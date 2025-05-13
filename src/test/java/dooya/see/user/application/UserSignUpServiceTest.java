@@ -1,10 +1,12 @@
 package dooya.see.user.application;
 
 import dooya.see.user.domain.Role;
+import dooya.see.user.domain.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
@@ -19,6 +21,9 @@ public class UserSignUpServiceTest {
 
     @InjectMocks
     private UserSignUpServiceImpl userSignUpService;
+
+    @Mock
+    private UserRepository userRepository;
 
     @DisplayName("유저 회원가입 성공 단위테스트")
     @Test
