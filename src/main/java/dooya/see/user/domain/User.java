@@ -30,4 +30,15 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    public static User singUpUser(String email, String name, String password, String phoneNumber, LocalDate birthDate, Role role) {
+        return User.builder()
+                .email(email)
+                .name(name)
+                .password(password)
+                .birthDate(birthDate)
+                .phoneNumber(phoneNumber)
+                .role(role)
+                .build();
+    }
 }
