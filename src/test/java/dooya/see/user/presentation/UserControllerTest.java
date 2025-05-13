@@ -1,6 +1,7 @@
 package dooya.see.user.presentation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dooya.see.user.application.UserSignUpRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,9 +26,11 @@ public class UserControllerTest {
     @DisplayName("유저 회원가입 성공 테스트")
     @Test
     void user_signUp_success() {
+        UserSignUpRequest request;
+
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
     }
 }
