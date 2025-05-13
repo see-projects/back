@@ -10,6 +10,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDate;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -25,8 +27,14 @@ public class UserControllerTest {
 
     @DisplayName("유저 회원가입 성공 테스트")
     @Test
-    void user_signUp_success() {
-        UserSignUpRequest request;
+    void user_signUp_success() throws Exception {
+        UserSignUpRequest request = UserSignUpRequest.builder()
+                .email("test@see.com")
+                .name("testName")
+                .password("testPassword")
+                .birthDate(LocalDate.of(2001, 1, 4))
+                .phoneNumber("01012345678")
+                .build();
 
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
