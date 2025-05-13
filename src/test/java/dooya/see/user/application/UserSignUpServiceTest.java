@@ -9,6 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 
@@ -32,18 +33,13 @@ public class UserSignUpServiceTest {
     @Test
     void user_signUp_success() {
         // given
-        UserSignUpRequest request = UserSignUpRequest.builder()
-                .email("test@see.com")
-                .name("testName")
-                .password("testPassword")
-                .birthDate(LocalDate.of(2001, 1, 4))
-                .phoneNumber("01012345678")
-                .build();
+        UserSignUpRequest request = new UserSignUpRequest("test@see.com", "testName", "testPassword", LocalDate.of(2001, 1, 4), "01012345678");
 
         given(userRepository.findByEmail(request.email())).willReturn(java.util.Optional.empty());
 
-        User testUser = User.singUpUser(request.email(), request.name(), request.password(), request.phoneNumber(), request.birthDate(), Role.of("USER"));
-        given(userRepository.save(testUser)).willReturn(testUser);
+        User testUser = User.singUpUser(request.email(), request.name(), request.password(), request.birthDate(), request.phoneNumber(), Role.of("USER"));
+        ReflectionTestUtils.setField(testUser, "id", 1L);
+        given(userRepository.save(any(User.class))).willReturn(testUser);
 
         // when
         UserSignUpResponse response = userSignUpService.userSignUp(request);
