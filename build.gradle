@@ -31,13 +31,13 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
     // OAuth2 클라이언트 의존성 (OAuth2 인증 기능을 클라이언트에서 사용할 수 있게 함)
-    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+//    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 
     // Spring Security 의존성 (보안 기능을 제공)
-    implementation 'org.springframework.boot:spring-boot-starter-security'
+//    implementation 'org.springframework.boot:spring-boot-starter-security'
 
     // Spring Security 테스트 의존성 (보안 관련 테스트 기능을 제공)
-    testImplementation 'org.springframework.security:spring-security-test'
+//    testImplementation 'org.springframework.security:spring-security-test'
 
     // Lombok 의존성 (컴파일 시점에 어노테이션을 처리하여 코드 자동 생성)
     compileOnly 'org.projectlombok:lombok'
