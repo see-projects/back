@@ -6,6 +6,7 @@ import java.time.LocalDate;
 
 @Builder
 public record UserSignUpResponse(
+        Long id,
         String email,
         String name,
         LocalDate birthDate,
