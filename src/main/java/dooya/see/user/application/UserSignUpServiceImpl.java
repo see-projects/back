@@ -24,6 +24,6 @@ public class UserSignUpServiceImpl implements UserSignUpService {
     }
 
     private User userSaveAndGet(UserSignUpRequest userSignUpRequest) {
-        return userRepository.save(User.singUpUser(userSignUpRequest.email(), userSignUpRequest.name(), userSignUpRequest.password(), userSignUpRequest.birthDate(), userSignUpRequest.phoneNumber(), Role.of("USER")));
+        return userRepository.save(User.signUpUser(userSignUpRequest.email(), userSignUpRequest.name(), userSignUpRequest.password(), userSignUpRequest.birthDate(), userSignUpRequest.phoneNumber(), Role.of("USER")));
     }
 }

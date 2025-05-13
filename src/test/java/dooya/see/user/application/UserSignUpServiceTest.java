@@ -37,7 +37,7 @@ public class UserSignUpServiceTest {
 
         given(userRepository.findByEmail(request.email())).willReturn(java.util.Optional.empty());
 
-        User testUser = User.singUpUser(request.email(), request.name(), request.password(), request.birthDate(), request.phoneNumber(), Role.of("USER"));
+        User testUser = User.signUpUser(request.email(), request.name(), request.password(), request.birthDate(), request.phoneNumber(), Role.of("USER"));
         ReflectionTestUtils.setField(testUser, "id", 1L);
         given(userRepository.save(any(User.class))).willReturn(testUser);
 
