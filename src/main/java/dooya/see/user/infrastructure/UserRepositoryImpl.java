@@ -1,5 +1,6 @@
 package dooya.see.user.infrastructure;
 
+import dooya.see.user.domain.User;
 import dooya.see.user.domain.UserRepository;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
