@@ -2,10 +2,10 @@ package dooya.see.user.presentation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dooya.see.user.application.UserSignUpRequest;
-import dooya.see.user.fixture.UserSignUpFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.stream.Stream;
 
+import static dooya.see.user.fixture.UserSignUpFixture.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -34,7 +35,7 @@ class UserControllerTest {
     @DisplayName("유저 회원가입 성공 테스트")
     @Test
     void user_signUp_success() throws Exception {
-        UserSignUpRequest request = UserSignUpFixture.request();
+        UserSignUpRequest request = request();
 
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -62,35 +63,10 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.validationErrors[0].message").value(message));
     }
 
-    private static Stream<org.junit.jupiter.params.provider.Arguments> invalidFieldProvider() {
-        return Stream.of(
-                org.junit.jupiter.params.provider.Arguments.of(
-                        UserSignUpFixture.request().toBuilder().email("").build(),
-                        "email", "이메일은 비어 있을 수 없습니다"
-                ),
-                org.junit.jupiter.params.provider.Arguments.of(
-                        UserSignUpFixture.request().toBuilder().name("").build(),
-                        "name", "이름은 비어 있을 수 없습니다"
-                ),
-                org.junit.jupiter.params.provider.Arguments.of(
-                        UserSignUpFixture.request().toBuilder().password("").build(),
-                        "password", "비밀번호는 비어 있을 수 없습니다"
-                ),
-                org.junit.jupiter.params.provider.Arguments.of(
-                        UserSignUpFixture.request().toBuilder().birthDate(null).build(),
-                        "birthDate", "생년월일은 비어 있을 수 없습니다"
-                ),
-                org.junit.jupiter.params.provider.Arguments.of(
-                        UserSignUpFixture.request().toBuilder().phoneNumber("").build(),
-                        "phoneNumber", "전화번호는 비어 있을 수 없습니다"
-                )
-        );
-    }
-
     @DisplayName("유저 회원가입 실패 테스트 - 모든 필드가 공란일때")
     @Test
     void user_signUp_fail_allFieldsInvalid() throws Exception {
-        UserSignUpRequest request = UserSignUpFixture.request().toBuilder()
+        UserSignUpRequest request = request().toBuilder()
                 .email("")
                 .name("")
                 .password("")
@@ -109,5 +85,30 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.validationErrors[?(@.field=='password')].message").value("비밀번호는 비어 있을 수 없습니다"))
                 .andExpect(jsonPath("$.validationErrors[?(@.field=='birthDate')].message").value("생년월일은 비어 있을 수 없습니다"))
                 .andExpect(jsonPath("$.validationErrors[?(@.field=='phoneNumber')].message").value("전화번호는 비어 있을 수 없습니다"));
+    }
+
+    private static Stream<Arguments> invalidFieldProvider() {
+        return Stream.of(
+                Arguments.of(
+                        request().toBuilder().email("").build(),
+                        "email", "이메일은 비어 있을 수 없습니다"
+                ),
+                Arguments.of(
+                        request().toBuilder().name("").build(),
+                        "name", "이름은 비어 있을 수 없습니다"
+                ),
+                Arguments.of(
+                        request().toBuilder().password("").build(),
+                        "password", "비밀번호는 비어 있을 수 없습니다"
+                ),
+                Arguments.of(
+                        request().toBuilder().birthDate(null).build(),
+                        "birthDate", "생년월일은 비어 있을 수 없습니다"
+                ),
+                Arguments.of(
+                        request().toBuilder().phoneNumber("").build(),
+                        "phoneNumber", "전화번호는 비어 있을 수 없습니다"
+                )
+        );
     }
 }
