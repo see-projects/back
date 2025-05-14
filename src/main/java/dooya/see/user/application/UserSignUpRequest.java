@@ -2,6 +2,7 @@ package dooya.see.user.application;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 
 import java.time.LocalDate;
@@ -18,7 +19,7 @@ public record UserSignUpRequest(
         @NotBlank(message = "비밀번호는 비어 있을 수 없습니다")
         String password,
 
-        @NotBlank(message = "생년월일은 비어 있을 수 없습니다")
+        @NotNull(message = "생년월일은 비어 있을 수 없습니다")
         LocalDate birthDate,
 
         @NotBlank(message = "전화번호는 비어 있을 수 없습니다")
