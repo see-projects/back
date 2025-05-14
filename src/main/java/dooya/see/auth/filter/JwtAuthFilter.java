@@ -22,7 +22,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static dooya.see.common.exception.ErrorCode.UNKNOWN_TOKEN_ERROR;
 
@@ -93,8 +95,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     }
 
     private void setResponse(HttpServletResponse response, ErrorCode errorCode) throws IOException {
-        response.setContentType("application/json;charset=UTF-8");
-        response.setStatus(errorCode.getStatus().value());
-        response.getWriter().print(objectMapper.writeValueAsString(errorCode.getMessage()));
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("code", errorCode.name());
+        errorResponse.put("message", errorCode.getMessage());
+        errorResponse.put("status", errorCode.getStatus().value());
+        response.getWriter().print(objectMapper.writeValueAsString(errorResponse));
     }
 }
