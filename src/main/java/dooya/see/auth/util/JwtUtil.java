@@ -46,19 +46,21 @@ public class JwtUtil {
                 .compact();
     }
 
-    public Long getUserId(String token) {
+    private Claims getClaims(String token) {
         return Jwts.parserBuilder().setSigningKey(secretKey).build()
-                .parseClaimsJws(token).getBody().get("userId", Long.class);
+                .parseClaimsJws(token).getBody();
+    }
+
+    public Long getUserId(String token) {
+        return getClaims(token).get("userId", Long.class);
     }
 
     public String getUsername(String token) {
-        return Jwts.parserBuilder().setSigningKey(secretKey).build()
-                .parseClaimsJws(token).getBody().get("email", String.class);
+        return getClaims(token).get("email", String.class);
     }
 
     public String getRole(String token) {
-        return Jwts.parserBuilder().setSigningKey(secretKey).build()
-                .parseClaimsJws(token).getBody().get("role", String.class);
+        return getClaims(token).get("role", String.class);
     }
 
     public boolean validateToken(String token) {
