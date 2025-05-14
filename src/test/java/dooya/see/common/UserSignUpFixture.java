@@ -1,4 +1,4 @@
-package dooya.see.user.fixture;
+package dooya.see.common;
 
 import dooya.see.user.application.UserSignUpRequest;
 import dooya.see.user.domain.Role;

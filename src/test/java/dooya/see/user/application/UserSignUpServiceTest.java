@@ -5,7 +5,7 @@ import dooya.see.common.exception.ErrorCode;
 import dooya.see.user.domain.Role;
 import dooya.see.user.domain.User;
 import dooya.see.user.domain.UserRepository;
-import dooya.see.user.fixture.UserSignUpFixture;
+import dooya.see.common.UserSignUpFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
