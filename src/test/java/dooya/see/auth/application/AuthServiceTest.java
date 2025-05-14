@@ -15,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -67,7 +68,9 @@ public class AuthServiceTest {
         doThrow(new CustomException(ErrorCode.USER_NOT_MATCH_LOGIN_INFO)).when(authValidator).validateEmailAndPassword(request.email(), request.password());
 
         // Act && Assert
-        assertThrows(CustomException.class, () -> authService.login(request));
+        assertThatCode(() -> authService.login(request))
+                .isInstanceOf(CustomException.class)
+                .hasMessageContaining("로그인 정보가 일치하지 않습니다.");
 
         then(authValidator).should(times(1)).validateEmailAndPassword(request.email(), request.password());
     }
