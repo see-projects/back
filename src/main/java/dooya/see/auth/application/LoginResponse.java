@@ -1,6 +1,5 @@
 package dooya.see.auth.application;
 
-import dooya.see.user.application.UserSignUpResponse;
 import dooya.see.user.domain.User;
 import lombok.Builder;
 
