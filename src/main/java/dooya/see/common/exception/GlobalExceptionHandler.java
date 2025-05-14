@@ -60,7 +60,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
         logException("HttpMessageNotReadableException", ex);
         ErrorCode errorCode = ErrorCode.INVALID_JSON_FORMAT;
-        String errorMessage = errorCode.getMessage() + " : " + ex.getMessage();
+        String errorMessage = errorCode.getMessage();
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponse.of(errorMessage));
