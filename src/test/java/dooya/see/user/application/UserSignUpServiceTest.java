@@ -32,7 +32,7 @@ public class UserSignUpServiceTest {
     @DisplayName("유저 회원가입 성공 단위테스트")
     @Test
     void user_signUp_success() {
-        // given
+        // Arrange
         UserSignUpRequest request = new UserSignUpRequest("test@see.com", "testName", "testPassword", LocalDate.of(2001, 1, 4), "01012345678");
 
         given(userRepository.findByEmail(request.email())).willReturn(java.util.Optional.empty());
@@ -41,10 +41,10 @@ public class UserSignUpServiceTest {
         ReflectionTestUtils.setField(testUser, "id", 1L);
         given(userRepository.save(any(User.class))).willReturn(testUser);
 
-        // when
+        // Act
         UserSignUpResponse response = userSignUpService.userSignUp(request);
 
-        // then
+        // Assert
         assertAll(
                 () -> assertThat(response).isNotNull(),
                 () -> assertThat(response.id()).isNotNull(),

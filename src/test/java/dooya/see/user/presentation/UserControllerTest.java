@@ -31,7 +31,7 @@ public class UserControllerTest {
     @DisplayName("유저 회원가입 성공 테스트")
     @Test
     void user_signUp_success() throws Exception {
-        // given
+        // Arrange
         UserSignUpRequest request = new UserSignUpRequest(
                 "test@see.com",
                 "testName",
@@ -40,7 +40,7 @@ public class UserControllerTest {
                 "01012345678"
         );
 
-        // when && then
+        // Act && Assert
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -50,7 +50,6 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.name").value(request.name()))
                 .andExpect(jsonPath("$.birthDate").value(request.birthDate().toString()))
                 .andExpect(jsonPath("$.phoneNumber").value(request.phoneNumber()))
-                .andExpect(jsonPath("$.role").value("USER"))
-                .andReturn(); // andReturn()을 사용하여 결과를 반환받음
+                .andExpect(jsonPath("$.role").value("USER"));
     }
 }
