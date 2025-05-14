@@ -28,8 +28,10 @@ public class AuthControllerTest {
     @DisplayName("유저 로그인 성공 테스트")
     @Test
     void user_login_success() throws Exception {
+        // Arrange
+        LoginRequest request = new LoginRequest("test@see.com", "testPassword");
+
         // Act & Assert
-        LoginRequest request;
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
