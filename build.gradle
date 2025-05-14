@@ -30,6 +30,8 @@ dependencies {
     // Spring Web 의존성 (웹 애플리케이션을 위한 기본 설정, REST API 제공)
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
     // OAuth2 클라이언트 의존성 (OAuth2 인증 기능을 클라이언트에서 사용할 수 있게 함)
 //    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 
@@ -58,7 +60,7 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     // Swagger
-    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0"
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0"
 }
 
 tasks.named('test') {
