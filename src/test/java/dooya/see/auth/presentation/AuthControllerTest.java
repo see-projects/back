@@ -1,6 +1,7 @@
 package dooya.see.auth.presentation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dooya.see.auth.application.LoginRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,7 @@ public class AuthControllerTest {
     @Test
     void user_login_success() throws Exception {
         // Act & Assert
+        LoginRequest request;
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
