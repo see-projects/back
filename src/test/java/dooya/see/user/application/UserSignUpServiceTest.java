@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -33,6 +34,9 @@ public class UserSignUpServiceTest {
     @Mock
     private UserValidator userValidator;
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     @DisplayName("유저 회원가입 성공 단위테스트")
     @Test
     void user_signUp_success() {
@@ -41,6 +45,7 @@ public class UserSignUpServiceTest {
         User testUser = UserSignUpFixture.createTestUser(request);
 
         doNothing().when(userValidator).validateDuplicateEmail(request.email());
+        given(passwordEncoder.encode(request.password())).willReturn(testUser.getPassword());
         given(userRepository.save(any(User.class))).willReturn(testUser);
 
         // Act
