@@ -66,15 +66,6 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(errorMessage));
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleUnhandledException(Exception ex) {
-        logException("UnhandledException", ex);
-        ErrorCode errorCode = ErrorCode.INTERNAL_SERVER_ERROR;
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ErrorResponse.of(errorCode.getMessage()));
-    }
-
     private void logException(String title, Exception ex) {
         log.error("[{}] 예외 발생: {}", title, ex.getMessage(), ex);
     }
