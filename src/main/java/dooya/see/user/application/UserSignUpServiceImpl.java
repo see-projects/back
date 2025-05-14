@@ -12,18 +12,18 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserSignUpServiceImpl implements UserSignUpService {
 
     private final UserRepository userRepository;
+    private final UserValidator userValidator;
 
     @Transactional
     @Override
-    public UserSignUpResponse userSignUp(UserSignUpRequest userSignUpRequest) {
-        userRepository.findByEmail(userSignUpRequest.email());
-
-        User user = userSaveAndGet(userSignUpRequest);
+    public UserSignUpResponse userSignUp(UserSignUpRequest request) {
+        userValidator.validateDuplicateEmail(request.email());
+        User user = userSaveAndGet(request);
 
         return UserSignUpResponse.from(user);
     }
 
-    private User userSaveAndGet(UserSignUpRequest userSignUpRequest) {
-        return userRepository.save(User.signUpUser(userSignUpRequest.email(), userSignUpRequest.name(), userSignUpRequest.password(), userSignUpRequest.birthDate(), userSignUpRequest.phoneNumber(), Role.of("USER")));
+    private User userSaveAndGet(UserSignUpRequest request) {
+        return userRepository.save(User.signUpUser(request.email(), request.name(), request.password(), request.birthDate(), request.phoneNumber(), Role.of("USER")));
     }
 }
