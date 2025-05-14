@@ -5,7 +5,7 @@ import dooya.see.common.exception.ErrorCode;
 import dooya.see.user.domain.Role;
 import dooya.see.user.domain.User;
 import dooya.see.user.domain.UserRepository;
-import dooya.see.user.fixture.UserSignUpFixture;
+import dooya.see.common.UserFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,8 +41,8 @@ public class UserSignUpServiceTest {
     @Test
     void user_signUp_success() {
         // Arrange
-        UserSignUpRequest request = UserSignUpFixture.request();
-        User testUser = UserSignUpFixture.createTestUser(request);
+        UserSignUpRequest request = UserFixture.request();
+        User testUser = UserFixture.createTestUser(request);
 
         doNothing().when(userValidator).validateDuplicateEmail(request.email());
         given(passwordEncoder.encode(request.password())).willReturn(testUser.getPassword());
@@ -70,7 +70,7 @@ public class UserSignUpServiceTest {
     @Test
     void user_signUp_fail() {
         // Arrange
-        UserSignUpRequest request = UserSignUpFixture.request();
+        UserSignUpRequest request = UserFixture.request();
         doThrow(new CustomException(ErrorCode.USER_ALREADY_EXISTS)).when(userValidator).validateDuplicateEmail(request.email());
 
         // Act && Assert
