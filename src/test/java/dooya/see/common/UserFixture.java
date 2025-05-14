@@ -27,11 +27,11 @@ public class UserFixture {
         return testUser;
     }
 
-    public static User testUser(PasswordEncoder passwordEncoder) {
+    public static User testUser() {
         return User.builder()
                 .email("test@see.com")
                 .name("testName")
-                .password(passwordEncoder.encode("testPassword"))
+                .password("$2a$10$DOWSDdkg2YqXWB3S1.CzHeeI6qHtDc0lYBFfN4y3pFehUcbDoztYm")
                 .birthDate(LocalDate.of(2001, 1, 4))
                 .phoneNumber("01012345678")
                 .role(Role.of("USER"))
