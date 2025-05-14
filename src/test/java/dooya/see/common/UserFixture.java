@@ -37,4 +37,15 @@ public class UserFixture {
                 .role(Role.of("USER"))
                 .build();
     }
+
+    public static User mockUser(PasswordEncoder passwordEncoder) {
+        return User.builder()
+                .email("test@see.com")
+                .name("testName")
+                .password(passwordEncoder.encode("testPassword"))
+                .birthDate(LocalDate.of(2001, 1, 4))
+                .phoneNumber("01012345678")
+                .role(Role.of("USER"))
+                .build();
+    }
 }

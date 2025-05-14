@@ -13,6 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static dooya.see.common.AuthFixture.*;
@@ -22,6 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Sql("classpath:init.sql")
 public class AuthControllerTest {
 
     @Autowired
@@ -33,9 +35,12 @@ public class AuthControllerTest {
     @Autowired
     private UserJpaRepository userJpaRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @BeforeEach
     void setUp() {
-        userJpaRepository.save(UserFixture.testUser());
+        userJpaRepository.save(UserFixture.mockUser(passwordEncoder));
     }
 
     @DisplayName("유저 로그인 성공 테스트")
