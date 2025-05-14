@@ -11,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static dooya.see.common.AuthFixture.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -29,7 +30,7 @@ public class AuthControllerTest {
     @Test
     void user_login_success() throws Exception {
         // Arrange
-        LoginRequest request = new LoginRequest("test@see.com", "testPassword");
+        LoginRequest request = request();
 
         // Act & Assert
         mockMvc.perform(post("/api/auth/login")
