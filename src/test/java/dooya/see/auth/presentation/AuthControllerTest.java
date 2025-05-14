@@ -33,12 +33,9 @@ public class AuthControllerTest {
     @Autowired
     private UserJpaRepository userJpaRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
     @BeforeEach
     void setUp() {
-        userJpaRepository.save(UserFixture.testUser(passwordEncoder));
+        userJpaRepository.save(UserFixture.testUser());
     }
 
     @DisplayName("유저 로그인 성공 테스트")
