@@ -3,7 +3,7 @@ package dooya.see.auth.application;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 
-@Builder
+@Builder(toBuilder = true)
 public record LoginRequest(
         @NotBlank(message = "이메일은 비어 있을 수 없습니다")
         String email,
