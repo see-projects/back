@@ -1,5 +1,7 @@
 package dooya.see.user.application;
 
+import dooya.see.user.domain.User;
+
 public interface UserSignUpService {
-    UserSignUpResponse userSignUp(UserSignUpRequest request);
+    User userSignUp(UserSignUpCommand command);
 }
