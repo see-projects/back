@@ -124,7 +124,7 @@ class UserControllerTest {
         );
     }
 
-    @DisplayName("토큰으로 유저 정보 조회 성공 테스트")
+    @DisplayName("토큰에 포함된 이메일로 유저 조회 성공테스트")
     @Test
     void findByToken_user_success() throws Exception {
         // Arrange
@@ -144,7 +144,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.role").value(testUser.getRole().getRoleName()));
     }
 
-    @DisplayName("토큰으로 유저 정보 조회 실패 테스트")
+    @DisplayName("토큰에 포함된 이메일로 유저 조회 실패 테스트")
     @Test
     void findByToken_user_fail() throws Exception {
         // Arrange
