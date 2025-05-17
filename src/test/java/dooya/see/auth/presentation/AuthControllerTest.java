@@ -1,7 +1,6 @@
 package dooya.see.auth.presentation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dooya.see.auth.application.LoginRequest;
 import dooya.see.common.UserFixture;
 import dooya.see.user.infrastructure.UserJpaRepository;
 import org.junit.jupiter.api.BeforeEach;

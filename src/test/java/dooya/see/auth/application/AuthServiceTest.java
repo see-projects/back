@@ -16,7 +16,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.doThrow;
@@ -34,12 +33,12 @@ public class AuthServiceTest {
     @Mock
     private JwtUtil jwtUtil;
 
-    private LoginRequest request;
+    private LoginCommand command;
     private User testUser;
 
     @BeforeEach
     void setUp() {
-        request = AuthFixture.request();
+        command = AuthFixture.command();
         testUser = UserFixture.testUser();
     }
 
@@ -47,17 +46,17 @@ public class AuthServiceTest {
     @Test
     void user_login_success() {
         // Arrange
-        given(authValidator.validateEmailAndPassword(request.email(), request.password())).willReturn(testUser);
+        given(authValidator.validateEmailAndPassword(command.email(), command.password())).willReturn(testUser);
         given(jwtUtil.createAccessToken(testUser.getId(), testUser.getEmail(), testUser.getRole())).willReturn("mocked-jwt-token");
 
         // Act
-        LoginResponse response = authService.login(request);
+        LoginResult result = authService.login(command);
 
         // Assert
-        assertThat(response.email()).isEqualTo(testUser.getEmail());
-        assertThat(response.accessToken()).isEqualTo("mocked-jwt-token");
+        assertThat(result.user().getEmail()).isEqualTo(testUser.getEmail());
+        assertThat(result.accessToken()).isEqualTo("mocked-jwt-token");
 
-        then(authValidator).should(times(1)).validateEmailAndPassword(request.email(), request.password());
+        then(authValidator).should(times(1)).validateEmailAndPassword(command.email(), command.password());
         then(jwtUtil).should(times(1)).createAccessToken(testUser.getId(), testUser.getEmail(), testUser.getRole());
     }
 
@@ -65,13 +64,13 @@ public class AuthServiceTest {
     @Test
     void user_login_failNotEmail() {
         // Arrange
-        doThrow(new CustomException(ErrorCode.USER_NOT_MATCH_LOGIN_INFO)).when(authValidator).validateEmailAndPassword(request.email(), request.password());
+        doThrow(new CustomException(ErrorCode.USER_NOT_MATCH_LOGIN_INFO)).when(authValidator).validateEmailAndPassword(command.email(), command.password());
 
         // Act && Assert
-        assertThatCode(() -> authService.login(request))
+        assertThatCode(() -> authService.login(command))
                 .isInstanceOf(CustomException.class)
                 .hasMessageContaining("로그인 정보가 일치하지 않습니다.");
 
-        then(authValidator).should(times(1)).validateEmailAndPassword(request.email(), request.password());
+        then(authValidator).should(times(1)).validateEmailAndPassword(command.email(), command.password());
     }
 }
