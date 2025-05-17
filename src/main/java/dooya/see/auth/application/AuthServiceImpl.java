@@ -13,11 +13,11 @@ public class AuthServiceImpl implements AuthService {
     private final AuthValidator authValidator;
 
     @Override
-    public LoginResponse login(LoginRequest request) {
-        User user = authValidator.validateEmailAndPassword(request.email(), request.password());
+    public LoginResult login(LoginCommand command) {
+        User user = authValidator.validateEmailAndPassword(command.email(), command.password());
 
         String accessToken = jwtUtil.createAccessToken(user.getId(), user.getEmail(), user.getRole());
 
-        return LoginResponse.from(user, accessToken);
+        return LoginResult.of(user, accessToken);
     }
 }

@@ -1,8 +1,8 @@
 package dooya.see.auth.presentation;
 
 import dooya.see.auth.application.AuthService;
-import dooya.see.auth.application.LoginRequest;
-import dooya.see.auth.application.LoginResponse;
+import dooya.see.auth.application.LoginCommand;
+import dooya.see.auth.application.LoginResult;
 import dooya.see.auth.util.CookieUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,11 +30,13 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> userLogin(@Valid @RequestBody LoginRequest request) {
-        LoginResponse response = authService.login(request);
-        ResponseCookie cookie = CookieUtil.createCookie(COOKIE_NAME, response.accessToken(), COOKIE_VALID_TIME);
+        LoginCommand command = AuthDtoMapper.toCommand(request);
+        LoginResult result = authService.login(command);
+
+        ResponseCookie cookie = CookieUtil.createCookie(COOKIE_NAME, result.accessToken(), COOKIE_VALID_TIME);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(response);
+                .body(AuthDtoMapper.toResponse(result));
     }
 }

@@ -1,4 +1,4 @@
-package dooya.see.auth.application;
+package dooya.see.auth.presentation;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
