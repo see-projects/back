@@ -1,6 +1,9 @@
 package dooya.see.user.application;
 
+import dooya.see.common.exception.CustomException;
+import dooya.see.common.exception.ErrorCode;
 import dooya.see.user.domain.User;
+import dooya.see.user.domain.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -8,10 +11,10 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UserQueryServiceImpl implements UserQueryService {
 
-    private final UserValidator userValidator;
+    private final UserRepository userRepository;
 
     @Override
-    public User getUserFromToken(String email) {
-        return userValidator.getUserFromToken(email);
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     }
 }

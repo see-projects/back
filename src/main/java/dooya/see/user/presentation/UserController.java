@@ -33,9 +33,9 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<UserSignUpResponse> getUserByToken(@AuthenticationPrincipal LoginUser loginUser) {
+    public ResponseEntity<UserSignUpResponse> getUserByEmail(@AuthenticationPrincipal LoginUser loginUser) {
         String email = loginUser.getUsername();
-        User user = userQueryService.getUserFromToken(email);
+        User user = userQueryService.getUserByEmail(email);
         UserSignUpResponse response = UserDtoMapper.toResponse(user);
 
         return ResponseEntity.ok().body(response);
