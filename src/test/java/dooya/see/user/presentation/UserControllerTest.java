@@ -1,6 +1,10 @@
 package dooya.see.user.presentation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dooya.see.auth.util.JwtUtil;
+import dooya.see.user.domain.User;
+import dooya.see.user.infrastructure.UserJpaRepository;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -17,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.stream.Stream;
 
 import static dooya.see.common.UserFixture.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -32,6 +37,12 @@ class UserControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @Autowired
+    private UserJpaRepository userJpaRepository;
 
     @DisplayName("유저 회원가입 성공 테스트")
     @Test
@@ -111,5 +122,70 @@ class UserControllerTest {
                         "phoneNumber", "전화번호는 비어 있을 수 없습니다"
                 )
         );
+    }
+
+    @DisplayName("토큰으로 유저 정보 조회 성공 테스트")
+    @Test
+    void findByToken_user_success() throws Exception {
+        // Arrange
+        User testUser = userJpaRepository.save(testUser());
+        String testToken = jwtUtil.createAccessToken(testUser.getId(), testUser.getEmail(), testUser.getRole());
+
+        // Act & Assert
+        mockMvc.perform(get("/api/users")
+                        .cookie(new Cookie("Authorization", testToken))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(testUser.getId()))
+                .andExpect(jsonPath("$.email").value(testUser.getEmail()))
+                .andExpect(jsonPath("$.name").value(testUser.getName()))
+                .andExpect(jsonPath("$.birthDate").value(testUser.getBirthDate().toString()))
+                .andExpect(jsonPath("$.phoneNumber").value(testUser.getPhoneNumber()))
+                .andExpect(jsonPath("$.role").value(testUser.getRole().getRoleName()));
+    }
+
+    @DisplayName("토큰으로 유저 정보 조회 실패 테스트")
+    @Test
+    void findByToken_user_fail() throws Exception {
+        // Arrange
+        User testUser = userJpaRepository.save(testUser());
+        String testToken = jwtUtil.createAccessToken(testUser.getId(), "test@fail.com", testUser.getRole());
+
+        // Act & Assert
+        mockMvc.perform(get("/api/users")
+                        .cookie(new Cookie("Authorization", testToken))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(false))
+                .andExpect(jsonPath("$.message").value("존재하지 않는 사용자입니다."));
+    }
+
+    @DisplayName("이메일 중복 확인 성공 테스트")
+    @Test
+    void findByEmail_user_success() throws Exception {
+        // Arrange
+        String email = "test@see.com";
+
+        // Act && Assert
+        mockMvc.perform(get("/api/users/check-email")
+                .param("email", email)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+    }
+
+    @DisplayName("이메일로 중복 확인 실패 테스트")
+    @Test
+    void findByEmail_user_fail() throws Exception {
+        // Arrange
+        userJpaRepository.save(testUser());
+        String email = "test@see.com";
+
+        // Act && Assert
+        mockMvc.perform(get("/api/users/check-email")
+                        .param("email", email)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(false))
+                .andExpect(jsonPath("$.message").value("이미 존재하는 사용자입니다."));
     }
 }

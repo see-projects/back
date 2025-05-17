@@ -6,7 +6,6 @@ import dooya.see.user.domain.User;
 import dooya.see.user.domain.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 @Component
 @RequiredArgsConstructor
@@ -18,6 +17,11 @@ public class UserValidatorImpl implements UserValidator {
     public void validateDuplicateEmail(String email) {
         userRepository.findByEmail(email)
                 .ifPresent(UserValidatorImpl::throwUserAlreadyExists);
+    }
+
+    @Override
+    public User getUserFromToken(String email) {
+        return userRepository.findByEmail(email).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     }
 
     private static void throwUserAlreadyExists(User user) {
