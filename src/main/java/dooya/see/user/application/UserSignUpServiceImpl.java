@@ -1,9 +1,7 @@
 package dooya.see.user.application;
 
-import dooya.see.user.domain.Role;
 import dooya.see.user.domain.User;
 import dooya.see.user.domain.UserRepository;
-import dooya.see.user.presentation.UserSignUpResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
