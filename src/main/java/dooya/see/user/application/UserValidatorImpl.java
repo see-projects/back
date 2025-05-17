@@ -19,11 +19,6 @@ public class UserValidatorImpl implements UserValidator {
                 .ifPresent(UserValidatorImpl::throwUserAlreadyExists);
     }
 
-    @Override
-    public User getUserFromToken(String email) {
-        return userRepository.findByEmail(email).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-    }
-
     private static void throwUserAlreadyExists(User user) {
         throw new CustomException(ErrorCode.USER_ALREADY_EXISTS);
     }
