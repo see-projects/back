@@ -3,12 +3,15 @@ package dooya.see.user.application;
 import dooya.see.common.exception.CustomException;
 import dooya.see.common.exception.ErrorCode;
 import dooya.see.user.domain.User;
+import dooya.see.user.domain.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Optional;
 
 import static dooya.see.common.UserFixture.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,7 +29,7 @@ public class UserQueryServiceTest {
     private UserQueryServiceImpl userQueryService;
 
     @Mock
-    private UserValidator userValidator;
+    private UserRepository userRepository;
 
     private final User testUser = testUser();
 
@@ -34,10 +37,10 @@ public class UserQueryServiceTest {
     @Test
     void user_getUserFromToken_success() {
         // Arrange
-        given(userValidator.getUserFromToken(testUser.getEmail())).willReturn(testUser);
+        given(userRepository.findByEmail(testUser.getEmail())).willReturn(Optional.of(testUser));
 
         // Act
-        User user = userQueryService.getUserFromToken(testUser.getEmail());
+        User user = userQueryService.getUserByEmail(testUser.getEmail());
 
         // Assert
         assertAll(
@@ -54,13 +57,13 @@ public class UserQueryServiceTest {
     @Test
     void user_getUserFromToken_failNotEmail() {
         // Arrange
-        doThrow(new CustomException(ErrorCode.USER_NOT_FOUND)).when(userValidator).getUserFromToken(testUser.getEmail());
+        doThrow(new CustomException(ErrorCode.USER_NOT_FOUND)).when(userRepository).findByEmail(testUser.getEmail());
 
         // Act && Assert
-        assertThatCode(() -> userQueryService.getUserFromToken(testUser.getEmail()))
+        assertThatCode(() -> userQueryService.getUserByEmail(testUser.getEmail()))
                 .isInstanceOf(CustomException.class)
                 .hasMessageContaining("존재하지 않는 사용자입니다.");
 
-        then(userValidator).should(times(1)).getUserFromToken(testUser.getEmail());
+        then(userRepository).should(times(1)).findByEmail(testUser.getEmail());
     }
 }
