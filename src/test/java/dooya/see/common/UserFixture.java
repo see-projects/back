@@ -1,6 +1,6 @@
 package dooya.see.common;
 
-import dooya.see.user.application.UserSignUpRequest;
+import dooya.see.user.presentation.UserSignUpRequest;
 import dooya.see.user.domain.Role;
 import dooya.see.user.domain.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
