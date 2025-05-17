@@ -1,8 +1,8 @@
 package dooya.see.user.presentation;
 
-import dooya.see.user.application.UserSignUpRequest;
-import dooya.see.user.application.UserSignUpResponse;
+import dooya.see.user.application.UserSignUpCommand;
 import dooya.see.user.application.UserSignUpService;
+import dooya.see.user.domain.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,8 +22,10 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<UserSignUpResponse> userSignUp(@Valid @RequestBody UserSignUpRequest request) {
-        UserSignUpResponse response = userSignUpService.userSignUp(request);
-        URI location = URI.create("/api/users/" + response.id());
-        return ResponseEntity.created(location).body(response);
+        UserSignUpCommand command = UserDtoMapper.toCommand(request);
+        User user = userSignUpService.userSignUp(command);
+        UserSignUpResponse response = UserDtoMapper.toResponse(user);
+
+        return ResponseEntity.created(URI.create("/api/users/" + user.getId())).body(response);
     }
 }
