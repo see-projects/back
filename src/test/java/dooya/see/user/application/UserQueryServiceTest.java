@@ -33,9 +33,9 @@ public class UserQueryServiceTest {
 
     private final User testUser = testUser();
 
-    @DisplayName("토큰으로 유저 조회 성공 단위테스트")
+    @DisplayName("이메일로 유저 조회 성공 단위테스트")
     @Test
-    void user_getUserFromToken_success() {
+    void user_getUserFromEmail_success() {
         // Arrange
         given(userRepository.findByEmail(testUser.getEmail())).willReturn(Optional.of(testUser));
 
@@ -53,9 +53,9 @@ public class UserQueryServiceTest {
         );
     }
 
-    @DisplayName("토큰으로 유저 조회 실패 단위테스트 - 존재하지 않는 이메일")
+    @DisplayName("이메일로 유저 조회 실패 단위테스트 - 존재하지 않는 이메일")
     @Test
-    void user_getUserFromToken_failNotEmail() {
+    void user_getUserFromEmail_failNotEmail() {
         // Arrange
         doThrow(new CustomException(ErrorCode.USER_NOT_FOUND)).when(userRepository).findByEmail(testUser.getEmail());
 
