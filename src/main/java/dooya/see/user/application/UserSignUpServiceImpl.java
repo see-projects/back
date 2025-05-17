@@ -1,6 +1,5 @@
 package dooya.see.user.application;
 
-import dooya.see.user.domain.Role;
 import dooya.see.user.domain.User;
 import dooya.see.user.domain.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,14 +17,10 @@ public class UserSignUpServiceImpl implements UserSignUpService {
 
     @Transactional
     @Override
-    public UserSignUpResponse userSignUp(UserSignUpRequest request) {
-        userValidator.validateDuplicateEmail(request.email());
-        User user = userSaveAndGet(request);
+    public User userSignUp(UserSignUpCommand command) {
+        userValidator.validateDuplicateEmail(command.email());
+        User user = UserCommandMapper.toEntity(command, passwordEncoder);
 
-        return UserSignUpResponse.from(user);
-    }
-
-    private User userSaveAndGet(UserSignUpRequest request) {
-        return userRepository.save(User.signUpUser(request.email(), request.name(), passwordEncoder.encode(request.password()), request.birthDate(), request.phoneNumber(), Role.of("USER")));
+        return userRepository.save(user);
     }
 }

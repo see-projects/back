@@ -15,8 +15,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -41,28 +41,28 @@ public class UserSignUpServiceTest {
     @Test
     void user_signUp_success() {
         // Arrange
-        UserSignUpRequest request = UserFixture.request();
-        User testUser = UserFixture.createTestUser(request);
+        UserSignUpCommand command = UserFixture.command();
+        User testUser = UserFixture.createTestUser(command);
 
-        doNothing().when(userValidator).validateDuplicateEmail(request.email());
-        given(passwordEncoder.encode(request.password())).willReturn(testUser.getPassword());
+        doNothing().when(userValidator).validateDuplicateEmail(command.email());
+        given(passwordEncoder.encode(command.password())).willReturn(testUser.getPassword());
         given(userRepository.save(any(User.class))).willReturn(testUser);
 
         // Act
-        UserSignUpResponse response = userSignUpService.userSignUp(request);
+        User user = userSignUpService.userSignUp(command);
 
         // Assert
         assertAll(
-                () -> assertThat(response).isNotNull(),
-                () -> assertThat(response.id()).isNotNull(),
-                () -> assertThat(response.email()).isEqualTo(request.email()),
-                () -> assertThat(response.name()).isEqualTo(request.name()),
-                () -> assertThat(response.birthDate()).isEqualTo(request.birthDate()),
-                () -> assertThat(response.phoneNumber()).isEqualTo(request.phoneNumber()),
-                () -> assertThat(response.role()).isEqualTo(Role.USER)
+                () -> assertThat(user).isNotNull(),
+                () -> assertThat(user.getId()).isNotNull(),
+                () -> assertThat(user.getEmail()).isEqualTo(command.email()),
+                () -> assertThat(user.getName()).isEqualTo(command.name()),
+                () -> assertThat(user.getBirthDate()).isEqualTo(command.birthDate()),
+                () -> assertThat(user.getPhoneNumber()).isEqualTo(command.phoneNumber()),
+                () -> assertThat(user.getRole()).isEqualTo(Role.USER)
         );
 
-        then(userValidator).should(times(1)).validateDuplicateEmail(request.email());
+        then(userValidator).should(times(1)).validateDuplicateEmail(command.email());
         then(userRepository).should(times(1)).save(any(User.class));
     }
 
@@ -70,13 +70,15 @@ public class UserSignUpServiceTest {
     @Test
     void user_signUp_fail() {
         // Arrange
-        UserSignUpRequest request = UserFixture.request();
-        doThrow(new CustomException(ErrorCode.USER_ALREADY_EXISTS)).when(userValidator).validateDuplicateEmail(request.email());
+        UserSignUpCommand command = UserFixture.command();
+        doThrow(new CustomException(ErrorCode.USER_ALREADY_EXISTS)).when(userValidator).validateDuplicateEmail(command.email());
 
         // Act && Assert
-        assertThrows(CustomException.class, () -> userSignUpService.userSignUp(request));
+        assertThatCode(() -> userSignUpService.userSignUp(command))
+                .isInstanceOf(CustomException.class)
+                .hasMessageContaining("이미 존재하는 사용자입니다.");
 
-        then(userValidator).should(times(1)).validateDuplicateEmail(request.email());
+        then(userValidator).should(times(1)).validateDuplicateEmail(command.email());
         then(userRepository).shouldHaveNoInteractions();
     }
 }

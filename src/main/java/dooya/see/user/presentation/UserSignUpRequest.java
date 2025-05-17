@@ -1,5 +1,6 @@
-package dooya.see.user.application;
+package dooya.see.user.presentation;
 
+import dooya.see.user.application.UserSignUpCommand;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

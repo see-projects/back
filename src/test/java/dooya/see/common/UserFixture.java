@@ -1,6 +1,7 @@
 package dooya.see.common;
 
-import dooya.see.user.application.UserSignUpRequest;
+import dooya.see.user.application.UserSignUpCommand;
+import dooya.see.user.presentation.UserSignUpRequest;
 import dooya.see.user.domain.Role;
 import dooya.see.user.domain.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,13 +15,17 @@ public class UserFixture {
         return new UserSignUpRequest("test@see.com", "testName", "testPassword", LocalDate.of(2001, 1, 4), "01012345678");
     }
 
-    public static User createTestUser(UserSignUpRequest request) {
+    public static UserSignUpCommand command() {
+        return new UserSignUpCommand("test@see.com", "testName", "testPassword", LocalDate.of(2001, 1, 4), "01012345678");
+    }
+
+    public static User createTestUser(UserSignUpCommand command) {
         User testUser = User.signUpUser(
-                request.email(),
-                request.name(),
-                request.password(),
-                request.birthDate(),
-                request.phoneNumber(),
+                command.email(),
+                command.name(),
+                command.password(),
+                command.birthDate(),
+                command.phoneNumber(),
                 Role.of("USER")
         );
         ReflectionTestUtils.setField(testUser, "id", 1L);
