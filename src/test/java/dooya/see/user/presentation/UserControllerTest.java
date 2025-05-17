@@ -1,6 +1,9 @@
 package dooya.see.user.presentation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dooya.see.auth.util.JwtUtil;
+import dooya.see.user.domain.User;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -17,6 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.stream.Stream;
 
 import static dooya.see.common.UserFixture.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -32,6 +36,9 @@ class UserControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @DisplayName("유저 회원가입 성공 테스트")
     @Test
@@ -111,5 +118,19 @@ class UserControllerTest {
                         "phoneNumber", "전화번호는 비어 있을 수 없습니다"
                 )
         );
+    }
+
+    @DisplayName("토큰으로 유저 정보 조회 성공 테스트")
+    @Test
+    void findByToken_user_success() throws Exception {
+        // Arrange
+        User testUser = testUser();
+        String testToken = jwtUtil.createAccessToken(testUser.getId(), testUser.getEmail(), testUser.getRole());
+
+        // Act & Assert
+        mockMvc.perform(get("/api/users")
+                        .cookie(new Cookie("Authorization", testToken))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
     }
 }
