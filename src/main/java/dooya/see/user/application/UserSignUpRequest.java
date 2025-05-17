@@ -25,4 +25,13 @@ public record UserSignUpRequest(
         @NotBlank(message = "전화번호는 비어 있을 수 없습니다")
         String phoneNumber
 ) {
+        public UserSignUpCommand toCommand() {
+                return UserSignUpCommand.builder()
+                        .email(email)
+                        .name(name)
+                        .password(password)
+                        .birthDate(birthDate)
+                        .phoneNumber(phoneNumber)
+                        .build();
+        }
 }
