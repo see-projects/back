@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 
 public class UserDtoMapperTest {
 
-    @DisplayName("UserSignRequest를 UserSignCommand로 정상 변환한다")
+    @DisplayName("UserSignUpRequest를 UserSignUpCommand로 정상 변환한다")
     @Test
     void convert_UserSignRequest_to_UserSignCommand() {
         // Arrange
