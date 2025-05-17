@@ -159,4 +159,33 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.status").value(false))
                 .andExpect(jsonPath("$.message").value("존재하지 않는 사용자입니다."));
     }
+
+    @DisplayName("이메일 중복 확인 성공 테스트")
+    @Test
+    void findByEmail_user_success() throws Exception {
+        // Arrange
+        String email = "test@see.com";
+
+        // Act && Assert
+        mockMvc.perform(get("/api/users/check-email")
+                .param("email", email)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+    }
+
+    @DisplayName("이메일로 중복 확인 실패 테스트")
+    @Test
+    void findByEmail_user_fail() throws Exception {
+        // Arrange
+        userJpaRepository.save(testUser());
+        String email = "test@see.com";
+
+        // Act && Assert
+        mockMvc.perform(get("/api/users/check-email")
+                        .param("email", email)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(false))
+                .andExpect(jsonPath("$.message").value("이미 존재하는 사용자입니다."));
+    }
 }
