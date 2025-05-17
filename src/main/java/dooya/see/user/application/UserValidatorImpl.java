@@ -6,7 +6,6 @@ import dooya.see.user.domain.User;
 import dooya.see.user.domain.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 @Component
 @RequiredArgsConstructor
