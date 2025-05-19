@@ -38,4 +38,8 @@ public class User {
                 .role(role)
                 .build();
     }
+
+    public void updateNickName(String newNickName) {
+        this.nickName = newNickName;
+    }
 }
