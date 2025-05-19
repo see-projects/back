@@ -49,16 +49,15 @@ public class UserSignUpServiceTest {
         given(userRepository.save(any(User.class))).willReturn(testUser);
 
         // Act
-        User user = userSignUpService.userSignUp(command);
+        UserResult result = userSignUpService.userSignUp(command);
 
         // Assert
         assertAll(
-                () -> assertThat(user).isNotNull(),
-                () -> assertThat(user.getId()).isNotNull(),
-                () -> assertThat(user.getEmail()).isEqualTo(command.email()),
-                () -> assertThat(user.getName()).isEqualTo(command.name()),
-                () -> assertThat(user.getNickName()).isEqualTo(command.nickName()),
-                () -> assertThat(user.getRole()).isEqualTo(Role.USER)
+                () -> assertThat(result).isNotNull(),
+                () -> assertThat(result.email()).isEqualTo(command.email()),
+                () -> assertThat(result.name()).isEqualTo(command.name()),
+                () -> assertThat(result.nickName()).isEqualTo(command.nickName()),
+                () -> assertThat(result.role()).isEqualTo(Role.USER)
         );
 
         then(userValidator).should(times(1)).validateDuplicateEmail(command.email());

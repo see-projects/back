@@ -1,7 +1,5 @@
 package dooya.see.user.application;
 
-import dooya.see.user.domain.User;
-
 public interface UserQueryService {
-    User getUserByEmail(String email);
+    UserResult getUserByEmail(String email);
 }

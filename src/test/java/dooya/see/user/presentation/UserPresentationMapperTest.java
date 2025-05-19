@@ -1,17 +1,17 @@
 package dooya.see.user.presentation;
 
+import dooya.see.user.application.UserResult;
 import dooya.see.user.application.UserSignUpCommand;
 import dooya.see.user.application.UserUpdateCommand;
-import dooya.see.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static dooya.see.common.UserFixture.*;
-import static dooya.see.user.presentation.UserDtoMapper.*;
+import static dooya.see.user.presentation.UserPresentationMapper.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
-public class UserDtoMapperTest {
+public class UserPresentationMapperTest {
 
     @DisplayName("UserSignUpRequest를 UserSignUpCommand로 정상 변환한다")
     @Test
@@ -35,18 +35,18 @@ public class UserDtoMapperTest {
     @Test
     void convert_User_to_UserSignResponse() {
         // Arrange
-        User user = testUser();
+        UserResult result = testUserResult();
 
         // Act
-        UserSignUpResponse response = toSignResponse(user);
+        UserSignUpResponse response = toSignResponse(result);
 
         // Assert
         assertAll(
-                () -> assertThat(response.id()).isEqualTo(user.getId()),
-                () -> assertThat(response.email()).isEqualTo(user.getEmail()),
-                () -> assertThat(response.name()).isEqualTo(user.getName()),
-                () -> assertThat(response.nickName()).isEqualTo(user.getNickName()),
-                () -> assertThat(response.role()).isEqualTo(user.getRole())
+                () -> assertThat(response.id()).isEqualTo(result.id()),
+                () -> assertThat(response.email()).isEqualTo(result.email()),
+                () -> assertThat(response.name()).isEqualTo(result.name()),
+                () -> assertThat(response.nickName()).isEqualTo(result.nickName()),
+                () -> assertThat(response.role()).isEqualTo(result.role())
         );
     }
 
@@ -67,12 +67,12 @@ public class UserDtoMapperTest {
     @Test
     void convert_User_to_UserUpdateResponse() {
         // Arrange
-        User user = testUser();
+        UserResult result = testUserResult();
 
         // Act
-        UserUpdateResponse response = toUpdateResponse(user);
+        UserUpdateResponse response = toUpdateResponse(result);
 
         // Assert
-        assertThat(response.nickName()).isEqualTo(user.getNickName()); 
+        assertThat(response.nickName()).isEqualTo(result.nickName());
     }
 }

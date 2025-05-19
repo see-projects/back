@@ -1,10 +1,10 @@
 package dooya.see.user.presentation;
 
+import dooya.see.user.application.UserResult;
 import dooya.see.user.application.UserSignUpCommand;
 import dooya.see.user.application.UserUpdateCommand;
-import dooya.see.user.domain.User;
 
-public class UserDtoMapper {
+public class UserPresentationMapper {
 
     public static UserSignUpCommand toSignCommand(UserSignUpRequest request) {
         return new UserSignUpCommand(
@@ -14,13 +14,13 @@ public class UserDtoMapper {
                 request.nickName());
     }
 
-    public static UserSignUpResponse toSignResponse(User user) {
+    public static UserSignUpResponse toSignResponse(UserResult userResult) {
         return new UserSignUpResponse(
-                user.getId(),
-                user.getEmail(),
-                user.getName(),
-                user.getNickName(),
-                user.getRole()
+                userResult.id(),
+                userResult.email(),
+                userResult.name(),
+                userResult.nickName(),
+                userResult.role()
         );
     }
 
@@ -28,7 +28,7 @@ public class UserDtoMapper {
         return new UserUpdateCommand(request.nickName());
     }
 
-    public static UserUpdateResponse toUpdateResponse(User user) {
-        return new UserUpdateResponse(user.getNickName());
+    public static UserUpdateResponse toUpdateResponse(UserResult userResult) {
+        return new UserUpdateResponse(userResult.nickName());
     }
 }

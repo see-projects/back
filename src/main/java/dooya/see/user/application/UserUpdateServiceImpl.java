@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static dooya.see.user.application.UserApplicationMapper.*;
+
 @Service
 @RequiredArgsConstructor
 public class UserUpdateServiceImpl implements UserUpdateService {
@@ -16,11 +18,11 @@ public class UserUpdateServiceImpl implements UserUpdateService {
 
     @Transactional
     @Override
-    public User updateNickName(String email, UserUpdateCommand command) {
+    public UserResult updateNickName(String email, UserUpdateCommand command) {
         User user = userRepository.findByEmail(email)
                         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         user.updateNickName(command.nickName());
 
-        return user;
+        return toResult(user);
     }
 }
