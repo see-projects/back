@@ -11,8 +11,7 @@ public class UserCommandMapper {
                 command.email(),
                 command.name(),
                 passwordEncoder.encode(command.password()),
-                command.birthDate(),
-                command.phoneNumber(),
+                command.nickName(),
                 Role.of("USER")
         );
     }
