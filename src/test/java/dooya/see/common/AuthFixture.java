@@ -1,7 +1,7 @@
 package dooya.see.common;
 
-import dooya.see.auth.application.LoginCommand;
-import dooya.see.auth.presentation.LoginRequest;
+import dooya.see.auth.application.dto.LoginCommand;
+import dooya.see.auth.presentation.dto.LoginRequest;
 
 public class AuthFixture {
 

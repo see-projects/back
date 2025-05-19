@@ -11,6 +11,16 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
+/**
+ * {@code CustomAccessDeniedHandler} 클래스는
+ * Spring Security의 AccessDeniedHandler를 구현하여
+ * 인증은 되었으나 권한이 부족한 사용자의 접근 시
+ * 커스텀 JSON 형태의 에러 응답을 반환하는 핸들러입니다.
+ *
+ * <p>403 상태 코드와 함께 적절한 에러 메시지를 JSON으로 응답합니다.
+ *
+ * @author dooya
+ */
 @Component
 @RequiredArgsConstructor
 public class CustomAccessDeniedHandler implements AccessDeniedHandler {

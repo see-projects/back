@@ -2,6 +2,8 @@ package dooya.see.user.application;
 
 import dooya.see.common.exception.CustomException;
 import dooya.see.common.exception.ErrorCode;
+import dooya.see.user.application.dto.UserResult;
+import dooya.see.user.application.service.impl.UserQueryServiceImpl;
 import dooya.see.user.domain.User;
 import dooya.see.user.domain.UserRepository;
 import org.junit.jupiter.api.DisplayName;

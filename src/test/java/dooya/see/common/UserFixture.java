@@ -1,8 +1,8 @@
 package dooya.see.common;
 
-import dooya.see.user.application.UserResult;
-import dooya.see.user.application.UserSignUpCommand;
-import dooya.see.user.application.UserUpdateCommand;
+import dooya.see.user.application.dto.UserResult;
+import dooya.see.user.application.dto.UserSignUpCommand;
+import dooya.see.user.application.dto.UserUpdateCommand;
 import dooya.see.user.presentation.UserSignUpRequest;
 import dooya.see.user.domain.Role;
 import dooya.see.user.domain.User;

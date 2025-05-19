@@ -1,7 +1,10 @@
-package dooya.see.user.application;
+package dooya.see.user.application.service.impl;
 
 import dooya.see.common.exception.CustomException;
 import dooya.see.common.exception.ErrorCode;
+import dooya.see.user.application.dto.UserApplicationMapper;
+import dooya.see.user.application.dto.UserResult;
+import dooya.see.user.application.service.UserQueryService;
 import dooya.see.user.domain.User;
 import dooya.see.user.domain.UserRepository;
 import lombok.RequiredArgsConstructor;

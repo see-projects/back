@@ -1,8 +1,8 @@
 package dooya.see.user.presentation;
 
-import dooya.see.user.application.UserResult;
-import dooya.see.user.application.UserSignUpCommand;
-import dooya.see.user.application.UserUpdateCommand;
+import dooya.see.user.application.dto.UserResult;
+import dooya.see.user.application.dto.UserSignUpCommand;
+import dooya.see.user.application.dto.UserUpdateCommand;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

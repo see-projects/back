@@ -1,7 +1,13 @@
 package dooya.see.user.presentation;
 
 import dooya.see.auth.domain.LoginUser;
-import dooya.see.user.application.*;
+import dooya.see.user.application.dto.UserResult;
+import dooya.see.user.application.dto.UserSignUpCommand;
+import dooya.see.user.application.dto.UserUpdateCommand;
+import dooya.see.user.application.service.UserQueryService;
+import dooya.see.user.application.service.UserSignUpService;
+import dooya.see.user.application.service.UserUpdateService;
+import dooya.see.user.application.service.UserValidator;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +18,24 @@ import java.net.URI;
 
 import static dooya.see.user.presentation.UserPresentationMapper.*;
 
+/**
+ * {@code UserController} 클래스는 사용자 관련 HTTP 요청을 처리하는
+ * 프레젠테이션 계층의 REST 컨트롤러입니다.
+ *
+ * <p>주요 기능으로는 회원가입, 로그인한 사용자 정보 조회,
+ * 이메일 중복 체크, 닉네임 업데이트 등이 포함됩니다.
+ *
+ * <p>각 메서드는 서비스 계층과 연동하여 비즈니스 로직을 수행하고,
+ * 요청과 응답 객체 간 변환은 {@link UserPresentationMapper}를 통해 처리합니다.
+ *
+ * <p>인증된 사용자의 정보는 Spring Security의 {@link AuthenticationPrincipal}
+ * 어노테이션을 통해 주입받습니다.
+ *
+ * <p>API 경로는 "/api/users"로 시작하며,
+ * RESTful 설계 원칙에 따라 자원에 대한 CRUD를 처리합니다.
+ *
+ * @author dooya
+ */
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor

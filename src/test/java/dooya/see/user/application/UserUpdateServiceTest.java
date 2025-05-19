@@ -1,6 +1,9 @@
 package dooya.see.user.application;
 
 import dooya.see.common.UserFixture;
+import dooya.see.user.application.dto.UserResult;
+import dooya.see.user.application.dto.UserUpdateCommand;
+import dooya.see.user.application.service.impl.UserUpdateServiceImpl;
 import dooya.see.user.domain.User;
 import dooya.see.user.domain.UserRepository;
 import org.junit.jupiter.api.DisplayName;
