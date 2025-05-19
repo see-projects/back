@@ -10,8 +10,7 @@ public class UserDtoMapper {
                 request.email(),
                 request.name(),
                 request.password(),
-                request.birthDate(),
-                request.phoneNumber());
+                request.nickName());
     }
 
     public static UserSignUpResponse toResponse(User user) {
@@ -19,8 +18,7 @@ public class UserDtoMapper {
                 user.getId(),
                 user.getEmail(),
                 user.getName(),
-                user.getBirthDate(),
-                user.getPhoneNumber(),
+                user.getNickName(),
                 user.getRole()
         );
     }
