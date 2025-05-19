@@ -9,8 +9,12 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 public class UserFixture {
 
-    public static UserSignUpRequest request() {
+    public static UserSignUpRequest signUpRequest() {
         return new UserSignUpRequest("test@see.com", "testName", "testPassword", "testNickName");
+    }
+
+    public static UserUpdateRequest updateRequest() {
+        return new UserUpdateRequest("updateNickName");
     }
 
     public static UserSignUpCommand command() {
