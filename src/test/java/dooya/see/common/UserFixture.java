@@ -1,5 +1,6 @@
 package dooya.see.common;
 
+import dooya.see.user.application.UserResult;
 import dooya.see.user.application.UserSignUpCommand;
 import dooya.see.user.application.UserUpdateCommand;
 import dooya.see.user.presentation.UserSignUpRequest;
@@ -47,6 +48,10 @@ public class UserFixture {
                 .nickName("testNickName")
                 .role(Role.of("USER"))
                 .build();
+    }
+
+    public static UserResult testUserResult() {
+        return new UserResult(1L, "test@see.com", "testName", "testNickName", Role.of("USER"));
     }
 
     public static User mockUser(PasswordEncoder passwordEncoder) {

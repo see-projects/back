@@ -35,9 +35,9 @@ public class UserUpdateServiceTest {
         given(userRepository.findByEmail(testUser.getEmail())).willReturn(Optional.of(testUser));
 
         // Act
-        User user = userUpdateService.updateNickName(testUser.getEmail(), command);
+        UserResult result = userUpdateService.updateNickName(testUser.getEmail(), command);
 
         // Assert
-        assertThat(user.getNickName()).isEqualTo(testUser.getNickName());
+        assertThat(result.nickName()).isEqualTo(testUser.getNickName());
     }
 }

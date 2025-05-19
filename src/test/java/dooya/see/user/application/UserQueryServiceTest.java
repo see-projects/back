@@ -40,15 +40,15 @@ public class UserQueryServiceTest {
         given(userRepository.findByEmail(testUser.getEmail())).willReturn(Optional.of(testUser));
 
         // Act
-        User user = userQueryService.getUserByEmail(testUser.getEmail());
+        UserResult result = userQueryService.getUserByEmail(testUser.getEmail());
 
         // Assert
         assertAll(
-                () -> assertThat(user.getId()).isEqualTo(testUser.getId()),
-                () -> assertThat(user.getEmail()).isEqualTo(testUser.getEmail()),
-                () -> assertThat(user.getName()).isEqualTo(testUser.getName()),
-                () -> assertThat(user.getNickName()).isEqualTo(testUser.getNickName()),
-                () -> assertThat(user.getRole()).isEqualTo(testUser.getRole())
+                () -> assertThat(result.id()).isEqualTo(testUser.getId()),
+                () -> assertThat(result.email()).isEqualTo(testUser.getEmail()),
+                () -> assertThat(result.name()).isEqualTo(testUser.getName()),
+                () -> assertThat(result.nickName()).isEqualTo(testUser.getNickName()),
+                () -> assertThat(result.role()).isEqualTo(testUser.getRole())
         );
     }
 
