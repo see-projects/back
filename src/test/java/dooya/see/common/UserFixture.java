@@ -7,8 +7,6 @@ import dooya.see.user.domain.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.LocalDate;
-
 public class UserFixture {
 
     public static UserSignUpRequest request() {
@@ -16,7 +14,7 @@ public class UserFixture {
     }
 
     public static UserSignUpCommand command() {
-        return new UserSignUpCommand("test@see.com", "testName", "testPassword", "nickName");
+        return new UserSignUpCommand("test@see.com", "testName", "testPassword", "testNickName");
     }
 
     public static User createTestUser(UserSignUpCommand command) {
