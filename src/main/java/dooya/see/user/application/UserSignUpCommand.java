@@ -9,7 +9,6 @@ public record UserSignUpCommand(
         String email,
         String name,
         String password,
-        LocalDate birthDate,
-        String phoneNumber
+        String nickName
 ) {
 }
