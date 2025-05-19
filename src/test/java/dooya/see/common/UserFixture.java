@@ -1,6 +1,7 @@
 package dooya.see.common;
 
 import dooya.see.user.application.UserSignUpCommand;
+import dooya.see.user.application.UserUpdateCommand;
 import dooya.see.user.presentation.UserSignUpRequest;
 import dooya.see.user.domain.Role;
 import dooya.see.user.domain.User;
@@ -18,8 +19,12 @@ public class UserFixture {
         return new UserUpdateRequest("updateNickName");
     }
 
-    public static UserSignUpCommand command() {
+    public static UserSignUpCommand signUpCommand() {
         return new UserSignUpCommand("test@see.com", "testName", "testPassword", "testNickName");
+    }
+
+    public static UserUpdateCommand updateCommand() {
+        return new UserUpdateCommand("updateNickName");
     }
 
     public static User createTestUser(UserSignUpCommand command) {
