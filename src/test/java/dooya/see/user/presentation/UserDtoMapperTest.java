@@ -16,7 +16,7 @@ public class UserDtoMapperTest {
     @Test
     void convert_UserSignRequest_to_UserSignCommand() {
         // Arrange
-        UserSignUpRequest request = request();
+        UserSignUpRequest request = signUpRequest();
 
         // Act
         UserSignUpCommand command = toCommand(request);
