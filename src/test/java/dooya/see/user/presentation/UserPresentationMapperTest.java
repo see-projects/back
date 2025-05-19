@@ -1,13 +1,17 @@
 package dooya.see.user.presentation;
 
-import dooya.see.user.application.UserResult;
-import dooya.see.user.application.UserSignUpCommand;
-import dooya.see.user.application.UserUpdateCommand;
+import dooya.see.user.application.dto.UserResult;
+import dooya.see.user.application.dto.UserSignUpCommand;
+import dooya.see.user.application.dto.UserUpdateCommand;
+import dooya.see.user.presentation.dto.UserSignUpRequest;
+import dooya.see.user.presentation.dto.UserSignUpResponse;
+import dooya.see.user.presentation.dto.UserUpdateRequest;
+import dooya.see.user.presentation.dto.UserUpdateResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static dooya.see.common.UserFixture.*;
-import static dooya.see.user.presentation.UserPresentationMapper.*;
+import static dooya.see.user.presentation.dto.UserPresentationMapper.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 

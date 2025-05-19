@@ -1,5 +1,6 @@
-package dooya.see.auth.application;
+package dooya.see.auth.application.service.impl;
 
+import dooya.see.auth.application.service.AuthValidator;
 import dooya.see.common.exception.CustomException;
 import dooya.see.common.exception.ErrorCode;
 import dooya.see.user.domain.User;

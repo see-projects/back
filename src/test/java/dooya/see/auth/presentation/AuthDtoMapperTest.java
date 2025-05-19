@@ -1,12 +1,14 @@
 package dooya.see.auth.presentation;
 
-import dooya.see.auth.application.LoginCommand;
-import dooya.see.auth.application.LoginResult;
+import dooya.see.auth.application.dto.LoginCommand;
+import dooya.see.auth.application.dto.LoginResult;
+import dooya.see.auth.presentation.dto.LoginRequest;
+import dooya.see.auth.presentation.dto.LoginResponse;
 import dooya.see.common.UserFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static dooya.see.auth.presentation.AuthDtoMapper.*;
+import static dooya.see.auth.presentation.dto.AuthDtoMapper.*;
 import static dooya.see.common.AuthFixture.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;

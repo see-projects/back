@@ -1,12 +1,12 @@
 package dooya.see.common;
 
-import dooya.see.user.application.UserResult;
-import dooya.see.user.application.UserSignUpCommand;
-import dooya.see.user.application.UserUpdateCommand;
-import dooya.see.user.presentation.UserSignUpRequest;
+import dooya.see.user.application.dto.UserResult;
+import dooya.see.user.application.dto.UserSignUpCommand;
+import dooya.see.user.application.dto.UserUpdateCommand;
+import dooya.see.user.presentation.dto.UserSignUpRequest;
 import dooya.see.user.domain.Role;
 import dooya.see.user.domain.User;
-import dooya.see.user.presentation.UserUpdateRequest;
+import dooya.see.user.presentation.dto.UserUpdateRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
