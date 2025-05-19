@@ -56,8 +56,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.email").value(request.email()))
                 .andExpect(jsonPath("$.name").value(request.name()))
-                .andExpect(jsonPath("$.birthDate").value(request.birthDate().toString()))
-                .andExpect(jsonPath("$.phoneNumber").value(request.phoneNumber()))
+                .andExpect(jsonPath("$.nickName").value(request.nickName()))
                 .andExpect(jsonPath("$.role").value("USER"));
     }
 
@@ -82,8 +81,7 @@ class UserControllerTest {
                 .email("")
                 .name("")
                 .password("")
-                .birthDate(null)
-                .phoneNumber("")
+                .nickName("")
                 .build();
 
         mockMvc.perform(post("/api/users")
@@ -95,8 +93,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.validationErrors[?(@.field=='email')].message").value("이메일은 비어 있을 수 없습니다"))
                 .andExpect(jsonPath("$.validationErrors[?(@.field=='name')].message").value("이름은 비어 있을 수 없습니다"))
                 .andExpect(jsonPath("$.validationErrors[?(@.field=='password')].message").value("비밀번호는 비어 있을 수 없습니다"))
-                .andExpect(jsonPath("$.validationErrors[?(@.field=='birthDate')].message").value("생년월일은 비어 있을 수 없습니다"))
-                .andExpect(jsonPath("$.validationErrors[?(@.field=='phoneNumber')].message").value("전화번호는 비어 있을 수 없습니다"));
+                .andExpect(jsonPath("$.validationErrors[?(@.field=='nickName')].message").value("닉네임은 비어 있을 수 없습니다"));
     }
 
     private static Stream<Arguments> invalidFieldProvider() {
@@ -114,12 +111,8 @@ class UserControllerTest {
                         "password", "비밀번호는 비어 있을 수 없습니다"
                 ),
                 Arguments.of(
-                        request().toBuilder().birthDate(null).build(),
-                        "birthDate", "생년월일은 비어 있을 수 없습니다"
-                ),
-                Arguments.of(
-                        request().toBuilder().phoneNumber("").build(),
-                        "phoneNumber", "전화번호는 비어 있을 수 없습니다"
+                        request().toBuilder().nickName("").build(),
+                        "nickName", "닉네임은 비어 있을 수 없습니다"
                 )
         );
     }
@@ -139,8 +132,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.id").value(testUser.getId()))
                 .andExpect(jsonPath("$.email").value(testUser.getEmail()))
                 .andExpect(jsonPath("$.name").value(testUser.getName()))
-                .andExpect(jsonPath("$.birthDate").value(testUser.getBirthDate().toString()))
-                .andExpect(jsonPath("$.phoneNumber").value(testUser.getPhoneNumber()))
+                .andExpect(jsonPath("$.nickName").value(testUser.getNickName()))
                 .andExpect(jsonPath("$.role").value(testUser.getRole().getRoleName()));
     }
 

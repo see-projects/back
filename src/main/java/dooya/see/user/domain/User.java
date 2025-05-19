@@ -6,8 +6,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
-
 @Entity
 @Table(name = "users")
 @Builder
@@ -26,20 +24,17 @@ public class User {
 
     private String password;
 
-    private LocalDate birthDate;
-
-    private String phoneNumber;
+    private String nickName;
 
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    public static User signUpUser(String email, String name, String password, LocalDate birthDate, String phoneNumber, Role role) {
+    public static User signUpUser(String email, String name, String password, String nickName, Role role) {
         return User.builder()
                 .email(email)
                 .name(name)
                 .password(password)
-                .birthDate(birthDate)
-                .phoneNumber(phoneNumber)
+                .nickName(nickName)
                 .role(role)
                 .build();
     }

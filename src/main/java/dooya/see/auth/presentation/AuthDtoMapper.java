@@ -21,8 +21,7 @@ public class AuthDtoMapper {
                 user.getId(),
                 user.getEmail(),
                 user.getName(),
-                user.getBirthDate(),
-                user.getPhoneNumber()
+                user.getNickName()
         );
     }
 }

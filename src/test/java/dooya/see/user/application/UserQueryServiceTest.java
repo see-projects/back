@@ -47,8 +47,7 @@ public class UserQueryServiceTest {
                 () -> assertThat(user.getId()).isEqualTo(testUser.getId()),
                 () -> assertThat(user.getEmail()).isEqualTo(testUser.getEmail()),
                 () -> assertThat(user.getName()).isEqualTo(testUser.getName()),
-                () -> assertThat(user.getBirthDate()).isEqualTo(testUser.getBirthDate()),
-                () -> assertThat(user.getPhoneNumber()).isEqualTo(testUser.getPhoneNumber()),
+                () -> assertThat(user.getNickName()).isEqualTo(testUser.getNickName()),
                 () -> assertThat(user.getRole()).isEqualTo(testUser.getRole())
         );
     }

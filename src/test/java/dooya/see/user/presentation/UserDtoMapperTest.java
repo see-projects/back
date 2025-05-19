@@ -26,8 +26,7 @@ public class UserDtoMapperTest {
                 () -> assertThat(command.email()).isEqualTo(request.email()),
                 () -> assertThat(command.name()).isEqualTo(request.name()),
                 () -> assertThat(command.password()).isEqualTo(request.password()),
-                () -> assertThat(command.birthDate()).isEqualTo(request.birthDate()),
-                () -> assertThat(command.phoneNumber()).isEqualTo(request.phoneNumber())
+                () -> assertThat(command.nickName()).isEqualTo(request.nickName())
         );
     }
 
@@ -45,8 +44,7 @@ public class UserDtoMapperTest {
                 () -> assertThat(response.id()).isEqualTo(user.getId()),
                 () -> assertThat(response.email()).isEqualTo(user.getEmail()),
                 () -> assertThat(response.name()).isEqualTo(user.getName()),
-                () -> assertThat(response.birthDate()).isEqualTo(user.getBirthDate()),
-                () -> assertThat(response.phoneNumber()).isEqualTo(user.getPhoneNumber()),
+                () -> assertThat(response.nickName()).isEqualTo(user.getNickName()),
                 () -> assertThat(response.role()).isEqualTo(user.getRole())
         );
     }

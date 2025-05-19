@@ -57,8 +57,7 @@ public class UserSignUpServiceTest {
                 () -> assertThat(user.getId()).isNotNull(),
                 () -> assertThat(user.getEmail()).isEqualTo(command.email()),
                 () -> assertThat(user.getName()).isEqualTo(command.name()),
-                () -> assertThat(user.getBirthDate()).isEqualTo(command.birthDate()),
-                () -> assertThat(user.getPhoneNumber()).isEqualTo(command.phoneNumber()),
+                () -> assertThat(user.getNickName()).isEqualTo(command.nickName()),
                 () -> assertThat(user.getRole()).isEqualTo(Role.USER)
         );
 

@@ -44,8 +44,7 @@ public class AuthDtoMapperTest {
                 () -> assertThat(response.id()).isEqualTo(result.user().getId()),
                 () -> assertThat(response.email()).isEqualTo(result.user().getEmail()),
                 () -> assertThat(response.name()).isEqualTo(result.user().getName()),
-                () -> assertThat(response.birthDate()).isEqualTo(result.user().getBirthDate()),
-                () -> assertThat(response.phoneNumber()).isEqualTo(result.user().getPhoneNumber())
+                () -> assertThat(response.nickName()).isEqualTo(result.user().getNickName())
         );
     }
 }
