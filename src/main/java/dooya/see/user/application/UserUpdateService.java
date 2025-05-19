@@ -1,7 +1,5 @@
 package dooya.see.user.application;
 
-import dooya.see.user.domain.User;
-
 public interface UserUpdateService {
-    User updateNickName(String email, UserUpdateCommand command);
+    UserResult updateNickName(String email, UserUpdateCommand command);
 }

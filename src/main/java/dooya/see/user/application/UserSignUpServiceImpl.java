@@ -17,10 +17,11 @@ public class UserSignUpServiceImpl implements UserSignUpService {
 
     @Transactional
     @Override
-    public User userSignUp(UserSignUpCommand command) {
+    public UserResult userSignUp(UserSignUpCommand command) {
         userValidator.validateDuplicateEmail(command.email());
-        User user = UserCommandMapper.toEntity(command, passwordEncoder);
+        User user = UserApplicationMapper.toEntity(command, passwordEncoder);
+        userRepository.save(user);
 
-        return userRepository.save(user);
+        return UserApplicationMapper.toResult(user);
     }
 }

@@ -16,7 +16,9 @@ public class UserQueryServiceImpl implements UserQueryService {
 
     @Transactional
     @Override
-    public User getUserByEmail(String email) {
-        return userRepository.findByEmail(email).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+    public UserResult getUserByEmail(String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        return UserApplicationMapper.toResult(user);
     }
 }
