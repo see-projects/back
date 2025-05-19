@@ -1,4 +1,4 @@
-package dooya.see.user.presentation;
+package dooya.see.user.presentation.dto;
 
 /**
  * {@code UserUpdateResponse} 클래스는

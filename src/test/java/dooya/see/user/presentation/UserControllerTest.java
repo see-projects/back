@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dooya.see.auth.util.JwtUtil;
 import dooya.see.user.domain.User;
 import dooya.see.user.infrastructure.UserJpaRepository;
+import dooya.see.user.presentation.dto.UserSignUpRequest;
+import dooya.see.user.presentation.dto.UserUpdateRequest;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

@@ -1,4 +1,4 @@
-package dooya.see.user.presentation;
+package dooya.see.user.presentation.dto;
 
 import dooya.see.user.application.dto.UserResult;
 import dooya.see.user.application.dto.UserSignUpCommand;

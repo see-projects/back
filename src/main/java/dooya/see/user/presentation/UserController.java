@@ -8,6 +8,7 @@ import dooya.see.user.application.service.UserQueryService;
 import dooya.see.user.application.service.UserSignUpService;
 import dooya.see.user.application.service.UserUpdateService;
 import dooya.see.user.application.service.UserValidator;
+import dooya.see.user.presentation.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 
-import static dooya.see.user.presentation.UserPresentationMapper.*;
+import static dooya.see.user.presentation.dto.UserPresentationMapper.*;
 
 /**
  * {@code UserController} 클래스는 사용자 관련 HTTP 요청을 처리하는

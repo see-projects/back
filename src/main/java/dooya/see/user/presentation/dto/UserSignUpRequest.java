@@ -1,4 +1,4 @@
-package dooya.see.user.presentation;
+package dooya.see.user.presentation.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
