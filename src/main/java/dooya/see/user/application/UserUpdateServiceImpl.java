@@ -9,7 +9,8 @@ import org.springframework.stereotype.Service;
 public class UserUpdateServiceImpl implements UserUpdateService {
 
     @Override
-    public void updateNickName(User user, UserUpdateCommand command) {
+    public User updateNickName(User user, UserUpdateCommand command) {
         user.updateNickName(command.nickName());
+        return user;
     }
 }
