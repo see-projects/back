@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 import static dooya.see.common.UserFixture.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -47,7 +48,7 @@ class UserControllerTest {
     @DisplayName("유저 회원가입 성공 테스트")
     @Test
     void user_signUp_success() throws Exception {
-        UserSignUpRequest request = request();
+        UserSignUpRequest request = signUpRequest();
 
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -77,7 +78,7 @@ class UserControllerTest {
     @DisplayName("유저 회원가입 실패 테스트 - 모든 필드가 공란일때")
     @Test
     void user_signUp_fail_allFieldsInvalid() throws Exception {
-        UserSignUpRequest request = request().toBuilder()
+        UserSignUpRequest request = signUpRequest().toBuilder()
                 .email("")
                 .name("")
                 .password("")
@@ -99,19 +100,19 @@ class UserControllerTest {
     private static Stream<Arguments> invalidFieldProvider() {
         return Stream.of(
                 Arguments.of(
-                        request().toBuilder().email("").build(),
+                        signUpRequest().toBuilder().email("").build(),
                         "email", "이메일은 비어 있을 수 없습니다"
                 ),
                 Arguments.of(
-                        request().toBuilder().name("").build(),
+                        signUpRequest().toBuilder().name("").build(),
                         "name", "이름은 비어 있을 수 없습니다"
                 ),
                 Arguments.of(
-                        request().toBuilder().password("").build(),
+                        signUpRequest().toBuilder().password("").build(),
                         "password", "비밀번호는 비어 있을 수 없습니다"
                 ),
                 Arguments.of(
-                        request().toBuilder().nickName("").build(),
+                        signUpRequest().toBuilder().nickName("").build(),
                         "nickName", "닉네임은 비어 있을 수 없습니다"
                 )
         );
@@ -179,5 +180,40 @@ class UserControllerTest {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value(false))
                 .andExpect(jsonPath("$.message").value("이미 존재하는 사용자입니다."));
+    }
+
+    @DisplayName("유저 정보 수정 성공 테스트")
+    @Test
+    void userNickName_update_success() throws Exception {
+        // Arrange
+        User testUser = userJpaRepository.save(testUser());
+        UserUpdateRequest request = updateRequest();
+        String testToken = jwtUtil.createAccessToken(testUser.getId(), testUser.getEmail(), testUser.getRole());
+
+        // Act && Assert
+        mockMvc.perform(put("/api/users")
+                        .cookie(new Cookie("Authorization", testToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nickName").value(request.nickName()));
+    }
+
+    @DisplayName("유저 정보 수정 실패 테스트")
+    @Test
+    void userNickName_update_fail() throws Exception {
+        // Arrange
+        User testUser = userJpaRepository.save(testUser());
+        UserUpdateRequest request = updateRequest();
+        String testToken = jwtUtil.createAccessToken(testUser.getId(), "test@fail.com", testUser.getRole());
+
+        // Act & Assert
+        mockMvc.perform(put("/api/users")
+                        .cookie(new Cookie("Authorization", testToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(false))
+                .andExpect(jsonPath("$.message").value("존재하지 않는 사용자입니다."));
     }
 }

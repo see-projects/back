@@ -1,20 +1,30 @@
 package dooya.see.common;
 
 import dooya.see.user.application.UserSignUpCommand;
+import dooya.see.user.application.UserUpdateCommand;
 import dooya.see.user.presentation.UserSignUpRequest;
 import dooya.see.user.domain.Role;
 import dooya.see.user.domain.User;
+import dooya.see.user.presentation.UserUpdateRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 public class UserFixture {
 
-    public static UserSignUpRequest request() {
+    public static UserSignUpRequest signUpRequest() {
         return new UserSignUpRequest("test@see.com", "testName", "testPassword", "testNickName");
     }
 
-    public static UserSignUpCommand command() {
+    public static UserUpdateRequest updateRequest() {
+        return new UserUpdateRequest("updateNickName");
+    }
+
+    public static UserSignUpCommand signUpCommand() {
         return new UserSignUpCommand("test@see.com", "testName", "testPassword", "testNickName");
+    }
+
+    public static UserUpdateCommand updateCommand() {
+        return new UserUpdateCommand("updateNickName");
     }
 
     public static User createTestUser(UserSignUpCommand command) {

@@ -10,13 +10,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class UserQueryServiceImpl implements UserQueryService {
+public class UserUpdateServiceImpl implements UserUpdateService {
 
     private final UserRepository userRepository;
 
     @Transactional
     @Override
-    public User getUserByEmail(String email) {
-        return userRepository.findByEmail(email).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+    public User updateNickName(String email, UserUpdateCommand command) {
+        User user = userRepository.findByEmail(email)
+                        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        user.updateNickName(command.nickName());
+
+        return user;
     }
 }
