@@ -51,9 +51,8 @@ public class UserController {
                                                                  @Valid @RequestBody UserUpdateRequest request) {
         String email = loginUser.getUsername();
         UserUpdateCommand command = UserDtoMapper.toUpdateCommand(request);
-        User user = userQueryService.getUserByEmail(email);
 
-        userUpdateService.updateNickName(user, command);
+        User user = userUpdateService.updateNickName(email, command);
 
         UserUpdateResponse response = UserDtoMapper.toUpdateResponse(user);
         return ResponseEntity.ok().body(response);
