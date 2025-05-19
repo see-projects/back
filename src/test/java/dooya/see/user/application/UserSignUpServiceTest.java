@@ -41,7 +41,7 @@ public class UserSignUpServiceTest {
     @Test
     void user_signUp_success() {
         // Arrange
-        UserSignUpCommand command = UserFixture.command();
+        UserSignUpCommand command = UserFixture.signUpCommand();
         User testUser = UserFixture.createTestUser(command);
 
         doNothing().when(userValidator).validateDuplicateEmail(command.email());
@@ -69,7 +69,7 @@ public class UserSignUpServiceTest {
     @Test
     void user_signUp_fail() {
         // Arrange
-        UserSignUpCommand command = UserFixture.command();
+        UserSignUpCommand command = UserFixture.signUpCommand();
         doThrow(new CustomException(ErrorCode.USER_ALREADY_EXISTS)).when(userValidator).validateDuplicateEmail(command.email());
 
         // Act && Assert
