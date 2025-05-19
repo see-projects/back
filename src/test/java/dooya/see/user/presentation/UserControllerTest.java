@@ -184,7 +184,7 @@ class UserControllerTest {
 
     @DisplayName("유저 정보 수정 성공 테스트")
     @Test
-    void userInfo_put_success() throws Exception {
+    void userNickName_update_success() throws Exception {
         // Arrange
         User testUser = userJpaRepository.save(testUser());
         UserUpdateRequest request = updateRequest();
@@ -195,6 +195,25 @@ class UserControllerTest {
                         .cookie(new Cookie("Authorization", testToken))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nickName").value(request.nickName()));
+    }
+
+    @DisplayName("유저 정보 수정 실패 테스트")
+    @Test
+    void userNickName_update_fail() throws Exception {
+        // Arrange
+        User testUser = userJpaRepository.save(testUser());
+        UserUpdateRequest request = updateRequest();
+        String testToken = jwtUtil.createAccessToken(testUser.getId(), "test@fail.com", testUser.getRole());
+
+        // Act & Assert
+        mockMvc.perform(put("/api/users")
+                        .cookie(new Cookie("Authorization", testToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(false))
+                .andExpect(jsonPath("$.message").value("존재하지 않는 사용자입니다."));
     }
 }
