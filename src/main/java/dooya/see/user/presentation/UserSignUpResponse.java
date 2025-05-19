@@ -3,15 +3,12 @@ package dooya.see.user.presentation;
 import dooya.see.user.domain.Role;
 import lombok.Builder;
 
-import java.time.LocalDate;
-
 @Builder
 public record UserSignUpResponse(
         Long id,
         String email,
         String name,
-        LocalDate birthDate,
-        String phoneNumber,
+        String nickName,
         Role role
 ) {
 }
