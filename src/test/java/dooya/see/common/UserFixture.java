@@ -12,11 +12,11 @@ import java.time.LocalDate;
 public class UserFixture {
 
     public static UserSignUpRequest request() {
-        return new UserSignUpRequest("test@see.com", "testName", "testPassword", LocalDate.of(2001, 1, 4), "01012345678");
+        return new UserSignUpRequest("test@see.com", "testName", "testPassword", "testNickName");
     }
 
     public static UserSignUpCommand command() {
-        return new UserSignUpCommand("test@see.com", "testName", "testPassword", LocalDate.of(2001, 1, 4), "01012345678");
+        return new UserSignUpCommand("test@see.com", "testName", "testPassword", "nickName");
     }
 
     public static User createTestUser(UserSignUpCommand command) {
@@ -24,8 +24,7 @@ public class UserFixture {
                 command.email(),
                 command.name(),
                 command.password(),
-                command.birthDate(),
-                command.phoneNumber(),
+                command.nickName(),
                 Role.of("USER")
         );
         ReflectionTestUtils.setField(testUser, "id", 1L);
@@ -37,8 +36,7 @@ public class UserFixture {
                 .email("test@see.com")
                 .name("testName")
                 .password("$2a$10$DOWSDdkg2YqXWB3S1.CzHeeI6qHtDc0lYBFfN4y3pFehUcbDoztYm")
-                .birthDate(LocalDate.of(2001, 1, 4))
-                .phoneNumber("01012345678")
+                .nickName("testNickName")
                 .role(Role.of("USER"))
                 .build();
     }
@@ -48,8 +46,7 @@ public class UserFixture {
                 .email("test@see.com")
                 .name("testName")
                 .password(passwordEncoder.encode("testPassword"))
-                .birthDate(LocalDate.of(2001, 1, 4))
-                .phoneNumber("01012345678")
+                .nickName("testNickName")
                 .role(Role.of("USER"))
                 .build();
     }
