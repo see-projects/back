@@ -1,8 +1,10 @@
 package dooya.see.common;
 
+import dooya.see.user.application.dto.PasswordUpdateCommand;
 import dooya.see.user.application.dto.UserResult;
 import dooya.see.user.application.dto.UserSignUpCommand;
 import dooya.see.user.application.dto.UserUpdateCommand;
+import dooya.see.user.presentation.dto.PasswordUpdateRequest;
 import dooya.see.user.presentation.dto.UserSignUpRequest;
 import dooya.see.user.domain.Role;
 import dooya.see.user.domain.User;
@@ -13,11 +15,19 @@ import org.springframework.test.util.ReflectionTestUtils;
 public class UserFixture {
 
     public static UserSignUpRequest signUpRequest() {
-        return new UserSignUpRequest("test@see.com", "testName", "testPassword", "testNickName");
+        return new UserSignUpRequest("dooya@see.com", "testName", "testPassword", "testNickName");
     }
 
-    public static UserUpdateRequest updateRequest() {
+    public static UserUpdateRequest nickNameUpdateRequest() {
         return new UserUpdateRequest("updateNickName");
+    }
+
+    public static PasswordUpdateRequest passwordUpdateRequest() {
+        return new PasswordUpdateRequest("testPassword", "updatePassword");
+    }
+
+    public static PasswordUpdateRequest passwordUpdateRequestFail() {
+        return new PasswordUpdateRequest("failPassword", "updatePassword");
     }
 
     public static UserSignUpCommand signUpCommand() {
@@ -26,6 +36,10 @@ public class UserFixture {
 
     public static UserUpdateCommand updateCommand() {
         return new UserUpdateCommand("updateNickName");
+    }
+
+    public static PasswordUpdateCommand passwordUpdateCommand() {
+        return new PasswordUpdateCommand("testPassword", "updatePassword");
     }
 
     public static User createTestUser(UserSignUpCommand command) {
