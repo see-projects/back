@@ -1,8 +1,6 @@
 package dooya.see.user.presentation.dto;
 
-import dooya.see.user.application.dto.UserResult;
-import dooya.see.user.application.dto.UserSignUpCommand;
-import dooya.see.user.application.dto.UserUpdateCommand;
+import dooya.see.user.application.dto.*;
 
 /**
  * {@code UserPresentationMapper} 클래스는
@@ -46,5 +44,16 @@ public class UserPresentationMapper {
 
     public static UserUpdateResponse toUpdateResponse(UserResult userResult) {
         return new UserUpdateResponse(userResult.nickName());
+    }
+
+    public static PasswordUpdateCommand toPasswordUpdateCommand(PasswordUpdateRequest request) {
+        return new PasswordUpdateCommand(
+                request.currentPassword(),
+                request.newPassword()
+        );
+    }
+
+    public static PasswordUpdateResponse toPasswordUpdateResponse(PasswordUpdateResult result) {
+        return new PasswordUpdateResponse(result.message());
     }
 }
