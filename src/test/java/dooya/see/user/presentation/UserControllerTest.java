@@ -2,11 +2,14 @@ package dooya.see.user.presentation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dooya.see.auth.util.JwtUtil;
+import dooya.see.common.UserFixture;
 import dooya.see.user.domain.User;
 import dooya.see.user.infrastructure.UserJpaRepository;
+import dooya.see.user.presentation.dto.PasswordUpdateRequest;
 import dooya.see.user.presentation.dto.UserSignUpRequest;
 import dooya.see.user.presentation.dto.UserUpdateRequest;
 import jakarta.servlet.http.Cookie;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -16,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
@@ -46,6 +50,18 @@ class UserControllerTest {
 
     @Autowired
     private UserJpaRepository userJpaRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    private User testUser;
+    private String testToken;
+
+    @BeforeEach
+    void setUp() {
+        testUser = userJpaRepository.save(UserFixture.mockUser(passwordEncoder));
+        testToken = jwtUtil.createAccessToken(testUser.getId(), testUser.getEmail(), testUser.getRole());
+    }
 
     @DisplayName("유저 회원가입 성공 테스트")
     @Test
@@ -123,10 +139,6 @@ class UserControllerTest {
     @DisplayName("토큰에 포함된 이메일로 유저 조회 성공테스트")
     @Test
     void findByToken_user_success() throws Exception {
-        // Arrange
-        User testUser = userJpaRepository.save(testUser());
-        String testToken = jwtUtil.createAccessToken(testUser.getId(), testUser.getEmail(), testUser.getRole());
-
         // Act & Assert
         mockMvc.perform(get("/api/users")
                         .cookie(new Cookie("Authorization", testToken))
@@ -143,7 +155,6 @@ class UserControllerTest {
     @Test
     void findByToken_user_fail() throws Exception {
         // Arrange
-        User testUser = userJpaRepository.save(testUser());
         String testToken = jwtUtil.createAccessToken(testUser.getId(), "test@fail.com", testUser.getRole());
 
         // Act & Assert
@@ -159,7 +170,7 @@ class UserControllerTest {
     @Test
     void findByEmail_user_success() throws Exception {
         // Arrange
-        String email = "test@see.com";
+        String email = "dooya@see.com";
 
         // Act && Assert
         mockMvc.perform(get("/api/users/check-email")
@@ -172,7 +183,6 @@ class UserControllerTest {
     @Test
     void findByEmail_user_fail() throws Exception {
         // Arrange
-        userJpaRepository.save(testUser());
         String email = "test@see.com";
 
         // Act && Assert
@@ -188,9 +198,7 @@ class UserControllerTest {
     @Test
     void userNickName_update_success() throws Exception {
         // Arrange
-        User testUser = userJpaRepository.save(testUser());
-        UserUpdateRequest request = updateRequest();
-        String testToken = jwtUtil.createAccessToken(testUser.getId(), testUser.getEmail(), testUser.getRole());
+        UserUpdateRequest request = nickNameUpdateRequest();
 
         // Act && Assert
         mockMvc.perform(put("/api/users")
@@ -205,8 +213,7 @@ class UserControllerTest {
     @Test
     void userNickName_update_fail() throws Exception {
         // Arrange
-        User testUser = userJpaRepository.save(testUser());
-        UserUpdateRequest request = updateRequest();
+        UserUpdateRequest request = nickNameUpdateRequest();
         String testToken = jwtUtil.createAccessToken(testUser.getId(), "test@fail.com", testUser.getRole());
 
         // Act & Assert
@@ -217,5 +224,37 @@ class UserControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(false))
                 .andExpect(jsonPath("$.message").value("존재하지 않는 사용자입니다."));
+    }
+
+    @DisplayName("유저 비밀번호 업데이트 성공 테스트")
+    @Test
+    void userPassword_Update_success() throws Exception {
+        // Arrange
+        PasswordUpdateRequest request = passwordUpdateRequest();
+
+        // Act & Assert
+        mockMvc.perform(put("/api/users/password")
+                        .cookie(new Cookie("Authorization", testToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("비밀번호가 성공적으로 변경되었습니다."));
+    }
+
+    @DisplayName("유저 비밀번호 업데이트 실패 테스트")
+    @Test
+    void userPassword_Update_fail() throws Exception {
+        // Arrange
+        PasswordUpdateRequest request = passwordUpdateRequestFail();
+
+        // Act & Assert
+        mockMvc.perform(put("/api/users/password")
+                        .cookie(new Cookie("Authorization", testToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(false))
+                .andExpect(jsonPath("$.message").value("비밀번호 정보가 일치하지 않습니다."));
+
     }
 }

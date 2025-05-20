@@ -1,5 +1,7 @@
 package dooya.see.user.application.service;
 
+import dooya.see.user.application.dto.PasswordUpdateCommand;
+import dooya.see.user.application.dto.PasswordUpdateResult;
 import dooya.see.user.application.dto.UserResult;
 import dooya.see.user.application.dto.UserUpdateCommand;
 
@@ -23,4 +25,13 @@ public interface UserUpdateService {
      * @return 업데이트된 사용자 정보를 담은 {@link UserResult}
      */
     UserResult updateNickName(String email, UserUpdateCommand command);
+
+    /**
+     * 지정된 이메일을 가진 사용자의 비밀번호를 업데이트합니다.
+     *
+     * @param email 비밀번호를 변경할 사용자의 이메일
+     * @param command 변경할 비밀번호 정보가 담긴 {@link PasswordUpdateCommand}
+     * @return 업데이트된 메시지 정보를 담은 {@link PasswordUpdateResult}
+     */
+    PasswordUpdateResult updatePassword(String email, PasswordUpdateCommand command);
 }

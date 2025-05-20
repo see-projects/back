@@ -1,9 +1,7 @@
 package dooya.see.user.presentation;
 
 import dooya.see.auth.domain.LoginUser;
-import dooya.see.user.application.dto.UserResult;
-import dooya.see.user.application.dto.UserSignUpCommand;
-import dooya.see.user.application.dto.UserUpdateCommand;
+import dooya.see.user.application.dto.*;
 import dooya.see.user.application.service.UserQueryService;
 import dooya.see.user.application.service.UserSignUpService;
 import dooya.see.user.application.service.UserUpdateService;
@@ -78,5 +76,15 @@ public class UserController {
         UserResult result = userUpdateService.updateNickName(email, command);
 
         return ResponseEntity.ok().body(toUpdateResponse(result));
+    }
+
+    @PutMapping("/password")
+    public ResponseEntity<PasswordUpdateResponse> updateUserPassword(@AuthenticationPrincipal LoginUser loginUser,
+                                                   @Valid @RequestBody PasswordUpdateRequest request) {
+        String email = loginUser.getUsername();
+        PasswordUpdateCommand command = toPasswordUpdateCommand(request);
+        PasswordUpdateResult result = userUpdateService.updatePassword(email, command);
+
+        return ResponseEntity.ok().body(toPasswordUpdateResponse(result));
     }
 }
