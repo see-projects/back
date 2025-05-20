@@ -1,9 +1,6 @@
 package dooya.see.common;
 
-import dooya.see.user.application.dto.PasswordUpdateCommand;
-import dooya.see.user.application.dto.UserResult;
-import dooya.see.user.application.dto.UserSignUpCommand;
-import dooya.see.user.application.dto.UserUpdateCommand;
+import dooya.see.user.application.dto.*;
 import dooya.see.user.presentation.dto.PasswordUpdateRequest;
 import dooya.see.user.presentation.dto.UserSignUpRequest;
 import dooya.see.user.domain.Role;
@@ -66,6 +63,10 @@ public class UserFixture {
 
     public static UserResult testUserResult() {
         return new UserResult(1L, "test@see.com", "testName", "testNickName", Role.of("USER"));
+    }
+
+    public static PasswordUpdateResult passwordUpdateResult() {
+        return new PasswordUpdateResult("비밀번호가 성공적으로 변경되었습니다.");
     }
 
     public static User mockUser(PasswordEncoder passwordEncoder) {
