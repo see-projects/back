@@ -1,12 +1,7 @@
 package dooya.see.user.presentation;
 
-import dooya.see.user.application.dto.UserResult;
-import dooya.see.user.application.dto.UserSignUpCommand;
-import dooya.see.user.application.dto.UserUpdateCommand;
-import dooya.see.user.presentation.dto.UserSignUpRequest;
-import dooya.see.user.presentation.dto.UserSignUpResponse;
-import dooya.see.user.presentation.dto.UserUpdateRequest;
-import dooya.see.user.presentation.dto.UserUpdateResponse;
+import dooya.see.user.application.dto.*;
+import dooya.see.user.presentation.dto.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -58,7 +53,7 @@ public class UserPresentationMapperTest {
     @Test
     void convert_UserUpdateRequest_to_UserUpdateCommand() {
         // Arrange
-        UserUpdateRequest request = updateRequest();
+        UserUpdateRequest request = nickNameUpdateRequest();
 
         // Act
         UserUpdateCommand command = toUpdateCommand(request);
@@ -67,7 +62,7 @@ public class UserPresentationMapperTest {
         assertThat(request.nickName()).isEqualTo(command.nickName());
     }
 
-    @DisplayName("User를 UserUpdateResponse로 정상 변환한다")
+    @DisplayName("UserResult를 UserUpdateResponse로 정상 변환한다")
     @Test
     void convert_User_to_UserUpdateResponse() {
         // Arrange
@@ -78,5 +73,32 @@ public class UserPresentationMapperTest {
 
         // Assert
         assertThat(response.nickName()).isEqualTo(result.nickName());
+    }
+
+    @DisplayName("PasswordUpdateRequest를 PasswordUpdateCommand로 정상 반환한다")
+    @Test
+    void convert_PasswordUpdateRequest_to_PasswordUpdateCommand() {
+        // Arrange
+        PasswordUpdateRequest request = passwordUpdateRequest();
+
+        // Act
+        PasswordUpdateCommand command = toPasswordUpdateCommand(request);
+
+        // Assert
+        assertThat(request.currentPassword()).isEqualTo(command.currentPassword());
+        assertThat(request.newPassword()).isEqualTo(command.newPassword());
+    }
+
+    @DisplayName("PasswordUpdateResult를 PasswordUpdateResponse로 정상 반환한다")
+    @Test
+    void convert_PasswordUpdateResponse_to_PasswordUpdateResponse() {
+        // Arrange
+        PasswordUpdateResult result = passwordUpdateResult();
+
+        // Act
+        PasswordUpdateResponse response = toPasswordUpdateResponse(result);
+
+        // Assert
+        assertThat(response.message()).isEqualTo(result.message());
     }
 }
