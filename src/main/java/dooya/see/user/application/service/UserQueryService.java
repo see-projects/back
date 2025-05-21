@@ -2,6 +2,8 @@ package dooya.see.user.application.service;
 
 import dooya.see.user.application.dto.UserResult;
 
+import java.util.List;
+
 /**
  * {@code UserQueryService} 인터페이스는 사용자 조회와 관련된
  * 애플리케이션 계층의 서비스 계약을 정의합니다.
@@ -23,4 +25,11 @@ public interface UserQueryService {
      * @throws IllegalArgumentException 조회 대상이 없을 경우 발생 가능
      */
     UserResult getUserByEmail(String email);
+
+    /**
+     * 모든 사용자를 조회합니다.
+     *
+     * @return 조회된 사용자 정보를 닮은 {@link UserResult} 리스트
+     */
+    List<UserResult> getUsers();
 }
