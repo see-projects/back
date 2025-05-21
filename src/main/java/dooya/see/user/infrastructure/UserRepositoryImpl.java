@@ -1,11 +1,13 @@
 package dooya.see.user.infrastructure;
 
+import dooya.see.user.domain.Role;
 import dooya.see.user.domain.User;
 import dooya.see.user.domain.UserRepository;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -23,6 +25,11 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public Optional<User> findByEmail(String email) {
         return userJpaRepository.findByEmail(email);
+    }
+
+    @Override
+    public List<User> findByRole(Role role) {
+        return userJpaRepository.findByRole(role);
     }
 
     @Override
