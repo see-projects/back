@@ -101,4 +101,22 @@ public class UserPresentationMapperTest {
         // Assert
         assertThat(response.message()).isEqualTo(result.message());
     }
+
+    @DisplayName("UserResult를 UserResponse로 정상 반환한다")
+    @Test
+    void convert_UserResult_to_UserResponse() {
+        // Arrange
+        UserResult result = testUserResult();
+
+        // Act
+        UserResponse response = toResponse(result);
+
+        // Assert
+        assertAll(
+                () -> assertThat(response.email()).isEqualTo(result.email()),
+                () -> assertThat(response.name()).isEqualTo(result.name()),
+                () -> assertThat(response.nickName()).isEqualTo(result.nickName()),
+                () -> assertThat(response.role()).isEqualTo(result.role())
+        );
+    }
 }

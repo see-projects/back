@@ -4,6 +4,9 @@ import dooya.see.user.domain.Role;
 import dooya.see.user.domain.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
  * {@code UserApplicationMapper} 클래스는 애플리케이션 계층에서
  * 사용자 관련 커맨드 객체와 도메인 엔티티, 결과 객체 간의 변환을 담당합니다.
@@ -40,5 +43,9 @@ public class UserApplicationMapper {
                 user.getNickName(),
                 user.getRole()
         );
+    }
+
+    public static List<UserResult> toResults(List<User> users) {
+        return users.stream().map(UserApplicationMapper::toResult).collect(Collectors.toList());
     }
 }

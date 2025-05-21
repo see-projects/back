@@ -5,11 +5,14 @@ import dooya.see.common.exception.ErrorCode;
 import dooya.see.user.application.dto.UserApplicationMapper;
 import dooya.see.user.application.dto.UserResult;
 import dooya.see.user.application.service.UserQueryService;
+import dooya.see.user.domain.Role;
 import dooya.see.user.domain.User;
 import dooya.see.user.domain.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -23,5 +26,13 @@ public class UserQueryServiceImpl implements UserQueryService {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         return UserApplicationMapper.toResult(user);
+    }
+
+    @Transactional
+    @Override
+    public List<UserResult> getUsers() {
+        List<User> users = userRepository.findByRole(Role.USER);
+
+        return UserApplicationMapper.toResults(users);
     }
 }

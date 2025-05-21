@@ -4,6 +4,7 @@ import dooya.see.common.exception.CustomException;
 import dooya.see.common.exception.ErrorCode;
 import dooya.see.user.application.dto.UserResult;
 import dooya.see.user.application.service.impl.UserQueryServiceImpl;
+import dooya.see.user.domain.Role;
 import dooya.see.user.domain.User;
 import dooya.see.user.domain.UserRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -13,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static dooya.see.common.UserFixture.*;
@@ -66,5 +68,24 @@ public class UserQueryServiceTest {
                 .hasMessageContaining("존재하지 않는 사용자입니다.");
 
         then(userRepository).should(times(1)).findByEmail(testUser.getEmail());
+    }
+
+    @DisplayName("권한이 USER인 유저 모두 조회 성공 테스트")
+    @Test
+    void user_getRoleUsers_success() {
+        // Arrange
+        User testUser1 = testUser();
+        User testUser2 = testUser();
+        List<User> users = List.of(testUser1, testUser2);
+
+        // Act
+        given(userRepository.findByRole(Role.USER)).willReturn(users);
+
+        // Assert
+        List<UserResult> results = userQueryService.getUsers();
+
+        assertThat(results).hasSize(2);
+
+        then(userRepository).should(times(1)).findByRole(Role.USER);
     }
 }

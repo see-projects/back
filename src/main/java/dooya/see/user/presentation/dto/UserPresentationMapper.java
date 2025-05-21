@@ -2,6 +2,8 @@ package dooya.see.user.presentation.dto;
 
 import dooya.see.user.application.dto.*;
 
+import java.util.List;
+
 /**
  * {@code UserPresentationMapper} 클래스는
  * 프레젠테이션 계층에서 요청(Request) 및 응답(Response) 객체와
@@ -55,5 +57,21 @@ public class UserPresentationMapper {
 
     public static PasswordUpdateResponse toPasswordUpdateResponse(PasswordUpdateResult result) {
         return new PasswordUpdateResponse(result.message());
+    }
+
+    public static UserResponse toResponse(UserResult result) {
+        return new UserResponse(
+                result.id(),
+                result.email(),
+                result.name(),
+                result.nickName(),
+                result.role()
+        );
+    }
+
+    public static List<UserResponse> toResponses(List<UserResult> results) {
+        return results.stream()
+                .map(UserPresentationMapper::toResponse)
+                .toList();
     }
 }
