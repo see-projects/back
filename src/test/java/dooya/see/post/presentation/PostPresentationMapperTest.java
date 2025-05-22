@@ -34,7 +34,7 @@ public class PostPresentationMapperTest {
 
     @DisplayName("PostResult를 PostResponse로 정상 변환한다")
     @Test
-    void convert_User_to_UserSignResponse() {
+    void convert_PostResult_to_PostResponse() {
         // Arrange
         PostResult result = result();
 
