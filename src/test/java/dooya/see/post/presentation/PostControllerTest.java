@@ -1,8 +1,11 @@
 package dooya.see.post.presentation;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dooya.see.auth.util.JwtUtil;
+import dooya.see.common.PostFixture;
 import dooya.see.common.UserFixture;
+import dooya.see.post.application.PostRequest;
 import dooya.see.user.domain.User;
 import dooya.see.user.infrastructure.UserJpaRepository;
 import jakarta.servlet.http.Cookie;
@@ -46,7 +49,7 @@ public class PostControllerTest {
 
     @DisplayName("게시글 작성 성공 테스트")
     @Test
-    void user_post_success() {
+    void user_post_success() throws Exception {
         // Arrange
         PostRequest request = PostFixture.request();
 
