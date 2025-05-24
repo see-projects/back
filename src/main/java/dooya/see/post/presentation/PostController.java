@@ -1,6 +1,7 @@
 package dooya.see.post.presentation;
 
 import dooya.see.auth.domain.LoginUser;
+import dooya.see.post.application.service.PostQueryService;
 import dooya.see.post.application.dto.PostCommand;
 import dooya.see.post.application.dto.PostResult;
 import dooya.see.post.application.service.PostCreateService;
@@ -22,6 +23,7 @@ import static dooya.see.post.presentation.dto.PostPresentationMapper.*;
 public class PostController {
 
     private final PostCreateService postCreateService;
+    private final PostQueryService postQueryService;
 
     @PostMapping
     public ResponseEntity<PostResponse> post(@AuthenticationPrincipal LoginUser loginUser,
@@ -35,7 +37,7 @@ public class PostController {
 
     @GetMapping
     public ResponseEntity<PostResponse> getPosts() {
-
+        postQueryService.getPosts();
         return ResponseEntity.ok().build();
     }
 }
