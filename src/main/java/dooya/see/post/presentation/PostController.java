@@ -10,10 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 
@@ -34,5 +31,11 @@ public class PostController {
         PostResult result = postCreateService.createPost(email, command);
 
         return ResponseEntity.created(URI.create("/api/post/" + result.id())).body(toResponse(result));
+    }
+
+    @GetMapping
+    public ResponseEntity<PostResponse> getPosts() {
+
+        return ResponseEntity.ok().build();
     }
 }
