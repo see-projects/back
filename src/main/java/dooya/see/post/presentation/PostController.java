@@ -11,6 +11,8 @@ import dooya.see.post.presentation.dto.PostRequest;
 import dooya.see.post.presentation.dto.PostResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -39,8 +41,8 @@ public class PostController {
     }
 
     @GetMapping
-    public ResponseEntity<List<PostResponse>> getPosts() {
-        List<PostResult> posts = postQueryService.getPosts();
+    public ResponseEntity<Page<PostResponse>> getPosts(Pageable pageable) {
+        Page<PostResult> posts = postQueryService.getPosts(pageable);
 
         return ResponseEntity.ok(PostPresentationMapper.toResponses(posts));
     }
