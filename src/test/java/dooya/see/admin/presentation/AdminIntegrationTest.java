@@ -53,12 +53,12 @@ public class AdminIntegrationTest {
     @DisplayName("유저 목록 조회 실패 테스트")
     @Test
     void admin_userSelect_fail() throws Exception {
-        User testAdmin = userJpaRepository.save(UserFixture.testUser());
-        String testToken = jwtUtil.createAccessToken(testAdmin.getId(), testAdmin.getEmail(), Role.valueOf(testAdmin.getRole().getRoleName()));
+        User regularUser = userJpaRepository.save(UserFixture.testUser());
+        String userToken = jwtUtil.createAccessToken(regularUser.getId(), regularUser.getEmail(), Role.valueOf(regularUser.getRole().getRoleName()));
 
         // Act & Assert
         mockMvc.perform(get("/api/admin")
-                        .cookie(new Cookie("Authorization", testToken))
+                        .cookie(new Cookie("Authorization", userToken))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.status").value(false))
