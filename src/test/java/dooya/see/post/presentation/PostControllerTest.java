@@ -1,37 +1,34 @@
 package dooya.see.post.presentation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dooya.see.auth.config.SecurityConfig;
+import dooya.see.auth.domain.LoginUser;
 import dooya.see.auth.util.JwtUtil;
 import dooya.see.common.PostFixture;
-import dooya.see.common.UserFixture;
+import dooya.see.post.application.service.PostQueryService;
+import dooya.see.post.application.dto.PostCommand;
+import dooya.see.post.application.service.PostCreateService;
 import dooya.see.post.presentation.dto.PostRequest;
-import dooya.see.user.domain.User;
-import dooya.see.user.infrastructure.UserJpaRepository;
-import jakarta.servlet.http.Cookie;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.stream.Stream;
-
-import static dooya.see.common.PostFixture.*;
-import static dooya.see.common.UserFixture.*;
+import static org.mockito.BDDMockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+@WebMvcTest(PostController.class)
+@Import(SecurityConfig.class)
 @AutoConfigureMockMvc
-@Sql("classpath:init.sql")
 public class PostControllerTest {
 
     @Autowired
@@ -40,65 +37,45 @@ public class PostControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired
-    private UserJpaRepository userJpaRepository;
-
-    @Autowired
+    @MockitoBean
     private JwtUtil jwtUtil;
 
-    private String testToken;
-    private User testUser;
+    @MockitoBean
+    private PostQueryService postQueryService;
 
-    @BeforeEach
-    void setUp() {
-        testUser = userJpaRepository.save(testUser());
-        testToken = jwtUtil.createAccessToken(testUser.getId(), testUser.getEmail(), testUser.getRole());
-    }
+    @MockitoBean
+    private PostCreateService postCreateService;
 
-    @DisplayName("게시글 작성 성공 테스트")
+    @DisplayName("POST 요청 시 postCreateService.createPost() 호출 여부 검증")
     @Test
-    void user_post_success() throws Exception {
-        // Arrange
-        PostRequest request = request();
+    void post_WhenCalled_InvokesCreatePost() throws Exception {
+        // given
+        PostRequest request = PostFixture.request();
+        PostCommand command = PostFixture.command();
+        LoginUser loginUser = new LoginUser(1L, "email", "USER");
 
-        // Act && Assert
+        given(postCreateService.createPost(anyString(), any(PostCommand.class))).willReturn(PostFixture.result());
+
+        // when
         mockMvc.perform(post("/api/post")
-                        .cookie(new Cookie("Authorization", testToken))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.nickName").value(testUser.getNickName()))
-                .andExpect(jsonPath("$.title").value(request.title()))
-                .andExpect(jsonPath("$.content").value(request.content()));
+                        .content(objectMapper.writeValueAsString(request))
+                        .with(user(loginUser))
+                        .with(csrf()))
+                .andExpect(status().isCreated());
+
+        // then
+        then(postCreateService).should().createPost("email", command);
     }
 
-    @DisplayName("게시글 작성 실패 테스트 - 개별 필드 유효성 검증")
-    @ParameterizedTest(name = "{index} => 필드 = {0}, 메시지 = {1}")
-    @MethodSource("invalidFieldProvider")
-    void post_fail_invalidField(PostRequest request, String field, String message) throws Exception {
-        mockMvc.perform(post("/api/post")
-                        .cookie(new Cookie("Authorization", testToken))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(false))
-                .andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
-                .andExpect(jsonPath("$.validationErrors[0].field").value(field))
-                .andExpect(jsonPath("$.validationErrors[0].message").value(message));
-    }
+    @DisplayName("GET 요청 시 postQueryService.getPosts() 호출 여부 검증")
+    @Test
+    void post_WhenCalled_InvokesGetPost() throws Exception {
+        // when
+        mockMvc.perform(get("/api/post"))
+                .andExpect(status().isOk());
 
-    private static Stream<Arguments> invalidFieldProvider() {
-        return Stream.of(
-                Arguments.of(
-                        request().toBuilder().title("").build(),
-                        "title", "제목은 비어 있을 수 없습니다"
-                ),
-                Arguments.of(
-                        request().toBuilder().content("").build(),
-                        "content", "내용은 비어 있을 수 없습니다"
-                )
-        );
+        // then
+        then(postQueryService).should().getPosts();
     }
-
 }

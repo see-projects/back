@@ -9,6 +9,7 @@ import dooya.see.user.domain.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -43,10 +44,13 @@ public class SecurityConfig {
         // HTTP Basic 인증 비활성화 (JWT 사용 시 필요 없음)
         http.httpBasic(AbstractHttpConfigurer::disable);
 
-        // 경로별 인가 작업
         http.authorizeHttpRequests((auth) -> auth
                 .requestMatchers("/api/users/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/post/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/post/**").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/post/**").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/post/**").authenticated()
                 .requestMatchers("/api/admin").hasAnyAuthority(Role.ADMIN.getRoleSecurity())
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/webjars/**").permitAll()
                 .anyRequest().authenticated());
