@@ -1,5 +1,6 @@
 package dooya.see.auth.application.service.impl;
 
+import dooya.see.auth.application.dto.AuthApplicationMapper;
 import dooya.see.auth.application.dto.LoginCommand;
 import dooya.see.auth.application.dto.LoginResult;
 import dooya.see.auth.application.service.AuthService;
@@ -22,6 +23,6 @@ public class AuthServiceImpl implements AuthService {
 
         String accessToken = jwtUtil.createAccessToken(user.getId(), user.getEmail(), user.getRole());
 
-        return LoginResult.of(user, accessToken);
+        return AuthApplicationMapper.toResult(user, accessToken);
     }
 }
