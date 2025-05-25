@@ -57,7 +57,7 @@ public class AuthServiceTest {
         LoginResult result = authService.login(command);
 
         // Assert
-        assertThat(result.user().getEmail()).isEqualTo(testUser.getEmail());
+        assertThat(result.email()).isEqualTo(testUser.getEmail());
         assertThat(result.accessToken()).isEqualTo("mocked-jwt-token");
 
         then(authValidator).should(times(1)).validateEmailAndPassword(command.email(), command.password());

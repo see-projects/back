@@ -2,7 +2,6 @@ package dooya.see.auth.presentation.dto;
 
 import dooya.see.auth.application.dto.LoginCommand;
 import dooya.see.auth.application.dto.LoginResult;
-import dooya.see.user.domain.User;
 
 /**
  * {@code AuthDtoMapper} 클래스는
@@ -19,7 +18,7 @@ import dooya.see.user.domain.User;
  *
  * @author dooya
  */
-public class AuthDtoMapper {
+public class AuthPresentationMapper {
 
     public static LoginCommand toCommand(LoginRequest request) {
         return new LoginCommand(
@@ -29,14 +28,12 @@ public class AuthDtoMapper {
     }
 
     public static LoginResponse toResponse(LoginResult result) {
-        User user = result.user();
-
         return new LoginResponse(
                 result.accessToken(),
-                user.getId(),
-                user.getEmail(),
-                user.getName(),
-                user.getNickName()
+                result.id(),
+                result.email(),
+                result.name(),
+                result.nickName()
         );
     }
 }
