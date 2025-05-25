@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface PostQueryService {
     List<PostResult> getPosts();
+    PostResult getPost(Long id);
 }
