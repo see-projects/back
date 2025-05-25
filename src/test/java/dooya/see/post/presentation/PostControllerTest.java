@@ -70,12 +70,29 @@ public class PostControllerTest {
 
     @DisplayName("GET 요청 시 postQueryService.getPosts() 호출 여부 검증")
     @Test
-    void post_WhenCalled_InvokesGetPost() throws Exception {
+    void get_WhenCalled_InvokesGetPosts() throws Exception {
         // when
         mockMvc.perform(get("/api/post"))
                 .andExpect(status().isOk());
 
         // then
         then(postQueryService).should().getPosts();
+    }
+
+    @DisplayName("{id} 경로로 GET 요청 시 postQueryService.getPost(id) 호출 여부 검증")
+    @Test
+    void get_WhenCalled_InvokesGetPost() throws Exception {
+        // given
+        Long id = 1L;
+
+        given(postQueryService.getPost(anyLong())).willReturn(PostFixture.result());
+
+        // when
+        mockMvc.perform(get("/api/post/{id}", id)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        // then
+        then(postQueryService).should().getPost(id);
     }
 }

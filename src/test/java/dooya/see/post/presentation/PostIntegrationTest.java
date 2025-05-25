@@ -1,5 +1,6 @@
 package dooya.see.post.presentation;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dooya.see.auth.util.JwtUtil;
 import dooya.see.post.presentation.dto.PostRequest;
@@ -18,6 +19,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.stream.Stream;
 
@@ -116,13 +118,50 @@ public class PostIntegrationTest {
                 .andExpect(jsonPath("$[0].content").exists());
     }
 
-    private void saveTestPost() throws Exception {
+    private long saveTestPost() throws Exception {
         PostRequest request = request();
 
-        mockMvc.perform(post("/api/post")
+        MvcResult result = mockMvc.perform(post("/api/post")
                         .cookie(new Cookie("Authorization", testToken))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String responseBody = result.getResponse().getContentAsString();
+        JsonNode jsonNode = objectMapper.readTree(responseBody);
+
+        return jsonNode.get("id").asLong();
+    }
+
+    @DisplayName("단일 게시글 조회 성공 테스트")
+    @Test
+    void postId_GetPost_Success() throws Exception {
+        // Arrange
+        Long id = saveTestPost();
+
+        // Act && Assert
+        mockMvc.perform(get("/api/post/{id}", id)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.nickName").exists())
+                .andExpect(jsonPath("$.title").exists())
+                .andExpect(jsonPath("$.content").exists());
+    }
+
+    @DisplayName("단일 게시글 조회 실패 테스트 - 게시글이 존재하지 않을 경우")
+    @Test
+    void postId_GetPost_Fail() throws Exception {
+        // Arrange
+        long id = saveTestPost();
+        id = 999L;
+
+        // Act && Assert
+        mockMvc.perform(get("/api/post/{id}", id)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(false))
+                .andExpect(jsonPath("$.message").value("게시글이 존재하지 않습니다."));
     }
 }

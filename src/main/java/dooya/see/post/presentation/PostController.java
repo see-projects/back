@@ -5,10 +5,10 @@ import dooya.see.post.application.service.PostQueryService;
 import dooya.see.post.application.dto.PostCommand;
 import dooya.see.post.application.dto.PostResult;
 import dooya.see.post.application.service.PostCreateService;
+import dooya.see.post.domain.Post;
 import dooya.see.post.presentation.dto.PostPresentationMapper;
 import dooya.see.post.presentation.dto.PostRequest;
 import dooya.see.post.presentation.dto.PostResponse;
-import dooya.see.user.presentation.dto.UserPresentationMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -43,5 +43,12 @@ public class PostController {
         List<PostResult> posts = postQueryService.getPosts();
 
         return ResponseEntity.ok(PostPresentationMapper.toResponses(posts));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<PostResponse> getPost(@PathVariable Long id) {
+        PostResult result = postQueryService.getPost(id);
+
+        return ResponseEntity.ok(PostPresentationMapper.toResponse(result));
     }
 }
