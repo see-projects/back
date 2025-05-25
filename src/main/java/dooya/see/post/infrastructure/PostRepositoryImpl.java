@@ -4,9 +4,10 @@ import dooya.see.post.domain.Post;
 import dooya.see.post.domain.PostRepository;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -22,8 +23,8 @@ public class PostRepositoryImpl implements PostRepository {
     }
 
     @Override
-    public List<Post> findAll() {
-        return postJpaRepository.findAll();
+    public Page<Post> findAll(Pageable pageable) {
+        return postJpaRepository.findAll(pageable);
     }
 
     @Override
