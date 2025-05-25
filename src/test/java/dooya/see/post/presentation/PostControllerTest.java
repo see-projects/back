@@ -1,6 +1,7 @@
 package dooya.see.post.presentation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dooya.see.auth.config.SecurityConfig;
 import dooya.see.auth.domain.LoginUser;
 import dooya.see.auth.util.JwtUtil;
 import dooya.see.common.PostFixture;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -25,6 +27,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(PostController.class)
+@Import(SecurityConfig.class)
 @AutoConfigureMockMvc
 public class PostControllerTest {
 
@@ -68,13 +71,8 @@ public class PostControllerTest {
     @DisplayName("GET 요청 시 postQueryService.getPosts() 호출 여부 검증")
     @Test
     void post_WhenCalled_InvokesGetPost() throws Exception {
-        // given
-        LoginUser loginUser = new LoginUser(1L, "email", "USER");
-
         // when
-        mockMvc.perform(get("/api/post")
-                        .with(user(loginUser))
-                        .with(csrf()))
+        mockMvc.perform(get("/api/post"))
                 .andExpect(status().isOk());
 
         // then
