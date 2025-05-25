@@ -3,7 +3,7 @@ package dooya.see.auth.presentation;
 import dooya.see.auth.application.service.AuthService;
 import dooya.see.auth.application.dto.LoginCommand;
 import dooya.see.auth.application.dto.LoginResult;
-import dooya.see.auth.presentation.dto.AuthDtoMapper;
+import dooya.see.auth.presentation.dto.AuthPresentationMapper;
 import dooya.see.auth.presentation.dto.LoginRequest;
 import dooya.see.auth.presentation.dto.LoginResponse;
 import dooya.see.auth.util.CookieUtil;
@@ -45,13 +45,13 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> userLogin(@Valid @RequestBody LoginRequest request) {
-        LoginCommand command = AuthDtoMapper.toCommand(request);
+        LoginCommand command = AuthPresentationMapper.toCommand(request);
         LoginResult result = authService.login(command);
 
         ResponseCookie cookie = CookieUtil.createCookie(COOKIE_NAME, result.accessToken(), COOKIE_VALID_TIME);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(AuthDtoMapper.toResponse(result));
+                .body(AuthPresentationMapper.toResponse(result));
     }
 }
