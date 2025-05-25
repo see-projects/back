@@ -17,7 +17,7 @@ public enum ErrorCode {
     USER_NOT_MATCH_LOGIN_INFO(HttpStatus.BAD_REQUEST, "로그인 정보가 일치하지 않습니다."),
 
     // Post Error
-    POST_NOT_FOUNT(HttpStatus.NOT_FOUND, "게시글이 존재하지 않습니다."),
+    POST_NOT_FOUND(HttpStatus.NOT_FOUND, "게시글이 존재하지 않습니다."),
 
     // Role Error
     ROLE_INVALID(HttpStatus.BAD_REQUEST, "유효하지 않은 권한입니다."),

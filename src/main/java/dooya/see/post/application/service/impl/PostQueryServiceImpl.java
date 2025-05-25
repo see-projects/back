@@ -24,7 +24,7 @@ public class PostQueryServiceImpl implements PostQueryService {
     public List<PostResult> getPosts() {
         List<Post> posts = postRepository.findAll();
         if (posts.isEmpty()) {
-            throw new CustomException(ErrorCode.POST_NOT_FOUNT);
+            throw new CustomException(ErrorCode.POST_NOT_FOUND);
         }
 
         return PostApplicationMapper.toResults(posts);
