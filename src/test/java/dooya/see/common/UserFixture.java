@@ -28,7 +28,7 @@ public class UserFixture {
     }
 
     public static UserSignUpCommand signUpCommand() {
-        return new UserSignUpCommand("test@see.com", "testName", "testPassword", "testNickName");
+        return new UserSignUpCommand("dooya@see.com", "testName", "testPassword", "testNickName");
     }
 
     public static UserUpdateCommand updateCommand() {
@@ -62,7 +62,7 @@ public class UserFixture {
     }
 
     public static UserResult testUserResult() {
-        return new UserResult(1L, "test@see.com", "testName", "testNickName", Role.of("USER"));
+        return new UserResult(1L, "dooya@see.com", "testName", "testNickName", Role.of("USER"));
     }
 
     public static PasswordUpdateResult passwordUpdateResult() {
