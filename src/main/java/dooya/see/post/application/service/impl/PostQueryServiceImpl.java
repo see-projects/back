@@ -8,10 +8,10 @@ import dooya.see.post.application.service.PostQueryService;
 import dooya.see.post.domain.Post;
 import dooya.see.post.domain.PostRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -21,8 +21,8 @@ public class PostQueryServiceImpl implements PostQueryService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<PostResult> getPosts() {
-        List<Post> posts = postRepository.findAll();
+    public Page<PostResult> getPosts(Pageable pageable) {
+        Page<Post> posts = postRepository.findAll(pageable);
 
         return PostApplicationMapper.toResults(posts);
     }

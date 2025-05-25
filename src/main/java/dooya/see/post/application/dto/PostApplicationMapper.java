@@ -2,9 +2,7 @@ package dooya.see.post.application.dto;
 
 import dooya.see.post.domain.Post;
 import dooya.see.user.domain.User;
-
-import java.util.List;
-import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
 
 public class PostApplicationMapper {
 
@@ -25,7 +23,7 @@ public class PostApplicationMapper {
         );
     }
 
-    public static List<PostResult> toResults(List<Post> posts) {
-        return posts.stream().map(PostApplicationMapper::toResult).collect(Collectors.toList());
+    public static Page<PostResult> toResults(Page<Post> posts) {
+        return posts.map(PostApplicationMapper::toResult);
     }
 }

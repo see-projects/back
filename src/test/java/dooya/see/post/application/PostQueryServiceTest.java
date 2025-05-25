@@ -4,6 +4,7 @@ import dooya.see.common.PostFixture;
 import dooya.see.common.exception.CustomException;
 import dooya.see.post.application.dto.PostResult;
 import dooya.see.post.application.service.impl.PostQueryServiceImpl;
+import dooya.see.post.domain.Post;
 import dooya.see.post.domain.PostRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,18 +38,18 @@ public class PostQueryServiceTest {
     @Test
     void getPosts_shouldReturnList_whenPostsExist() {
         // given
-        given(postRepository.findAll()).willReturn(PostFixture.testPosts());
+        Page<Post> page = new PageImpl<>(List.of(PostFixture.testPost()));
+        given(postRepository.findAll(any(Pageable.class))).willReturn(page);
 
         // when
-        List<PostResult> result = postQueryService.getPosts();
+        Page<PostResult> result = postQueryService.getPosts(PageRequest.of(0, 10));
 
         // then
         assertAll(
-                () -> assertThat(result).hasSize(3),
-                () -> assertThat(result.getFirst().title()).isEqualTo("테스트용 게시글 제목 1"),
-                () -> assertThat(result.getFirst().nickName()).isEqualTo("testNickName"),
-                () -> assertThat(result.get(1).content()).contains("테스트용 게시물 내용 2입니다."),
-                () -> assertThat(result.get(2).id()).isNotNull()
+                () -> assertThat(result).hasSize(1),
+                () -> assertThat(result.getContent().getFirst().title()).isEqualTo("테스트용 게시글 제목"),
+                () -> assertThat(result.getContent().getFirst().nickName()).isEqualTo("testNickName"),
+                () -> assertThat(result.getContent().getFirst().content()).contains("테스트용 게시물 내용입니다.")
         );
     }
 

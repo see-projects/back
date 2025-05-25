@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -71,12 +72,15 @@ public class PostControllerTest {
     @DisplayName("GET 요청 시 postQueryService.getPosts() 호출 여부 검증")
     @Test
     void get_WhenCalled_InvokesGetPosts() throws Exception {
+        // given
+        given(postQueryService.getPosts(any())).willReturn(PostFixture.pageResult());
+
         // when
         mockMvc.perform(get("/api/post"))
                 .andExpect(status().isOk());
 
         // then
-        then(postQueryService).should().getPosts();
+        then(postQueryService).should().getPosts(any(Pageable.class));
     }
 
     @DisplayName("{id} 경로로 GET 요청 시 postQueryService.getPost(id) 호출 여부 검증")
