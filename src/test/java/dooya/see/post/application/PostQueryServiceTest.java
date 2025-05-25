@@ -3,44 +3,60 @@ package dooya.see.post.application;
 import dooya.see.common.PostFixture;
 import dooya.see.common.exception.CustomException;
 import dooya.see.post.application.dto.PostResult;
-import dooya.see.post.application.service.PostQueryService;
 import dooya.see.post.application.service.impl.PostQueryServiceImpl;
-import dooya.see.post.domain.Post;
-import jakarta.servlet.http.Cookie;
+import dooya.see.post.domain.PostRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.mockito.BDDMockito.*;
 
+@ExtendWith(MockitoExtension.class)
 public class PostQueryServiceTest {
 
-    private final PostQueryService postQueryService = new PostQueryServiceImpl();
+    @InjectMocks
+    private PostQueryServiceImpl postQueryService;
+
+    @Mock
+    private PostRepository postRepository;
 
     @DisplayName("게시글 조회 실패 테스트 - 게시글이 없는 경우")
     @Test
-    void noPost() {
+    void getPosts_shouldThrowException_whenNoPostsExist() {
+        // given
+        given(postRepository.findAll()).willReturn(Collections.emptyList());
+
+        // when && then
         assertThatCode(postQueryService::getPosts)
                 .isInstanceOf(CustomException.class)
                 .hasMessageContaining("게시글이 존재하지 않습니다.");
     }
 
+    @DisplayName("게시글 조회 성공 테스트")
+    @Test
+    void getPosts_shouldReturnList_whenPostsExist() {
+        // given
+        given(postRepository.findAll()).willReturn(PostFixture.testPosts());
 
-//    @Test
-//    void name() {
-//        // Arrange
-//        Post post = PostFixture.testPost();
-//
-//        // Act
-//        List<PostResult> result = postQueryService.getPosts();
-//
-//        // Assert
-//        assertThat(result.get(0).id()).isEqualTo(post.getId());
-//    }
+        // when
+        List<PostResult> result = postQueryService.getPosts();
+
+        // then
+        assertAll(
+                () -> assertThat(result).hasSize(3),
+                () -> assertThat(result.getFirst().title()).isEqualTo("테스트용 게시글 제목 1"),
+                () -> assertThat(result.getFirst().nickName()).isEqualTo("testNickName"),
+                () -> assertThat(result.get(1).content()).contains("테스트용 게시물 내용 2입니다."),
+                () -> assertThat(result.get(2).id()).isNotNull()
+        );
+    }
 }
