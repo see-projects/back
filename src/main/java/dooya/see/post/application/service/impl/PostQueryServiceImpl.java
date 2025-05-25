@@ -1,7 +1,5 @@
 package dooya.see.post.application.service.impl;
 
-import dooya.see.common.exception.CustomException;
-import dooya.see.common.exception.ErrorCode;
 import dooya.see.post.application.dto.PostApplicationMapper;
 import dooya.see.post.application.dto.PostResult;
 import dooya.see.post.application.service.PostQueryService;
@@ -23,9 +21,6 @@ public class PostQueryServiceImpl implements PostQueryService {
     @Override
     public List<PostResult> getPosts() {
         List<Post> posts = postRepository.findAll();
-        if (posts.isEmpty()) {
-            throw new CustomException(ErrorCode.POST_NOT_FOUND);
-        }
 
         return PostApplicationMapper.toResults(posts);
     }
