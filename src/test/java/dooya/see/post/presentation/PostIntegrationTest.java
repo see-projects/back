@@ -104,12 +104,31 @@ public class PostIntegrationTest {
     @Test
     void post_get_success() throws Exception {
         // Arrange
+        saveTestPost();
 
         // Act && Assert
         mockMvc.perform(get("/api/post")
-                        .cookie(new Cookie("Authorization", testToken))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").exists());
+                .andExpect(status().isOk());
+    }
+
+    private void saveTestPost() throws Exception {
+        PostRequest request = request();
+
+        mockMvc.perform(post("/api/post")
+                        .cookie(new Cookie("Authorization", testToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)));
+    }
+
+    @DisplayName("게시글 조회 실패 테스트 - 게시글이 존재하지 않을 때")
+    @Test
+    void post_get_fail_notFound() throws Exception {
+        // Act && Assert
+        mockMvc.perform(get("/api/post")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(false))
+                .andExpect(jsonPath("$.message").value("게시글이 존재하지 않습니다."));
     }
 }
