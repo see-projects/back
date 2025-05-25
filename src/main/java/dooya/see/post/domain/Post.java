@@ -1,5 +1,6 @@
 package dooya.see.post.domain;
 
+import dooya.see.common.base.BaseEntity;
 import dooya.see.user.domain.Role;
 import dooya.see.user.domain.User;
 import jakarta.persistence.*;
@@ -13,7 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
-public class Post {
+public class Post extends BaseEntity {
 
     @Id
     @GeneratedValue
