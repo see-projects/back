@@ -8,7 +8,6 @@ import dooya.see.post.application.service.PostCreateService;
 import dooya.see.post.presentation.dto.PostPresentationMapper;
 import dooya.see.post.presentation.dto.PostRequest;
 import dooya.see.post.presentation.dto.PostResponse;
-import dooya.see.user.presentation.dto.UserPresentationMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
