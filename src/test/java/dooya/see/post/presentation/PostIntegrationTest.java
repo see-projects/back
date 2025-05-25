@@ -109,7 +109,11 @@ public class PostIntegrationTest {
         // Act && Assert
         mockMvc.perform(get("/api/post")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").exists())
+                .andExpect(jsonPath("$[0].nickName").exists())
+                .andExpect(jsonPath("$[0].title").exists())
+                .andExpect(jsonPath("$[0].content").exists());
     }
 
     private void saveTestPost() throws Exception {
@@ -118,6 +122,7 @@ public class PostIntegrationTest {
         mockMvc.perform(post("/api/post")
                         .cookie(new Cookie("Authorization", testToken))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)));
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated());
     }
 }
