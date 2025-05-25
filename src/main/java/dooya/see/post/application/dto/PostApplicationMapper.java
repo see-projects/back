@@ -1,8 +1,6 @@
 package dooya.see.post.application.dto;
 
 import dooya.see.post.domain.Post;
-import dooya.see.user.application.dto.UserApplicationMapper;
-import dooya.see.user.application.dto.UserResult;
 import dooya.see.user.domain.User;
 
 import java.util.List;
