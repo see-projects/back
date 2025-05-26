@@ -117,7 +117,8 @@ public class PostIntegrationTest {
                 .andExpect(jsonPath("$.content[0].id").exists())
                 .andExpect(jsonPath("$.content[0].nickName").exists())
                 .andExpect(jsonPath("$.content[0].title").exists())
-                .andExpect(jsonPath("$.content[0].content").exists());
+                .andExpect(jsonPath("$.content[0].content").exists())
+                .andExpect(jsonPath("$.content[0].createdDate").exists());
     }
 
     private long saveTestPost() throws Exception {
@@ -149,7 +150,8 @@ public class PostIntegrationTest {
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.nickName").exists())
                 .andExpect(jsonPath("$.title").exists())
-                .andExpect(jsonPath("$.content").exists());
+                .andExpect(jsonPath("$.content").exists())
+                .andExpect(jsonPath("$.createdDate").exists());
     }
 
     @DisplayName("단일 게시글 조회 실패 테스트 - 게시글이 존재하지 않을 경우")
