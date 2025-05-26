@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class PostFixture {
@@ -25,14 +26,20 @@ public class PostFixture {
                 1L,
                 "testNickName",
                 "테스트용 게시글 제목",
-                "테스트용 게시물 내용입니다."
+                "테스트용 게시물 내용입니다.",
+                LocalDateTime.of(2025, 5, 25, 14, 30),
+                LocalDateTime.of(2025, 5, 25, 15, 30)
         );
     }
 
     public static Page<PostResult> pageResult() {
         List<PostResult> content = List.of(
-                new PostResult(1L, "작성자1", "제목1", "내용1"),
-                new PostResult(2L, "작성자2", "제목2", "내용2")
+                new PostResult(1L, "작성자1", "제목1", "내용1",
+                        LocalDateTime.of(2025, 5, 24, 10, 30),
+                        LocalDateTime.of(2025, 5, 25, 12, 0)),
+                new PostResult(2L, "작성자2", "제목2", "내용2",
+                        LocalDateTime.of(2025, 5, 24, 11, 0),
+                        LocalDateTime.of(2025, 5, 24, 11, 0))
         );
 
         return new PageImpl<>(content, PageRequest.of(0, 10), content.size());
