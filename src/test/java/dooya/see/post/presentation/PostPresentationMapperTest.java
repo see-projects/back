@@ -46,7 +46,8 @@ public class PostPresentationMapperTest {
                 () -> assertThat(response.id()).isEqualTo(result.id()),
                 () -> assertThat(response.nickName()).isEqualTo(result.nickName()),
                 () -> assertThat(response.title()).isEqualTo(result.title()),
-                () -> assertThat(response.content()).isEqualTo(result.content())
+                () -> assertThat(response.createdDate()).isEqualTo(result.createdDate()),
+                () -> assertThat(response.updatedDate()).isEqualTo(result.updatedDate())
         );
     }
 }
