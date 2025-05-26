@@ -19,7 +19,9 @@ public class PostApplicationMapper {
                 post.getId(),
                 post.getUser().getNickName(),
                 post.getTitle(),
-                post.getContent()
+                post.getContent(),
+                post.getCreatedAt(),
+                post.getUpdatedAt()
         );
     }
 

@@ -18,7 +18,9 @@ public class PostPresentationMapper {
                 result.id(),
                 result.nickName(),
                 result.title(),
-                result.content()
+                result.content(),
+                result.createdDate(),
+                result.updatedDate()
         );
     }
 
