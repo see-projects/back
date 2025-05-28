@@ -42,6 +42,8 @@ public class User extends BaseEntity {
 
     private String nickName;
 
+    private String profileImageUrl;
+
     @Enumerated(EnumType.STRING)
     private Role role;
 
@@ -51,6 +53,7 @@ public class User extends BaseEntity {
                 .name(name)
                 .password(password)
                 .nickName(nickName)
+                .profileImageUrl(null)
                 .role(role)
                 .build();
     }
