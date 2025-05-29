@@ -25,12 +25,13 @@ import java.util.stream.Collectors;
  */
 public class UserApplicationMapper {
 
-    public static User toEntity(UserSignUpCommand command, PasswordEncoder passwordEncoder) {
+    public static User toEntity(UserSignUpCommand command, PasswordEncoder passwordEncoder, String defaultImageUrl) {
         return User.signUpUser(
                 command.email(),
                 command.name(),
                 passwordEncoder.encode(command.password()),
                 command.nickName(),
+                defaultImageUrl,
                 Role.of("USER")
         );
     }
