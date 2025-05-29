@@ -1,5 +1,6 @@
 package dooya.see.user.application;
 
+import dooya.see.common.config.UserProfileProperties;
 import dooya.see.common.exception.CustomException;
 import dooya.see.common.exception.ErrorCode;
 import dooya.see.user.application.dto.UserResult;
@@ -10,6 +11,7 @@ import dooya.see.user.domain.Role;
 import dooya.see.user.domain.User;
 import dooya.see.user.domain.UserRepository;
 import dooya.see.common.UserFixture;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,6 +42,14 @@ public class UserSignUpServiceTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private UserProfileProperties userProfileProperties;
+
+    @BeforeEach
+    void setUp() {
+        UserFixture.setDefaultImageUrl("https://fake-s3/profile.jpeg");
+    }
 
     @DisplayName("유저 회원가입 성공 단위테스트")
     @Test
