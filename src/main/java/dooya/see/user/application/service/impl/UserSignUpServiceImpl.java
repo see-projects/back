@@ -1,5 +1,6 @@
 package dooya.see.user.application.service.impl;
 
+import dooya.see.common.config.UserProfileProperties;
 import dooya.see.user.application.dto.UserApplicationMapper;
 import dooya.see.user.application.dto.UserResult;
 import dooya.see.user.application.dto.UserSignUpCommand;
@@ -19,12 +20,13 @@ public class UserSignUpServiceImpl implements UserSignUpService {
     private final UserRepository userRepository;
     private final UserValidator userValidator;
     private final PasswordEncoder passwordEncoder;
+    private final UserProfileProperties userProfileProperties;
 
     @Transactional
     @Override
     public UserResult userSignUp(UserSignUpCommand command) {
         userValidator.validateDuplicateEmail(command.email());
-        User user = UserApplicationMapper.toEntity(command, passwordEncoder);
+        User user = UserApplicationMapper.toEntity(command, passwordEncoder, userProfileProperties.getDefaultImageUrl());
         userRepository.save(user);
 
         return UserApplicationMapper.toResult(user);
