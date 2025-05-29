@@ -19,6 +19,7 @@ public record UserResult(
         String email,
         String name,
         String nickName,
+        String profileImageUrl,
         Role role
 ) {
 }
