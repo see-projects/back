@@ -47,13 +47,13 @@ public class User extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    public static User signUpUser(String email, String name, String password, String nickName, Role role) {
+    public static User signUpUser(String email, String name, String password, String nickName, String defaultImageUrl, Role role) {
         return User.builder()
                 .email(email)
                 .name(name)
                 .password(password)
                 .nickName(nickName)
-                .profileImageUrl(null)
+                .profileImageUrl(defaultImageUrl)
                 .role(role)
                 .build();
     }
