@@ -76,6 +76,7 @@ class UserIntegrationTest {
                 .andExpect(jsonPath("$.email").value(request.email()))
                 .andExpect(jsonPath("$.name").value(request.name()))
                 .andExpect(jsonPath("$.nickName").value(request.nickName()))
+                .andExpect(jsonPath("$.profileImageUrl").isNotEmpty())
                 .andExpect(jsonPath("$.role").value("USER"));
     }
 

@@ -36,6 +36,7 @@ public class UserPresentationMapper {
                 userResult.email(),
                 userResult.name(),
                 userResult.nickName(),
+                userResult.profileImageUrl(),
                 userResult.role()
         );
     }

@@ -45,6 +45,7 @@ public class UserFixture {
                 command.name(),
                 command.password(),
                 command.nickName(),
+                "https://fake-s3/profile.jpeg",
                 Role.of("USER")
         );
         ReflectionTestUtils.setField(testUser, "id", 1L);
@@ -62,7 +63,7 @@ public class UserFixture {
     }
 
     public static UserResult testUserResult() {
-        return new UserResult(1L, "dooya@see.com", "testName", "testNickName", Role.of("USER"));
+        return new UserResult(1L, "dooya@see.com", "testName", "testNickName", "https://fake-s3/profile.jpeg", Role.of("USER"));
     }
 
     public static PasswordUpdateResult passwordUpdateResult() {

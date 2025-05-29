@@ -1,5 +1,6 @@
 package dooya.see.user.application;
 
+import dooya.see.common.config.UserProfileProperties;
 import dooya.see.common.exception.CustomException;
 import dooya.see.common.exception.ErrorCode;
 import dooya.see.user.application.dto.UserResult;
@@ -41,6 +42,9 @@ public class UserSignUpServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private UserProfileProperties userProfileProperties;
+
     @DisplayName("유저 회원가입 성공 단위테스트")
     @Test
     void user_signUp_success() {
@@ -50,6 +54,7 @@ public class UserSignUpServiceTest {
 
         doNothing().when(userValidator).validateDuplicateEmail(command.email());
         given(passwordEncoder.encode(command.password())).willReturn(testUser.getPassword());
+        given(userProfileProperties.getDefaultImageUrl()).willReturn("default-image-url");
         given(userRepository.save(any(User.class))).willReturn(testUser);
 
         // Act
@@ -61,6 +66,7 @@ public class UserSignUpServiceTest {
                 () -> assertThat(result.email()).isEqualTo(command.email()),
                 () -> assertThat(result.name()).isEqualTo(command.name()),
                 () -> assertThat(result.nickName()).isEqualTo(command.nickName()),
+                () -> assertThat(result.profileImageUrl()).isNotNull(),
                 () -> assertThat(result.role()).isEqualTo(Role.USER)
         );
 
