@@ -54,6 +54,7 @@ public class UserSignUpServiceTest {
 
         doNothing().when(userValidator).validateDuplicateEmail(command.email());
         given(passwordEncoder.encode(command.password())).willReturn(testUser.getPassword());
+        given(userProfileProperties.getDefaultImageUrl()).willReturn("default-image-url");
         given(userRepository.save(any(User.class))).willReturn(testUser);
 
         // Act
@@ -65,6 +66,7 @@ public class UserSignUpServiceTest {
                 () -> assertThat(result.email()).isEqualTo(command.email()),
                 () -> assertThat(result.name()).isEqualTo(command.name()),
                 () -> assertThat(result.nickName()).isEqualTo(command.nickName()),
+                () -> assertThat(result.profileImageUrl()).isNotNull(),
                 () -> assertThat(result.role()).isEqualTo(Role.USER)
         );
 
