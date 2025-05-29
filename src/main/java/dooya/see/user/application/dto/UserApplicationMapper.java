@@ -42,6 +42,7 @@ public class UserApplicationMapper {
                 user.getEmail(),
                 user.getName(),
                 user.getNickName(),
+                user.getProfileImageUrl(),
                 user.getRole()
         );
     }
