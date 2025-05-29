@@ -11,7 +11,6 @@ import dooya.see.user.domain.Role;
 import dooya.see.user.domain.User;
 import dooya.see.user.domain.UserRepository;
 import dooya.see.common.UserFixture;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,11 +44,6 @@ public class UserSignUpServiceTest {
 
     @Mock
     private UserProfileProperties userProfileProperties;
-
-    @BeforeEach
-    void setUp() {
-        UserFixture.setDefaultImageUrl("https://fake-s3/profile.jpeg");
-    }
 
     @DisplayName("유저 회원가입 성공 단위테스트")
     @Test
