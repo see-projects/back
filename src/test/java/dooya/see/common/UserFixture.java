@@ -11,6 +11,12 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 public class UserFixture {
 
+    private static String defaultImageUrl = "https://fake-s3//profile.jpeg";
+
+    public static void setDefaultImageUrl(String url) {
+        defaultImageUrl = url;
+    }
+
     public static UserSignUpRequest signUpRequest() {
         return new UserSignUpRequest("dooya@see.com", "testName", "testPassword", "testNickName");
     }
@@ -45,6 +51,7 @@ public class UserFixture {
                 command.name(),
                 command.password(),
                 command.nickName(),
+                defaultImageUrl,
                 Role.of("USER")
         );
         ReflectionTestUtils.setField(testUser, "id", 1L);
