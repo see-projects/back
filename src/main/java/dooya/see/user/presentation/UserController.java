@@ -9,9 +9,11 @@ import dooya.see.user.application.service.UserValidator;
 import dooya.see.user.presentation.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URI;
 
@@ -86,5 +88,14 @@ public class UserController {
         PasswordUpdateResult result = userUpdateService.updatePassword(email, command);
 
         return ResponseEntity.ok().body(toPasswordUpdateResponse(result));
+    }
+
+    @PatchMapping(value = "/profile-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<UserResponse> updateProfileImage(@AuthenticationPrincipal LoginUser loginUser,
+                                                           @RequestPart MultipartFile profileImage) {
+        String email = loginUser.getUsername();
+        UserResult result = userUpdateService.updateProfileImage(email, profileImage);
+
+        return ResponseEntity.ok().body(toResponse(result));
     }
 }
