@@ -17,6 +17,7 @@ public record UserResponse(
         String email,
         String name,
         String nickName,
+        String profileImageUrl,
         Role role
 ) {
 }
