@@ -2,6 +2,7 @@ package dooya.see.user.application;
 
 import dooya.see.common.exception.CustomException;
 import dooya.see.common.exception.ErrorCode;
+import dooya.see.common.s3.S3Uploader;
 import dooya.see.user.application.dto.PasswordUpdateCommand;
 import dooya.see.user.application.dto.PasswordUpdateResult;
 import dooya.see.user.application.dto.UserResult;
@@ -16,6 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Optional;
 
@@ -24,8 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.*;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -39,6 +40,9 @@ public class UserUpdateServiceTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private S3Uploader s3Uploader;
 
     private final User testUser = testUser();
 
@@ -102,6 +106,45 @@ public class UserUpdateServiceTest {
         assertThatCode(() -> userUpdateService.updatePassword(testUser.getEmail(), command))
                 .isInstanceOf(CustomException.class)
                 .hasMessageContaining("비밀번호 정보가 일치하지 않습니다.");
+
+        then(userRepository).should(times(1)).findByEmail(testUser.getEmail());
+    }
+
+    @DisplayName("유저 프로필 이미지 업데이트 성공 테스트")
+    @Test
+    void user_profileUpdate_success() {
+        // Arrange
+        String email = "test@example.com";
+        String expectedImageUrl = "https://s3.amazon.com/profile/image.png";
+
+        MultipartFile mockFile = mock(MultipartFile.class);
+        User testUser = testUser();
+
+        given(s3Uploader.upload(mockFile, "profile")).willReturn(expectedImageUrl);
+        given(userRepository.findByEmail(email)).willReturn(Optional.of(testUser));
+
+        // Act
+        UserResult result = userUpdateService.updateProfileImage(email, mockFile);
+
+        // Assert
+        assertThat(result.profileImageUrl()).isEqualTo(expectedImageUrl);
+        assertThat(testUser.getProfileImageUrl()).isEqualTo(expectedImageUrl);
+
+        then(s3Uploader).should(times(1)).upload(mockFile, "profile");
+        then(userRepository).should(times(1)).findByEmail(email);
+    }
+
+    @DisplayName("유저 프로필 이미지 업데이트 실패 테스트 - 유저가 존재하지 않음")
+    @Test
+    void user_profileUpdate_fail() {
+        // Arrange
+        MultipartFile mockFile = mock(MultipartFile.class);
+        doThrow(new CustomException(ErrorCode.USER_NOT_FOUND)).when(userRepository).findByEmail(testUser.getEmail());
+
+        // Act & Assert
+        assertThatCode(() -> userUpdateService.updateProfileImage(testUser.getEmail(), mockFile))
+                .isInstanceOf(CustomException.class)
+                .hasMessageContaining("존재하지 않는 사용자입니다.");
 
         then(userRepository).should(times(1)).findByEmail(testUser.getEmail());
     }

@@ -26,6 +26,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -175,5 +176,37 @@ public class UserControllerTest {
 
         // then
         then(userUpdateService).should().updatePassword(email, command);
+    }
+
+    @DisplayName("/profile-image 경로로 PATCH 요청 시 userUpdateService.updateProfileImage(email, profileImage) 호출 여부 검증")
+    @Test
+    void patch_WhenCalled_InvokeUpdateProfileImage() throws Exception {
+        // given
+        String email = "test@see.com";
+        LoginUser loginUser = new LoginUser(1L, "test@see.com", "USER");
+
+        MockMultipartFile mockImage = new MockMultipartFile(
+                "profileImage",
+                "profile.jpg",
+                "image/jpeg",
+                "fake-image-content".getBytes()
+        );
+
+        given(userUpdateService.updateProfileImage(anyString(), any())).willReturn(UserFixture.testUserResult());
+
+        // when
+        mockMvc.perform(multipart("/api/users/profile-image")
+                        .file(mockImage)
+                        .cookie(new Cookie("Authorization", testToken))
+                        .with(user(loginUser))
+                        .with(request -> {
+                            request.setMethod("PATCH");
+                            return request;
+                        })
+                )
+                .andExpect(status().isOk());
+
+        // then
+        then(userUpdateService).should().updateProfileImage(email, mockImage);
     }
 }
