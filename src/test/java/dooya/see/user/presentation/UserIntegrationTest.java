@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
@@ -27,9 +28,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.stream.Stream;
 
 import static dooya.see.common.UserFixture.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -257,5 +256,29 @@ class UserIntegrationTest {
                 .andExpect(jsonPath("$.status").value(false))
                 .andExpect(jsonPath("$.message").value("비밀번호 정보가 일치하지 않습니다."));
 
+    }
+
+    @DisplayName("유저 프로필 이미지 업데이트 성공 테스트")
+    @Test
+    void userProfile_Update_Success() throws Exception {
+        // Arrange
+        MockMultipartFile mockImage = new MockMultipartFile(
+                "profileImage",
+                "profile.jpg",
+                "image/jpeg",
+                "fake-image-content".getBytes()
+        );
+
+        // Act && Assert
+        mockMvc.perform(multipart("/api/users/profile-image")
+                        .file(mockImage)
+                        .cookie(new Cookie("Authorization", testToken))
+                        .with(request -> {
+                            request.setMethod("PATCH");
+                            return request;
+                        })
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.profileImageUrl").isNotEmpty());
     }
 }
