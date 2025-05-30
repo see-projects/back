@@ -4,6 +4,7 @@ import dooya.see.user.application.dto.PasswordUpdateCommand;
 import dooya.see.user.application.dto.PasswordUpdateResult;
 import dooya.see.user.application.dto.UserResult;
 import dooya.see.user.application.dto.UserUpdateCommand;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * {@code UserUpdateService}는 사용자 정보 업데이트 기능을 제공하는
@@ -34,4 +35,6 @@ public interface UserUpdateService {
      * @return 업데이트된 메시지 정보를 담은 {@link PasswordUpdateResult}
      */
     PasswordUpdateResult updatePassword(String email, PasswordUpdateCommand command);
+
+    UserResult updateProfileImage(String email, MultipartFile profileImage);
 }
