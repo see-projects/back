@@ -7,6 +7,12 @@ import dooya.see.auth.presentation.dto.AuthPresentationMapper;
 import dooya.see.auth.presentation.dto.LoginRequest;
 import dooya.see.auth.presentation.dto.LoginResponse;
 import dooya.see.auth.util.CookieUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,6 +36,8 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * @author dooya
  */
+
+@Tag(name = "User", description = "로그인 API입니다.")
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -43,6 +51,15 @@ public class AuthController {
 
     private final AuthService authService;
 
+    @Operation(
+            summary = "로그인",
+            description = "사용자가 로그인하면 JWT를 쿠키로 반환합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "로그인 성공",
+                    content = @Content(schema = @Schema(implementation = LoginResponse.class))),
+            @ApiResponse(responseCode = "400", description = "로그인 실패 - 인증 정보 불일치" ,content = @Content)
+    })
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> userLogin(@Valid @RequestBody LoginRequest request) {
         LoginCommand command = AuthPresentationMapper.toCommand(request);
