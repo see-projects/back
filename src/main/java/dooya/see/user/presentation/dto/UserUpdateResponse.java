@@ -1,5 +1,7 @@
 package dooya.see.user.presentation.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * {@code UserUpdateResponse} 클래스는
  * 사용자 정보 업데이트 요청 처리 후 반환되는 응답 데이터 객체입니다.
@@ -10,6 +12,8 @@ package dooya.see.user.presentation.dto;
  * @author dooya
  */
 public record UserUpdateResponse(
+
+        @Schema(description = "업데이트 된 사용자 닉네임", example = "See")
         String nickName
 ) {
 }

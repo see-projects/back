@@ -1,5 +1,6 @@
 package dooya.see.auth.presentation.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 
 /**
@@ -16,10 +17,20 @@ import lombok.Builder;
  */
 @Builder
 public record LoginResponse(
+
+        @Schema(description = "JWT 엑세스 토큰", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
         String accessToken,
+
+        @Schema(description = "사용자 ID", example = "1")
         Long id,
+
+        @Schema(description = "사용자 이메일", example = "user@example.com")
         String email,
+
+        @Schema(description = "사용자 이름", example = "홍길동")
         String name,
+
+        @Schema(description = "사용자 닉네임", example = "See")
         String nickName
 ) {
 }

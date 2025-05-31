@@ -1,6 +1,7 @@
 package dooya.see.user.presentation.dto;
 
 import dooya.see.user.domain.Role;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * {@code UserResponse} 클래스는
@@ -13,11 +14,23 @@ import dooya.see.user.domain.Role;
  * @author dooya
  */
 public record UserResponse(
+
+        @Schema(description = "유저 고유 ID", example = "1")
         Long id,
+
+        @Schema(description = "이메일", example = "see@example.com")
         String email,
+
+        @Schema(description = "이름", example = "홍길동")
         String name,
+
+        @Schema(description = "닉네임", example = "See")
         String nickName,
+
+        @Schema(description = "프로필 이미지 주소", example = "https://~~")
         String profileImageUrl,
+
+        @Schema(description = "사용자 권한", example = "USER")
         Role role
 ) {
 }
