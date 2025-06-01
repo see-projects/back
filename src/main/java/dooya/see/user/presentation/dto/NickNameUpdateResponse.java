@@ -11,7 +11,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
  *
  * @author dooya
  */
-public record UserUpdateResponse(
+public record NickNameUpdateResponse(
 
         @Schema(description = "업데이트 된 사용자 닉네임", example = "See")
         String nickName

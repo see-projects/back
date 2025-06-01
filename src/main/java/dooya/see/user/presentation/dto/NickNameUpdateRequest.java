@@ -12,7 +12,7 @@ import lombok.Builder;
  * @author dooya
  */
 @Builder
-public record UserUpdateRequest(
+public record NickNameUpdateRequest(
         String nickName
 ) {
 }
