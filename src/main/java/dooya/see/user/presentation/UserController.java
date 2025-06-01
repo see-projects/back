@@ -168,12 +168,12 @@ public class UserController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "프로필 수정 성공",
                     content = @Content(schema = @Schema(implementation = UserResponse.class))),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content)
+            @ApiResponse(responseCode = "404", description = "사용자 정보를 찾을 수 없음", content = @Content)
     })
     @PutMapping(value = "/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<UserResponse> updateProfile(@AuthenticationPrincipal LoginUser loginUser,
-                                                      @RequestPart NickNameUpdateRequest request,
-                                                      @RequestPart MultipartFile profileImage) {
+                                                      @RequestPart(required = false) NickNameUpdateRequest request,
+                                                      @RequestPart(required = false) MultipartFile profileImage) {
         String email = loginUser.getUsername();
         NickNameUpdateCommand command = UserPresentationMapper.toUpdateCommand(request);
         UserResult result = userUpdateService.updateProfile(email, command, profileImage);
