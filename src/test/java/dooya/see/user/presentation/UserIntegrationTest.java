@@ -201,7 +201,7 @@ class UserIntegrationTest {
         UserUpdateRequest request = nickNameUpdateRequest();
 
         // Act && Assert
-        mockMvc.perform(put("/api/users")
+        mockMvc.perform(put("/api/users/nick-name")
                         .cookie(new Cookie("Authorization", testToken))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -217,7 +217,7 @@ class UserIntegrationTest {
         String testToken = jwtUtil.createAccessToken(testUser.getId(), "test@fail.com", testUser.getRole());
 
         // Act & Assert
-        mockMvc.perform(put("/api/users")
+        mockMvc.perform(put("/api/users/nick-name")
                         .cookie(new Cookie("Authorization", testToken))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))

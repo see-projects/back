@@ -144,7 +144,7 @@ public class UserControllerTest {
         given(userUpdateService.updateNickName(anyString(), any(UserUpdateCommand.class))).willReturn(UserFixture.testUserResult());
 
         // when
-        mockMvc.perform(put("/api/users")
+        mockMvc.perform(put("/api/users/nick-name")
                         .cookie(new Cookie("Authorization", testToken))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
