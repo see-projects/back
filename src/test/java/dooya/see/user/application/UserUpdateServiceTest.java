@@ -112,7 +112,7 @@ public class UserUpdateServiceTest {
 
     @DisplayName("유저 프로필 이미지 업데이트 성공 테스트")
     @Test
-    void user_profileUpdate_success() {
+    void user_profileImageUpdate_success() {
         // Arrange
         String email = "test@example.com";
         String expectedImageUrl = "https://s3.amazon.com/profile/image.png";
@@ -136,7 +136,7 @@ public class UserUpdateServiceTest {
 
     @DisplayName("유저 프로필 이미지 업데이트 실패 테스트 - 유저가 존재하지 않음")
     @Test
-    void user_profileUpdate_fail() {
+    void user_profileImageUpdate_fail() {
         // Arrange
         MultipartFile mockFile = mock(MultipartFile.class);
         doThrow(new CustomException(ErrorCode.USER_NOT_FOUND)).when(userRepository).findByEmail(testUser.getEmail());
@@ -147,5 +147,45 @@ public class UserUpdateServiceTest {
                 .hasMessageContaining("존재하지 않는 사용자입니다.");
 
         then(userRepository).should(times(1)).findByEmail(testUser.getEmail());
+    }
+
+    @DisplayName("유저 프로필 업데이트 실패 테스트 - 유저가 존재하지 않음")
+    @Test
+    void user_profileUpdate_fail() {
+        // Arrange
+        MultipartFile mockFile = mock(MultipartFile.class);
+        NickNameUpdateCommand command = updateCommand();
+        doThrow(new CustomException(ErrorCode.USER_NOT_FOUND)).when(userRepository).findByEmail(testUser.getEmail());
+        // Act && Assert
+        assertThatCode(() -> userUpdateService.updateProfile(testUser.getEmail(), command, mockFile))
+                .isInstanceOf(CustomException.class)
+                .hasMessageContaining("존재하지 않는 사용자입니다.");
+
+        then(userRepository).should(times(1)).findByEmail(testUser.getEmail());
+    }
+
+    @DisplayName("유저 프로필 업데이트 성공 테스트")
+    @Test
+    void user_profileUpdate_success() {
+        // Arrange
+        String email = "test@example.com";
+        String expectedImageUrl = "https://s3.amazon.com/profile/image.png";
+        NickNameUpdateCommand command = updateCommand();
+
+        MultipartFile mockFile = mock(MultipartFile.class);
+        User testUser = testUser();
+
+        given(s3Uploader.upload(mockFile, "profile")).willReturn(expectedImageUrl);
+        given(userRepository.findByEmail(email)).willReturn(Optional.of(testUser));
+
+        // Act
+        UserResult result = userUpdateService.updateProfile(email, command, mockFile);
+
+        // Assert
+        assertThat(result.profileImageUrl()).isEqualTo(expectedImageUrl);
+        assertThat(testUser.getProfileImageUrl()).isEqualTo(expectedImageUrl);
+
+        then(s3Uploader).should(times(1)).upload(mockFile, "profile");
+        then(userRepository).should(times(1)).findByEmail(email);
     }
 }

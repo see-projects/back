@@ -25,6 +25,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.nio.charset.StandardCharsets;
 import java.util.stream.Stream;
 
 import static dooya.see.common.UserFixture.*;
@@ -260,7 +261,7 @@ class UserIntegrationTest {
 
     @DisplayName("유저 프로필 이미지 업데이트 성공 테스트")
     @Test
-    void userProfile_Update_Success() throws Exception {
+    void userProfileImage_Update_Success() throws Exception {
         // Arrange
         MockMultipartFile mockImage = new MockMultipartFile(
                 "profileImage",
@@ -279,6 +280,40 @@ class UserIntegrationTest {
                         })
                 )
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.profileImageUrl").isNotEmpty());
+    }
+
+    @DisplayName("유저 프로필 업데이트 성공 테스트")
+    @Test
+    void userProfile_Update_Success() throws Exception {
+        // Arrange
+        String nickNameJson = objectMapper.writeValueAsString(nickNameUpdateRequest());
+
+        MockMultipartFile nickNamePart = new MockMultipartFile(
+                "request",
+                null,
+                MediaType.APPLICATION_JSON_VALUE,
+                nickNameJson.getBytes(StandardCharsets.UTF_8)
+        );
+
+        MockMultipartFile mockImage = new MockMultipartFile(
+                "profileImage",
+                "profile.jpg",
+                "image/jpeg",
+                "fake-image-content".getBytes()
+        );
+
+        // Act && Assert
+        mockMvc.perform(multipart("/api/users/profile")
+                        .file(nickNamePart)
+                        .file(mockImage)
+                        .cookie(new Cookie("Authorization", testToken))
+                        .with(request -> {
+                            request.setMethod("PUT");
+                            return request;
+                        }))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nickName").value(nickNameUpdateRequest().nickName()))
                 .andExpect(jsonPath("$.profileImageUrl").isNotEmpty());
     }
 }

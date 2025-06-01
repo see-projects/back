@@ -31,6 +31,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.nio.charset.StandardCharsets;
+
+import static dooya.see.common.UserFixture.nickNameUpdateRequest;
 import static dooya.see.common.UserFixture.signUpRequest;
 
 import static org.mockito.BDDMockito.*;
@@ -208,5 +211,46 @@ public class UserControllerTest {
 
         // then
         then(userUpdateService).should().updateProfileImage(email, mockImage);
+    }
+
+    @DisplayName("/profile 경로로 PUT 요청 시 userUpdateService.updateProfile(email, command, profileImage) 호출 여부 검증")
+    @Test
+    void put_WhenCalled_InvokeUpdateProfile() throws Exception {
+        // given
+        String email = "test@see.com";
+        LoginUser loginUser = new LoginUser(1L, "test@see.com", "USER");
+        NickNameUpdateCommand command = UserFixture.updateCommand();
+        String nickNameJson = objectMapper.writeValueAsString(nickNameUpdateRequest());
+
+        MockMultipartFile nickNamePart = new MockMultipartFile(
+                "request",
+                null,
+                MediaType.APPLICATION_JSON_VALUE,
+                nickNameJson.getBytes(StandardCharsets.UTF_8)
+        );
+
+        MockMultipartFile mockImage = new MockMultipartFile(
+                "profileImage",
+                "profile.jpg",
+                "image/jpeg",
+                "fake-image-content".getBytes()
+        );
+
+        given(userUpdateService.updateProfile(anyString(), any(), any())).willReturn(UserFixture.testUserResult());
+
+        // when
+        mockMvc.perform(multipart("/api/users/profile")
+                        .file(nickNamePart)
+                        .file(mockImage)
+                        .cookie(new Cookie("Authorization", testToken))
+                        .with(user(loginUser))
+                        .with(request -> {
+                            request.setMethod("PUT");
+                            return request;
+                        }))
+                .andExpect(status().isOk());
+
+        // then
+        then(userUpdateService).should().updateProfile(email, command, mockImage);
     }
 }

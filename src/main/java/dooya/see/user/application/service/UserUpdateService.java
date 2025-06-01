@@ -37,4 +37,6 @@ public interface UserUpdateService {
     PasswordUpdateResult updatePassword(String email, PasswordUpdateCommand command);
 
     UserResult updateProfileImage(String email, MultipartFile profileImage);
+
+    UserResult updateProfile(String email, NickNameUpdateCommand command, MultipartFile profileImage);
 }
