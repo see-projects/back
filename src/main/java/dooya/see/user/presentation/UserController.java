@@ -8,6 +8,7 @@ import dooya.see.user.application.service.UserUpdateService;
 import dooya.see.user.application.service.UserValidator;
 import dooya.see.user.presentation.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -156,6 +157,26 @@ public class UserController {
                                                            @RequestPart MultipartFile profileImage) {
         String email = loginUser.getUsername();
         UserResult result = userUpdateService.updateProfileImage(email, profileImage);
+
+        return ResponseEntity.ok().body(toResponse(result));
+    }
+
+    @Operation(
+            summary = "프로필 통합 수정",
+            description = "닉네임과 프로필 이미지를 동시에 수정합니다. 닉네임은 JSON 형식으로, 프로필 이미지는 이미지 파일로 전송합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "프로필 수정 성공",
+                    content = @Content(schema = @Schema(implementation = UserResponse.class))),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content)
+    })
+    @PutMapping(value = "/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<UserResponse> updateProfile(@AuthenticationPrincipal LoginUser loginUser,
+                                                      @RequestPart NickNameUpdateRequest request,
+                                                      @RequestPart MultipartFile profileImage) {
+        String email = loginUser.getUsername();
+        NickNameUpdateCommand command = UserPresentationMapper.toUpdateCommand(request);
+        UserResult result = userUpdateService.updateProfile(email, command, profileImage);
 
         return ResponseEntity.ok().body(toResponse(result));
     }
