@@ -11,7 +11,7 @@ package dooya.see.user.application.dto;
  *
  * @author dooya
  */
-public record UserUpdateCommand(
+public record NickNameUpdateCommand(
         String nickName
 ) {
 }

@@ -41,12 +41,12 @@ public class UserPresentationMapper {
         );
     }
 
-    public static UserUpdateCommand toUpdateCommand(UserUpdateRequest request) {
-        return new UserUpdateCommand(request.nickName());
+    public static NickNameUpdateCommand toUpdateCommand(NickNameUpdateRequest request) {
+        return new NickNameUpdateCommand(request.nickName());
     }
 
-    public static UserUpdateResponse toUpdateResponse(UserResult userResult) {
-        return new UserUpdateResponse(userResult.nickName());
+    public static NickNameUpdateResponse toUpdateResponse(UserResult userResult) {
+        return new NickNameUpdateResponse(userResult.nickName());
     }
 
     public static PasswordUpdateCommand toPasswordUpdateCommand(PasswordUpdateRequest request) {

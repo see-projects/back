@@ -53,10 +53,10 @@ public class UserPresentationMapperTest {
     @Test
     void convert_UserUpdateRequest_to_UserUpdateCommand() {
         // Arrange
-        UserUpdateRequest request = nickNameUpdateRequest();
+        NickNameUpdateRequest request = nickNameUpdateRequest();
 
         // Act
-        UserUpdateCommand command = toUpdateCommand(request);
+        NickNameUpdateCommand command = toUpdateCommand(request);
 
         // Assert
         assertThat(request.nickName()).isEqualTo(command.nickName());
@@ -69,7 +69,7 @@ public class UserPresentationMapperTest {
         UserResult result = testUserResult();
 
         // Act
-        UserUpdateResponse response = toUpdateResponse(result);
+        NickNameUpdateResponse response = toUpdateResponse(result);
 
         // Assert
         assertThat(response.nickName()).isEqualTo(result.nickName());

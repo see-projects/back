@@ -5,7 +5,7 @@ import dooya.see.user.presentation.dto.PasswordUpdateRequest;
 import dooya.see.user.presentation.dto.UserSignUpRequest;
 import dooya.see.user.domain.Role;
 import dooya.see.user.domain.User;
-import dooya.see.user.presentation.dto.UserUpdateRequest;
+import dooya.see.user.presentation.dto.NickNameUpdateRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -15,8 +15,8 @@ public class UserFixture {
         return new UserSignUpRequest("dooya@see.com", "testName", "testPassword", "testNickName");
     }
 
-    public static UserUpdateRequest nickNameUpdateRequest() {
-        return new UserUpdateRequest("updateNickName");
+    public static NickNameUpdateRequest nickNameUpdateRequest() {
+        return new NickNameUpdateRequest("updateNickName");
     }
 
     public static PasswordUpdateRequest passwordUpdateRequest() {
@@ -31,8 +31,8 @@ public class UserFixture {
         return new UserSignUpCommand("dooya@see.com", "testName", "testPassword", "testNickName");
     }
 
-    public static UserUpdateCommand updateCommand() {
-        return new UserUpdateCommand("updateNickName");
+    public static NickNameUpdateCommand updateCommand() {
+        return new NickNameUpdateCommand("updateNickName");
     }
 
     public static PasswordUpdateCommand passwordUpdateCommand() {

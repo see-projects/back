@@ -6,7 +6,7 @@ import dooya.see.common.s3.S3Uploader;
 import dooya.see.user.application.dto.PasswordUpdateCommand;
 import dooya.see.user.application.dto.PasswordUpdateResult;
 import dooya.see.user.application.dto.UserResult;
-import dooya.see.user.application.dto.UserUpdateCommand;
+import dooya.see.user.application.dto.NickNameUpdateCommand;
 import dooya.see.user.application.service.impl.UserUpdateServiceImpl;
 import dooya.see.user.domain.User;
 import dooya.see.user.domain.UserRepository;
@@ -50,7 +50,7 @@ public class UserUpdateServiceTest {
     @Test
     void user_nickNameUpdate_success() {
         // Arrange
-        UserUpdateCommand command = updateCommand();
+        NickNameUpdateCommand command = updateCommand();
 
         given(userRepository.findByEmail(testUser.getEmail())).willReturn(Optional.of(testUser));
 

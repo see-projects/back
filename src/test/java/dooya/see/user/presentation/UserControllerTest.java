@@ -7,7 +7,7 @@ import dooya.see.auth.util.JwtUtil;
 import dooya.see.common.UserFixture;
 import dooya.see.user.application.dto.PasswordUpdateCommand;
 import dooya.see.user.application.dto.UserSignUpCommand;
-import dooya.see.user.application.dto.UserUpdateCommand;
+import dooya.see.user.application.dto.NickNameUpdateCommand;
 import dooya.see.user.application.service.UserQueryService;
 import dooya.see.user.application.service.UserSignUpService;
 import dooya.see.user.application.service.UserUpdateService;
@@ -15,7 +15,7 @@ import dooya.see.user.application.service.UserValidator;
 import dooya.see.user.domain.User;
 import dooya.see.user.presentation.dto.PasswordUpdateRequest;
 import dooya.see.user.presentation.dto.UserSignUpRequest;
-import dooya.see.user.presentation.dto.UserUpdateRequest;
+import dooya.see.user.presentation.dto.NickNameUpdateRequest;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -138,13 +138,13 @@ public class UserControllerTest {
         // given
         String email = "test@see.com";
         LoginUser loginUser = new LoginUser(1L, "test@see.com", "USER");
-        UserUpdateRequest request = UserFixture.nickNameUpdateRequest();
-        UserUpdateCommand command = UserFixture.updateCommand();
+        NickNameUpdateRequest request = UserFixture.nickNameUpdateRequest();
+        NickNameUpdateCommand command = UserFixture.updateCommand();
 
-        given(userUpdateService.updateNickName(anyString(), any(UserUpdateCommand.class))).willReturn(UserFixture.testUserResult());
+        given(userUpdateService.updateNickName(anyString(), any(NickNameUpdateCommand.class))).willReturn(UserFixture.testUserResult());
 
         // when
-        mockMvc.perform(put("/api/users")
+        mockMvc.perform(put("/api/users/nick-name")
                         .cookie(new Cookie("Authorization", testToken))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))

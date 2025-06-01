@@ -6,7 +6,7 @@ import dooya.see.common.s3.S3Uploader;
 import dooya.see.user.application.dto.PasswordUpdateCommand;
 import dooya.see.user.application.dto.PasswordUpdateResult;
 import dooya.see.user.application.dto.UserResult;
-import dooya.see.user.application.dto.UserUpdateCommand;
+import dooya.see.user.application.dto.NickNameUpdateCommand;
 import dooya.see.user.application.service.UserUpdateService;
 import dooya.see.user.domain.User;
 import dooya.see.user.domain.UserRepository;
@@ -28,7 +28,7 @@ public class UserUpdateServiceImpl implements UserUpdateService {
 
     @Transactional
     @Override
-    public UserResult updateNickName(String email, UserUpdateCommand command) {
+    public UserResult updateNickName(String email, NickNameUpdateCommand command) {
         User user = userRepository.findByEmail(email)
                         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         user.updateNickName(command.nickName());
