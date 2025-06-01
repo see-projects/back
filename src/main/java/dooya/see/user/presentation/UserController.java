@@ -112,7 +112,7 @@ public class UserController {
                     content = @Content(schema = @Schema(implementation = UserUpdateResponse.class))),
             @ApiResponse(responseCode = "404", description = "사용자 정보를 찾을 수 없음", content = @Content)
     })
-    @PutMapping
+    @PutMapping("/nick-name")
     public ResponseEntity<UserUpdateResponse> updateUserNickName(@AuthenticationPrincipal LoginUser loginUser,
                                                                  @Valid @RequestBody UserUpdateRequest request) {
         String email = loginUser.getUsername();
