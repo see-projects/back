@@ -109,14 +109,14 @@ public class UserController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "닉네임 변경 성공",
-                    content = @Content(schema = @Schema(implementation = UserUpdateResponse.class))),
+                    content = @Content(schema = @Schema(implementation = NickNameUpdateResponse.class))),
             @ApiResponse(responseCode = "404", description = "사용자 정보를 찾을 수 없음", content = @Content)
     })
     @PutMapping("/nick-name")
-    public ResponseEntity<UserUpdateResponse> updateUserNickName(@AuthenticationPrincipal LoginUser loginUser,
-                                                                 @Valid @RequestBody UserUpdateRequest request) {
+    public ResponseEntity<NickNameUpdateResponse> updateUserNickName(@AuthenticationPrincipal LoginUser loginUser,
+                                                                     @Valid @RequestBody NickNameUpdateRequest request) {
         String email = loginUser.getUsername();
-        UserUpdateCommand command = toUpdateCommand(request);
+        NickNameUpdateCommand command = toUpdateCommand(request);
         UserResult result = userUpdateService.updateNickName(email, command);
 
         return ResponseEntity.ok().body(toUpdateResponse(result));

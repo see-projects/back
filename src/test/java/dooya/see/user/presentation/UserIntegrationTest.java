@@ -7,7 +7,7 @@ import dooya.see.user.domain.User;
 import dooya.see.user.infrastructure.UserJpaRepository;
 import dooya.see.user.presentation.dto.PasswordUpdateRequest;
 import dooya.see.user.presentation.dto.UserSignUpRequest;
-import dooya.see.user.presentation.dto.UserUpdateRequest;
+import dooya.see.user.presentation.dto.NickNameUpdateRequest;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -198,7 +198,7 @@ class UserIntegrationTest {
     @Test
     void userNickName_update_success() throws Exception {
         // Arrange
-        UserUpdateRequest request = nickNameUpdateRequest();
+        NickNameUpdateRequest request = nickNameUpdateRequest();
 
         // Act && Assert
         mockMvc.perform(put("/api/users/nick-name")
@@ -213,7 +213,7 @@ class UserIntegrationTest {
     @Test
     void userNickName_update_fail() throws Exception {
         // Arrange
-        UserUpdateRequest request = nickNameUpdateRequest();
+        NickNameUpdateRequest request = nickNameUpdateRequest();
         String testToken = jwtUtil.createAccessToken(testUser.getId(), "test@fail.com", testUser.getRole());
 
         // Act & Assert
