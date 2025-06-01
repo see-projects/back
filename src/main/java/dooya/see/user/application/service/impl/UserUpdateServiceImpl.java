@@ -59,4 +59,21 @@ public class UserUpdateServiceImpl implements UserUpdateService {
 
         return toResult(user);
     }
+
+    @Transactional
+    @Override
+    public UserResult updateProfile(String email, NickNameUpdateCommand command, MultipartFile profileImage) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        if (command != null && command.nickName() != null) {
+            user.updateNickName(command.nickName());
+        }
+
+        if (profileImage != null && !profileImage.isEmpty()) {
+            String uploadImageUrl = s3Uploader.upload(profileImage, "profile");
+            user.updateProfileImage(uploadImageUrl);
+        }
+        return toResult(user);
+    }
 }
