@@ -236,6 +236,8 @@ public class UserControllerTest {
                 "fake-image-content".getBytes()
         );
 
+        given(userUpdateService.updateProfile(anyString(), any(), any())).willReturn(UserFixture.testUserResult());
+
         // when
         mockMvc.perform(multipart("/api/users/profile")
                         .file(nickNamePart)
