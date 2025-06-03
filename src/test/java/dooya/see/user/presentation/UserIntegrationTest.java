@@ -65,7 +65,7 @@ class UserIntegrationTest {
 
     @DisplayName("유저 회원가입 성공 테스트")
     @Test
-    void user_signUp_success() throws Exception {
+    void user_SignUp_Success() throws Exception {
         UserSignUpRequest request = signUpRequest();
 
         mockMvc.perform(post("/api/users")
@@ -83,7 +83,7 @@ class UserIntegrationTest {
     @DisplayName("유저 회원가입 실패 테스트 - 개별 필드 유효성 검증")
     @ParameterizedTest(name = "{index} => 필드 = {0}, 메시지 = {1}")
     @MethodSource("invalidFieldProvider")
-    void user_signUp_fail_invalidField(UserSignUpRequest request, String field, String message) throws Exception {
+    void user_SignUp_Fail_InvalidField(UserSignUpRequest request, String field, String message) throws Exception {
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -96,7 +96,7 @@ class UserIntegrationTest {
 
     @DisplayName("유저 회원가입 실패 테스트 - 모든 필드가 공란일때")
     @Test
-    void user_signUp_fail_allFieldsInvalid() throws Exception {
+    void user_SignUp_Fail_AllFieldsInvalid() throws Exception {
         UserSignUpRequest request = signUpRequest().toBuilder()
                 .email("")
                 .name("")
@@ -139,7 +139,7 @@ class UserIntegrationTest {
 
     @DisplayName("토큰에 포함된 이메일로 유저 조회 성공테스트")
     @Test
-    void findByToken_user_success() throws Exception {
+    void findByToken_User_Success() throws Exception {
         // Act & Assert
         mockMvc.perform(get("/api/users")
                         .cookie(new Cookie("Authorization", testToken))
@@ -154,7 +154,7 @@ class UserIntegrationTest {
 
     @DisplayName("토큰에 포함된 이메일로 유저 조회 실패 테스트")
     @Test
-    void findByToken_user_fail() throws Exception {
+    void findByToken_User_Fail() throws Exception {
         // Arrange
         String testToken = jwtUtil.createAccessToken(testUser.getId(), "test@fail.com", testUser.getRole());
 
@@ -169,7 +169,7 @@ class UserIntegrationTest {
 
     @DisplayName("이메일 중복 확인 성공 테스트")
     @Test
-    void findByEmail_user_success() throws Exception {
+    void findByEmail_User_Success() throws Exception {
         // Arrange
         String email = "dooya@see.com";
 
@@ -182,7 +182,7 @@ class UserIntegrationTest {
 
     @DisplayName("이메일로 중복 확인 실패 테스트")
     @Test
-    void findByEmail_user_fail() throws Exception {
+    void findByEmail_User_Fail() throws Exception {
         // Arrange
         String email = "test@see.com";
 
@@ -197,7 +197,7 @@ class UserIntegrationTest {
 
     @DisplayName("유저 정보 수정 성공 테스트")
     @Test
-    void userNickName_update_success() throws Exception {
+    void userNickName_Update_Success() throws Exception {
         // Arrange
         NickNameUpdateRequest request = nickNameUpdateRequest();
 
@@ -212,7 +212,7 @@ class UserIntegrationTest {
 
     @DisplayName("유저 정보 수정 실패 테스트")
     @Test
-    void userNickName_update_fail() throws Exception {
+    void userNickName_Update_Fail() throws Exception {
         // Arrange
         NickNameUpdateRequest request = nickNameUpdateRequest();
         String testToken = jwtUtil.createAccessToken(testUser.getId(), "test@fail.com", testUser.getRole());
@@ -229,7 +229,7 @@ class UserIntegrationTest {
 
     @DisplayName("유저 비밀번호 업데이트 성공 테스트")
     @Test
-    void userPassword_Update_success() throws Exception {
+    void userPassword_Update_Success() throws Exception {
         // Arrange
         PasswordUpdateRequest request = passwordUpdateRequest();
 
@@ -244,7 +244,7 @@ class UserIntegrationTest {
 
     @DisplayName("유저 비밀번호 업데이트 실패 테스트")
     @Test
-    void userPassword_Update_fail() throws Exception {
+    void userPassword_Update_Fail() throws Exception {
         // Arrange
         PasswordUpdateRequest request = passwordUpdateRequestFail();
 

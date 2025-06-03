@@ -38,7 +38,7 @@ public class AdminIntegrationTest {
 
     @DisplayName("유저 목록 조회 성공 테스트")
     @Test
-    void admin_userSelect_success() throws Exception {
+    void admin_UserSelect_Success() throws Exception {
         // Arrange
         User testAdmin = userJpaRepository.save(AdminFixture.testAdmin());
         String testToken = jwtUtil.createAccessToken(testAdmin.getId(), testAdmin.getEmail(), Role.valueOf(testAdmin.getRole().getRoleName()));
@@ -52,7 +52,7 @@ public class AdminIntegrationTest {
 
     @DisplayName("유저 목록 조회 실패 테스트")
     @Test
-    void admin_userSelect_fail() throws Exception {
+    void admin_UserSelect_Fail() throws Exception {
         User regularUser = userJpaRepository.save(UserFixture.testUser());
         String userToken = jwtUtil.createAccessToken(regularUser.getId(), regularUser.getEmail(), Role.valueOf(regularUser.getRole().getRoleName()));
 

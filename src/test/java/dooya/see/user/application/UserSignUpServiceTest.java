@@ -47,7 +47,7 @@ public class UserSignUpServiceTest {
 
     @DisplayName("유저 회원가입 성공 단위테스트")
     @Test
-    void user_signUp_success() {
+    void user_SignUp_Success() {
         // Arrange
         UserSignUpCommand command = UserFixture.signUpCommand();
         User testUser = UserFixture.createTestUser(command);
@@ -76,7 +76,7 @@ public class UserSignUpServiceTest {
 
     @DisplayName("유저 회원가입 실패 단위테스트 - 중복되는 이메일")
     @Test
-    void user_signUp_fail() {
+    void user_SignUp_Fail() {
         // Arrange
         UserSignUpCommand command = UserFixture.signUpCommand();
         doThrow(new CustomException(ErrorCode.USER_ALREADY_EXISTS)).when(userValidator).validateDuplicateEmail(command.email());

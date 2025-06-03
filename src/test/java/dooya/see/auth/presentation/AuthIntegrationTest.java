@@ -52,7 +52,7 @@ public class AuthIntegrationTest {
 
     @DisplayName("유저 로그인 성공 테스트")
     @Test
-    void user_login_success() throws Exception {
+    void user_Login_Success() throws Exception {
         // Arrange
         LoginRequest request = request();
 
@@ -71,7 +71,7 @@ public class AuthIntegrationTest {
     @DisplayName("유저 로그인 실패 테스트 - 개별 필드 유효성 검증")
     @ParameterizedTest(name = "{index} => 필드 = {0}, 메시지 = {1}")
     @MethodSource("invalidFieldProvider")
-    void user_login_fail_invalidField(LoginRequest request, String field, String message) throws Exception {
+    void user_Login_Fail_InvalidField(LoginRequest request, String field, String message) throws Exception {
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))

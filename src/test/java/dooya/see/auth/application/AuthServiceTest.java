@@ -48,7 +48,7 @@ public class AuthServiceTest {
 
     @DisplayName("유저 로그인 성공 단위테스트")
     @Test
-    void user_login_success() {
+    void user_Login_Success() {
         // Arrange
         given(authValidator.validateEmailAndPassword(command.email(), command.password())).willReturn(testUser);
         given(jwtUtil.createAccessToken(testUser.getId(), testUser.getEmail(), testUser.getRole())).willReturn("mocked-jwt-token");
@@ -66,7 +66,7 @@ public class AuthServiceTest {
 
     @DisplayName("유저 로그인 실패 단위테스트")
     @Test
-    void user_login_failNotEmail() {
+    void user_Login_FailNotEmail() {
         // Arrange
         doThrow(new CustomException(ErrorCode.USER_NOT_MATCH_LOGIN_INFO)).when(authValidator).validateEmailAndPassword(command.email(), command.password());
 

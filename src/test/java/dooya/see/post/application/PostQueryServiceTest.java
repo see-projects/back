@@ -36,7 +36,7 @@ public class PostQueryServiceTest {
 
     @DisplayName("게시글 조회 성공 테스트")
     @Test
-    void getPosts_shouldReturnList_whenPostsExist() {
+    void getPosts_ShouldReturnList_WhenPostsExist() {
         // given
         Page<Post> page = new PageImpl<>(List.of(PostFixture.testPost()));
         given(postRepository.findAll(any(Pageable.class))).willReturn(page);
@@ -55,7 +55,7 @@ public class PostQueryServiceTest {
 
     @DisplayName("단일 게시글 조회 실패 테스트 - 게시글이 존재하지 않을 경우")
     @Test
-    void getPost_shouldReturn_whenPostExistFail() {
+    void getPost_ShouldReturn_WhenPostExistFail() {
         // given
         Long id = 1L;
 
@@ -67,7 +67,7 @@ public class PostQueryServiceTest {
 
     @DisplayName("단일 게시글 조회 성공 테스트")
     @Test
-    void getPost_shouldReturn_whenPostExistSuccess() {
+    void getPost_ShouldReturn_WhenPostExistSuccess() {
         // given
         Long id = 1L;
         given(postRepository.findById(id)).willReturn(Optional.of(PostFixture.testPost()));

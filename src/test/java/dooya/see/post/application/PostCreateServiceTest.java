@@ -38,7 +38,7 @@ public class PostCreateServiceTest {
 
     @DisplayName("게시글 작성 성공 단위테스트")
     @Test
-    void user_post_success() {
+    void user_Post_Success() {
         // Arrange
         PostCommand command = PostFixture.command();
         User testUser = UserFixture.testUser();
