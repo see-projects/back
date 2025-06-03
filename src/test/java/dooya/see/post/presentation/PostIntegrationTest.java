@@ -58,7 +58,7 @@ public class PostIntegrationTest {
 
     @DisplayName("게시글 작성 성공 테스트")
     @Test
-    void user_post_success() throws Exception {
+    void user_Post_Success() throws Exception {
         // Arrange
         PostRequest request = request();
 
@@ -77,7 +77,7 @@ public class PostIntegrationTest {
     @DisplayName("게시글 작성 실패 테스트 - 개별 필드 유효성 검증")
     @ParameterizedTest(name = "{index} => 필드 = {0}, 메시지 = {1}")
     @MethodSource("invalidFieldProvider")
-    void post_fail_invalidField(PostRequest request, String field, String message) throws Exception {
+    void post_Fail_InvalidField(PostRequest request, String field, String message) throws Exception {
         mockMvc.perform(post("/api/post")
                         .cookie(new Cookie("Authorization", testToken))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -104,7 +104,7 @@ public class PostIntegrationTest {
 
     @DisplayName("게시글 조회 성공 테스트")
     @Test
-    void post_get_success() throws Exception {
+    void post_Get_Success() throws Exception {
         // Arrange
         saveTestPost();
 

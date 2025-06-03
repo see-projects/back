@@ -39,7 +39,7 @@ public class UserQueryServiceTest {
 
     @DisplayName("이메일로 유저 조회 성공 단위테스트")
     @Test
-    void user_getUserByEmail_success() {
+    void user_GetUserByEmail_Success() {
         // Arrange
         given(userRepository.findByEmail(testUser.getEmail())).willReturn(Optional.of(testUser));
 
@@ -58,7 +58,7 @@ public class UserQueryServiceTest {
 
     @DisplayName("이메일로 유저 조회 실패 단위테스트 - 존재하지 않는 이메일")
     @Test
-    void user_getUserByEmail_failNotEmail() {
+    void user_GetUserByEmail_FailNotEmail() {
         // Arrange
         doThrow(new CustomException(ErrorCode.USER_NOT_FOUND)).when(userRepository).findByEmail(testUser.getEmail());
 
@@ -72,7 +72,7 @@ public class UserQueryServiceTest {
 
     @DisplayName("권한이 USER인 유저 모두 조회 성공 테스트")
     @Test
-    void user_getRoleUsers_success() {
+    void user_GetRoleUsers_Success() {
         // Arrange
         User testUser1 = testUser();
         User testUser2 = testUser();

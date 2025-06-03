@@ -48,7 +48,7 @@ public class UserUpdateServiceTest {
 
     @DisplayName("유저 닉네임 업데이트 성공 테스트")
     @Test
-    void user_nickNameUpdate_success() {
+    void user_NickNameUpdate_Success() {
         // Arrange
         NickNameUpdateCommand command = updateCommand();
 
@@ -63,7 +63,7 @@ public class UserUpdateServiceTest {
 
     @DisplayName("유저 닉네임 업데이트 실패 테스트 - 유저가 존재하지 않음")
     @Test
-    void user_nickNameUpdate_failure() {
+    void user_NickNameUpdate_Failure() {
         // Arrange
         doThrow(new CustomException(ErrorCode.USER_NOT_FOUND)).when(userRepository).findByEmail(testUser.getEmail());
 
@@ -77,7 +77,7 @@ public class UserUpdateServiceTest {
 
     @DisplayName("유저 비밀번호 업데이트 성공 테스트")
     @Test
-    void user_passwordUpdate_success() {
+    void user_PasswordUpdate_Success() {
         // Arrange
         PasswordUpdateCommand command = passwordUpdateCommand();
 
@@ -98,7 +98,7 @@ public class UserUpdateServiceTest {
 
     @DisplayName("유저 비밀번호 업데이트 실패 테스트 - 일치하지 않는 비밀번호")
     @Test
-    void user_passwordUpdate_failure() {
+    void user_PasswordUpdate_Failure() {
         // Arrange
         PasswordUpdateCommand command = passwordUpdateCommand();
 
@@ -112,7 +112,7 @@ public class UserUpdateServiceTest {
 
     @DisplayName("유저 프로필 이미지 업데이트 성공 테스트")
     @Test
-    void user_profileImageUpdate_success() {
+    void user_ProfileImageUpdate_Success() {
         // Arrange
         String email = "test@example.com";
         String expectedImageUrl = "https://s3.amazon.com/profile/image.png";
@@ -136,7 +136,7 @@ public class UserUpdateServiceTest {
 
     @DisplayName("유저 프로필 이미지 업데이트 실패 테스트 - 유저가 존재하지 않음")
     @Test
-    void user_profileImageUpdate_fail() {
+    void user_ProfileImageUpdate_Fail() {
         // Arrange
         MultipartFile mockFile = mock(MultipartFile.class);
         doThrow(new CustomException(ErrorCode.USER_NOT_FOUND)).when(userRepository).findByEmail(testUser.getEmail());
@@ -151,7 +151,7 @@ public class UserUpdateServiceTest {
 
     @DisplayName("유저 프로필 업데이트 실패 테스트 - 유저가 존재하지 않음")
     @Test
-    void user_profileUpdate_fail() {
+    void user_ProfileUpdate_Fail() {
         // Arrange
         MultipartFile mockFile = mock(MultipartFile.class);
         NickNameUpdateCommand command = updateCommand();
@@ -166,7 +166,7 @@ public class UserUpdateServiceTest {
 
     @DisplayName("유저 프로필 업데이트 성공 테스트")
     @Test
-    void user_profileUpdate_success() {
+    void user_ProfileUpdate_Success() {
         // Arrange
         String email = "test@example.com";
         String expectedImageUrl = "https://s3.amazon.com/profile/image.png";
