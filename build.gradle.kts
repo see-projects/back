@@ -1,0 +1,73 @@
+plugins {
+    java
+    id("org.springframework.boot") version "3.4.5"
+    id("io.spring.dependency-management") version "1.1.7"
+}
+
+group = "dooya"
+version = "0.0.1-SNAPSHOT"
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom(configurations.annotationProcessor.get())
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Spring Data JPA 의존성 (JPA와 데이터베이스 연동을 위한 기본 설정)
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+
+    // Spring Web 의존성 (웹 애플리케이션을 위한 기본 설정, REST API 제공)
+    implementation("org.springframework.boot:spring-boot-starter-web")
+
+    implementation("org.springframework.boot:spring-boot-starter-validation")
+
+    // Spring Security 의존성 (보안 기능을 제공)
+    implementation("org.springframework.boot:spring-boot-starter-security")
+
+    // Spring Security 테스트 의존성 (보안 관련 테스트 기능을 제공)
+    testImplementation("org.springframework.security:spring-security-test")
+
+    // Lombok 의존성 (컴파일 시점에 어노테이션을 처리하여 코드 자동 생성)
+    compileOnly("org.projectlombok:lombok")
+
+    // MySQL 데이터베이스 연결을 위한 JDBC 드라이버 의존성 (런타임 시에 필요)
+    runtimeOnly("com.mysql:mysql-connector-j")
+
+    // Lombok 어노테이션 처리기 의존성 (컴파일 시 Lombok 어노테이션 처리)
+    annotationProcessor("org.projectlombok:lombok")
+
+    // Spring Boot 테스트 의존성 (JUnit, MockMvc 등을 포함하여 테스트 환경을 제공)
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+
+    // H2 데이터베이스 의존성 (주로 테스트 환경에서 인메모리 데이터베이스로 사용)
+    runtimeOnly("com.h2database:h2")
+
+    // JUnit 플랫폼 런처 의존성 (JUnit 테스트를 실행할 수 있도록 지원)
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    // Swagger
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
+
+    // JWT
+    implementation("io.jsonwebtoken:jjwt-api:0.11.5")
+    implementation("io.jsonwebtoken:jjwt-impl:0.11.5")
+    implementation("io.jsonwebtoken:jjwt-jackson:0.11.5")
+
+    // AWS S3
+    implementation("com.amazonaws:aws-java-sdk-s3:1.12.783")
+}
+
+tasks.named<Test>("test") {
+    useJUnitPlatform()
+}
