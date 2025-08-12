@@ -1,6 +1,5 @@
-package dooya.see.domain.member;
+package dooya.see.domain.shared;
 
-import dooya.see.domain.shared.Email;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
