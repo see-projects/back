@@ -1,6 +1,7 @@
 package dooya.see.domain.member;
 
 import dooya.see.domain.AbstractEntity;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 @ToString(callSuper = true)
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class MemberDetail extends AbstractEntity {
+    @Embedded
     private Profile profile;
 
     private LocalDateTime registeredAt;

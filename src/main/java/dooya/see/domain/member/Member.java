@@ -2,7 +2,10 @@ package dooya.see.domain.member;
 
 import dooya.see.domain.AbstractEntity;
 import dooya.see.domain.shared.Email;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
+import jakarta.persistence.OneToOne;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,6 +20,7 @@ import static java.util.Objects.requireNonNull;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member extends AbstractEntity {
     @NaturalId
+    @Embedded
     private Email email;
 
     private String nickname;
@@ -25,6 +29,7 @@ public class Member extends AbstractEntity {
 
     private MemberStatus status;
 
+    @OneToOne(cascade = CascadeType.ALL)
     private MemberDetail detail;
 
     public static Member register(MemberRegisterRequest registerRequest, PasswordEncoder passwordEncoder) {
