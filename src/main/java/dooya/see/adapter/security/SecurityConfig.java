@@ -1,0 +1,84 @@
+package dooya.see.adapter.security;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import dooya.see.adapter.CustomAccessDeniedHandler;
+import dooya.see.adapter.CustomAuthenticationEntryPoint;
+import dooya.see.adapter.JwtAuthFilter;
+import dooya.see.adapter.JwtUtil;
+import dooya.see.domain.member.Role;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
+
+@Configuration
+@EnableWebSecurity
+@RequiredArgsConstructor
+public class SecurityConfig {
+
+    private final JwtUtil jwtUtil;
+    private final ObjectMapper objectMapper;
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        // CORS 설정
+        http.cors(cors -> cors.configurationSource(configurationSource()));
+
+        // CSRF 비활성화 (보통 REST API는 CSRF 비활성화)
+        http.csrf(AbstractHttpConfigurer::disable);
+
+        // Form Login 비활성화 (프론트에서 로그인 처리할 경우 주로 비활성화)
+        http.formLogin(AbstractHttpConfigurer::disable);
+
+        // HTTP Basic 인증 비활성화 (JWT 사용 시 필요 없음)
+        http.httpBasic(AbstractHttpConfigurer::disable);
+
+        http.authorizeHttpRequests((auth) -> auth
+                .requestMatchers("/api/members/**").permitAll()
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/post/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/post/**").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/post/**").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/post/**").authenticated()
+                .requestMatchers("/api/admin").hasAnyAuthority(Role.ADMIN.getRoleSecurity())
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/webjars/**").permitAll()
+                .anyRequest().authenticated());
+
+        // 세션 설정 : STATELESS
+        http.sessionManagement((session) -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+
+        // JWT 필터 추가
+        http.addFilterBefore(new JwtAuthFilter(jwtUtil, objectMapper), UsernamePasswordAuthenticationFilter.class);
+
+        // Exception handler 추가
+        http.exceptionHandling((exceptionHandling) -> exceptionHandling
+                .accessDeniedHandler(new CustomAccessDeniedHandler(objectMapper))
+                .authenticationEntryPoint(new CustomAuthenticationEntryPoint(objectMapper)));
+
+        return http.build();
+    }
+
+    public CorsConfigurationSource configurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.addAllowedHeader("*");
+        configuration.addAllowedMethod("*");
+        configuration.setAllowedOrigins(Arrays.asList("https://", "http://localhost:5173", "https://","https://"));
+        configuration.setAllowCredentials(true);
+        configuration.addExposedHeader("ACCESS_TOKEN");
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+}
