@@ -8,8 +8,8 @@ import dooya.see.post.application.dto.PostResult;
 import dooya.see.post.application.service.PostCreateService;
 import dooya.see.post.domain.Post;
 import dooya.see.post.domain.PostRepository;
-import dooya.see.user.domain.User;
-import dooya.see.user.domain.UserRepository;
+import dooya.see.member.domain.Member;
+import dooya.see.member.domain.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,16 +18,16 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class PostCreateServiceImpl implements PostCreateService {
 
-    private final UserRepository userRepository;
+    private final MemberRepository memberRepository;
     private final PostRepository postRepository;
 
     @Transactional
     @Override
     public PostResult createPost(String email, PostCommand command) {
-        User user = userRepository.findByEmail(email)
+        Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        Post post = PostApplicationMapper.toEntity(command, user);
+        Post post = PostApplicationMapper.toEntity(command, member);
         postRepository.save(post);
 
         return PostApplicationMapper.toResult(post);

@@ -1,8 +1,7 @@
 package dooya.see.post.domain;
 
 import dooya.see.common.base.BaseEntity;
-import dooya.see.user.domain.Role;
-import dooya.see.user.domain.User;
+import dooya.see.member.domain.Member;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,15 +21,15 @@ public class Post extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    User user;
+    Member member;
 
     String title;
 
     String content;
 
-    public static Post createPost(String title, String content, User user) {
+    public static Post createPost(String title, String content, Member member) {
         return Post.builder()
-                .user(user)
+                .member(member)
                 .title(title)
                 .content(content)
                 .build();

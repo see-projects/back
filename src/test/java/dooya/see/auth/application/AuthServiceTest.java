@@ -9,7 +9,7 @@ import dooya.see.common.AuthFixture;
 import dooya.see.common.UserFixture;
 import dooya.see.common.exception.CustomException;
 import dooya.see.common.exception.ErrorCode;
-import dooya.see.user.domain.User;
+import dooya.see.member.domain.Member;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,30 +38,30 @@ public class AuthServiceTest {
     private JwtUtil jwtUtil;
 
     private LoginCommand command;
-    private User testUser;
+    private Member testMember;
 
     @BeforeEach
     void setUp() {
         command = AuthFixture.command();
-        testUser = UserFixture.testUser();
+        testMember = UserFixture.testUser();
     }
 
     @DisplayName("유저 로그인 성공 단위테스트")
     @Test
     void user_Login_Success() {
         // Arrange
-        given(authValidator.validateEmailAndPassword(command.email(), command.password())).willReturn(testUser);
-        given(jwtUtil.createAccessToken(testUser.getId(), testUser.getEmail(), testUser.getRole())).willReturn("mocked-jwt-token");
+        given(authValidator.validateEmailAndPassword(command.email(), command.password())).willReturn(testMember);
+        given(jwtUtil.createAccessToken(testMember.getId(), testMember.getEmail(), testMember.getRole())).willReturn("mocked-jwt-token");
 
         // Act
         LoginResult result = authService.login(command);
 
         // Assert
-        assertThat(result.email()).isEqualTo(testUser.getEmail());
+        assertThat(result.email()).isEqualTo(testMember.getEmail());
         assertThat(result.accessToken()).isEqualTo("mocked-jwt-token");
 
         then(authValidator).should(times(1)).validateEmailAndPassword(command.email(), command.password());
-        then(jwtUtil).should(times(1)).createAccessToken(testUser.getId(), testUser.getEmail(), testUser.getRole());
+        then(jwtUtil).should(times(1)).createAccessToken(testMember.getId(), testMember.getEmail(), testMember.getRole());
     }
 
     @DisplayName("유저 로그인 실패 단위테스트")

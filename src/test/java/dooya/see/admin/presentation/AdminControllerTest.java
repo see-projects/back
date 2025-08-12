@@ -2,7 +2,7 @@ package dooya.see.admin.presentation;
 
 import dooya.see.auth.config.SecurityConfig;
 import dooya.see.auth.util.JwtUtil;
-import dooya.see.user.application.service.UserQueryService;
+import dooya.see.member.application.service.MemberQueryService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +31,7 @@ public class AdminControllerTest {
     private JwtUtil jwtUtil;
 
     @MockitoBean
-    private UserQueryService userQueryService;
+    private MemberQueryService memberQueryService;
 
     @MockitoBean
     private JpaMetamodelMappingContext jpaMetamodelMappingContext;
@@ -46,6 +46,6 @@ public class AdminControllerTest {
                 .andExpect(status().isOk());
 
         // then
-        then(userQueryService).should().getUsers();
+        then(memberQueryService).should().getUsers();
     }
 }

@@ -2,13 +2,13 @@ package dooya.see.post.application;
 
 import dooya.see.common.PostFixture;
 import dooya.see.common.UserFixture;
+import dooya.see.member.domain.Member;
 import dooya.see.post.application.dto.PostCommand;
 import dooya.see.post.application.dto.PostResult;
 import dooya.see.post.application.service.impl.PostCreateServiceImpl;
 import dooya.see.post.domain.Post;
 import dooya.see.post.domain.PostRepository;
-import dooya.see.user.domain.User;
-import dooya.see.user.domain.UserRepository;
+import dooya.see.member.domain.MemberRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,7 +30,7 @@ public class PostCreateServiceTest {
     private PostCreateServiceImpl postCreateService;
 
     @Mock
-    private UserRepository userRepository;
+    private MemberRepository memberRepository;
 
     @Mock
     private PostRepository postRepository;
@@ -41,18 +41,18 @@ public class PostCreateServiceTest {
     void user_Post_Success() {
         // Arrange
         PostCommand command = PostFixture.command();
-        User testUser = UserFixture.testUser();
+        Member testMember = UserFixture.testUser();
         Post testPost = PostFixture.testPost();
 
-        given(userRepository.findByEmail(testUser.getEmail())).willReturn(Optional.of(testUser));
+        given(memberRepository.findByEmail(testMember.getEmail())).willReturn(Optional.of(testMember));
         given(postRepository.save(any(Post.class))).willReturn(testPost);
 
         // Act
-        PostResult result = postCreateService.createPost(testUser.getEmail(), command);
+        PostResult result = postCreateService.createPost(testMember.getEmail(), command);
 
         // Assert
         assertAll(
-                () -> assertThat(result.nickName()).isEqualTo(testUser.getNickName()),
+                () -> assertThat(result.nickName()).isEqualTo(testMember.getNickName()),
                 () -> assertThat(result.title()).isEqualTo(command.title()),
                 () -> assertThat(result.content()).isEqualTo(command.content())
         );

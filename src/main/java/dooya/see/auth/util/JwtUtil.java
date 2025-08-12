@@ -3,7 +3,7 @@ package dooya.see.auth.util;
 
 import dooya.see.common.exception.CustomException;
 import dooya.see.common.exception.ErrorCode;
-import dooya.see.user.domain.Role;
+import dooya.see.member.domain.Role;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;

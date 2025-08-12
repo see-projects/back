@@ -81,7 +81,7 @@ src/
 │   │   ├── auth/           # 인증/인가
 │   │   ├── common/         # 공통 기능
 │   │   ├── post/           # 게시글 관리
-│   │   └── user/           # 사용자 관리
+│   │   └── member/           # 사용자 관리
 │   └── resources/
 │       ├── application.yml
 │       └── application-prod.yml

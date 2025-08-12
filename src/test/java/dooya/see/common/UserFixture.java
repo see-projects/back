@@ -1,18 +1,18 @@
 package dooya.see.common;
 
-import dooya.see.user.application.dto.*;
-import dooya.see.user.presentation.dto.PasswordUpdateRequest;
-import dooya.see.user.presentation.dto.UserSignUpRequest;
-import dooya.see.user.domain.Role;
-import dooya.see.user.domain.User;
-import dooya.see.user.presentation.dto.NickNameUpdateRequest;
+import dooya.see.member.application.dto.*;
+import dooya.see.member.domain.Member;
+import dooya.see.member.presentation.dto.PasswordUpdateRequest;
+import dooya.see.member.presentation.dto.MemberRegisterRequest;
+import dooya.see.member.domain.Role;
+import dooya.see.member.presentation.dto.NickNameUpdateRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 public class UserFixture {
 
-    public static UserSignUpRequest signUpRequest() {
-        return new UserSignUpRequest("dooya@see.com", "testName", "testPassword", "testNickName");
+    public static MemberRegisterRequest signUpRequest() {
+        return new MemberRegisterRequest("dooya@see.com", "testName", "testPassword", "testNickName");
     }
 
     public static NickNameUpdateRequest nickNameUpdateRequest() {
@@ -27,8 +27,8 @@ public class UserFixture {
         return new PasswordUpdateRequest("failPassword", "updatePassword");
     }
 
-    public static UserSignUpCommand signUpCommand() {
-        return new UserSignUpCommand("dooya@see.com", "testName", "testPassword", "testNickName");
+    public static MemberRegisterCommand signUpCommand() {
+        return new MemberRegisterCommand("dooya@see.com", "testName", "testPassword", "testNickName");
     }
 
     public static NickNameUpdateCommand updateCommand() {
@@ -39,8 +39,8 @@ public class UserFixture {
         return new PasswordUpdateCommand("testPassword", "updatePassword");
     }
 
-    public static User createTestUser(UserSignUpCommand command) {
-        User testUser = User.signUpUser(
+    public static Member createTestUser(MemberRegisterCommand command) {
+        Member testMember = Member.signUpUser(
                 command.email(),
                 command.name(),
                 command.password(),
@@ -48,12 +48,12 @@ public class UserFixture {
                 "https://fake-s3/profile.jpeg",
                 Role.of("USER")
         );
-        ReflectionTestUtils.setField(testUser, "id", 1L);
-        return testUser;
+        ReflectionTestUtils.setField(testMember, "id", 1L);
+        return testMember;
     }
 
-    public static User testUser() {
-        return User.builder()
+    public static Member testUser() {
+        return Member.builder()
                 .email("test@see.com")
                 .name("testName")
                 .password("$2a$10$DOWSDdkg2YqXWB3S1.CzHeeI6qHtDc0lYBFfN4y3pFehUcbDoztYm")
@@ -62,16 +62,16 @@ public class UserFixture {
                 .build();
     }
 
-    public static UserResult testUserResult() {
-        return new UserResult(1L, "dooya@see.com", "testName", "testNickName", "https://fake-s3/profile.jpeg", Role.of("USER"));
+    public static MemberResult testUserResult() {
+        return new MemberResult(1L, "dooya@see.com", "testName", "testNickName", "https://fake-s3/profile.jpeg", Role.of("USER"));
     }
 
     public static PasswordUpdateResult passwordUpdateResult() {
         return new PasswordUpdateResult("비밀번호가 성공적으로 변경되었습니다.");
     }
 
-    public static User mockUser(PasswordEncoder passwordEncoder) {
-        return User.builder()
+    public static Member mockUser(PasswordEncoder passwordEncoder) {
+        return Member.builder()
                 .email("test@see.com")
                 .name("testName")
                 .password(passwordEncoder.encode("testPassword"))
