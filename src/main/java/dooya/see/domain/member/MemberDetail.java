@@ -15,13 +15,13 @@ import java.time.LocalDateTime;
 public class MemberDetail extends AbstractEntity {
     private Profile profile;
 
-    private LocalDateTime registerdAt;
+    private LocalDateTime registeredAt;
 
     private LocalDateTime deactivatedAt;
 
     public static MemberDetail create() {
         MemberDetail memberDetail = new MemberDetail();
-        memberDetail.registerdAt = LocalDateTime.now();
+        memberDetail.registeredAt = LocalDateTime.now();
 
         return memberDetail;
     }

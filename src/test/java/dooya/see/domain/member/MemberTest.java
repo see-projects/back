@@ -22,6 +22,6 @@ class MemberTest {
     @DisplayName("멤버 생성")
     void memberRegister() {
         assertThat(member.getStatus()).isEqualTo(MemberStatus.ACTIVE);
-        assertThat(member.getDetail().getRegisterdAt()).isNotNull();
+        assertThat(member.getDetail().getRegisteredAt()).isNotNull();
     }
 }
