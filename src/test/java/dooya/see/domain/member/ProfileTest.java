@@ -14,7 +14,7 @@ public class ProfileTest {
     }
 
     @Test
-    @DisplayName("프로필 문자열 검증")
+    @DisplayName("프로필 문자열 유효성 검증")
     void profileNotEmpty() {
         assertThatThrownBy(() -> new Profile("longlonglonglonglonglongprofile")).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new Profile("A")).isInstanceOf(IllegalArgumentException.class);
