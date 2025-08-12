@@ -3,9 +3,9 @@ package dooya.see.admin.presentation;
 import dooya.see.auth.util.JwtUtil;
 import dooya.see.common.AdminFixture;
 import dooya.see.common.UserFixture;
-import dooya.see.user.domain.Role;
-import dooya.see.user.domain.User;
-import dooya.see.user.infrastructure.UserJpaRepository;
+import dooya.see.member.domain.Role;
+import dooya.see.member.domain.Member;
+import dooya.see.member.infrastructure.MemberJpaRepository;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,7 +31,7 @@ public class AdminIntegrationTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private UserJpaRepository userJpaRepository;
+    private MemberJpaRepository memberJpaRepository;
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -40,7 +40,7 @@ public class AdminIntegrationTest {
     @Test
     void admin_UserSelect_Success() throws Exception {
         // Arrange
-        User testAdmin = userJpaRepository.save(AdminFixture.testAdmin());
+        Member testAdmin = memberJpaRepository.save(AdminFixture.testAdmin());
         String testToken = jwtUtil.createAccessToken(testAdmin.getId(), testAdmin.getEmail(), Role.valueOf(testAdmin.getRole().getRoleName()));
 
         // Act & Assert
@@ -53,8 +53,8 @@ public class AdminIntegrationTest {
     @DisplayName("유저 목록 조회 실패 테스트")
     @Test
     void admin_UserSelect_Fail() throws Exception {
-        User regularUser = userJpaRepository.save(UserFixture.testUser());
-        String userToken = jwtUtil.createAccessToken(regularUser.getId(), regularUser.getEmail(), Role.valueOf(regularUser.getRole().getRoleName()));
+        Member regularMember = memberJpaRepository.save(UserFixture.testUser());
+        String userToken = jwtUtil.createAccessToken(regularMember.getId(), regularMember.getEmail(), Role.valueOf(regularMember.getRole().getRoleName()));
 
         // Act & Assert
         mockMvc.perform(get("/api/admin")

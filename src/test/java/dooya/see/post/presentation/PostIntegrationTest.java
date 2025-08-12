@@ -3,9 +3,9 @@ package dooya.see.post.presentation;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dooya.see.auth.util.JwtUtil;
+import dooya.see.member.domain.Member;
 import dooya.see.post.presentation.dto.PostRequest;
-import dooya.see.user.domain.User;
-import dooya.see.user.infrastructure.UserJpaRepository;
+import dooya.see.member.infrastructure.MemberJpaRepository;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -42,18 +42,18 @@ public class PostIntegrationTest {
     private ObjectMapper objectMapper;
 
     @Autowired
-    private UserJpaRepository userJpaRepository;
+    private MemberJpaRepository memberJpaRepository;
 
     @Autowired
     private JwtUtil jwtUtil;
 
     private String testToken;
-    private User testUser;
+    private Member testMember;
 
     @BeforeEach
     void setUp() {
-        testUser = userJpaRepository.save(testUser());
-        testToken = jwtUtil.createAccessToken(testUser.getId(), testUser.getEmail(), testUser.getRole());
+        testMember = memberJpaRepository.save(testUser());
+        testToken = jwtUtil.createAccessToken(testMember.getId(), testMember.getEmail(), testMember.getRole());
     }
 
     @DisplayName("게시글 작성 성공 테스트")
@@ -69,7 +69,7 @@ public class PostIntegrationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.nickName").value(testUser.getNickName()))
+                .andExpect(jsonPath("$.nickName").value(testMember.getNickName()))
                 .andExpect(jsonPath("$.title").value(request.title()))
                 .andExpect(jsonPath("$.content").value(request.content()));
     }

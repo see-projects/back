@@ -3,7 +3,7 @@ package dooya.see.auth.presentation;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dooya.see.auth.presentation.dto.LoginRequest;
 import dooya.see.common.UserFixture;
-import dooya.see.user.infrastructure.UserJpaRepository;
+import dooya.see.member.infrastructure.MemberJpaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,14 +40,14 @@ public class AuthIntegrationTest {
     private ObjectMapper objectMapper;
 
     @Autowired
-    private UserJpaRepository userJpaRepository;
+    private MemberJpaRepository memberJpaRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
     @BeforeEach
     void setUp() {
-        userJpaRepository.save(UserFixture.mockUser(passwordEncoder));
+        memberJpaRepository.save(UserFixture.mockUser(passwordEncoder));
     }
 
     @DisplayName("유저 로그인 성공 테스트")

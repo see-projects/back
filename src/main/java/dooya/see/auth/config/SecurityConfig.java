@@ -5,7 +5,7 @@ import dooya.see.auth.exception.CustomAccessDeniedHandler;
 import dooya.see.auth.exception.CustomAuthenticationEntryPoint;
 import dooya.see.auth.filter.JwtAuthFilter;
 import dooya.see.auth.util.JwtUtil;
-import dooya.see.user.domain.Role;
+import dooya.see.member.domain.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -45,7 +45,7 @@ public class SecurityConfig {
         http.httpBasic(AbstractHttpConfigurer::disable);
 
         http.authorizeHttpRequests((auth) -> auth
-                .requestMatchers("/api/users/**").permitAll()
+                .requestMatchers("/api/members/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/post/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/post/**").authenticated()

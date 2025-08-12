@@ -1,23 +1,23 @@
 package dooya.see.post.application.dto;
 
 import dooya.see.post.domain.Post;
-import dooya.see.user.domain.User;
+import dooya.see.member.domain.Member;
 import org.springframework.data.domain.Page;
 
 public class PostApplicationMapper {
 
-    public static Post toEntity(PostCommand command, User user) {
+    public static Post toEntity(PostCommand command, Member member) {
         return Post.createPost(
                 command.title(),
                 command.content(),
-                user
+                member
         );
     }
 
     public static PostResult toResult(Post post) {
         return new PostResult(
                 post.getId(),
-                post.getUser().getNickName(),
+                post.getMember().getNickName(),
                 post.getTitle(),
                 post.getContent(),
                 post.getCreatedAt(),

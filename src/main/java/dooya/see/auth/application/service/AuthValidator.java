@@ -1,6 +1,6 @@
 package dooya.see.auth.application.service;
 
-import dooya.see.user.domain.User;
+import dooya.see.member.domain.Member;
 
 /**
  * {@code AuthValidator} 인터페이스는
@@ -15,11 +15,11 @@ import dooya.see.user.domain.User;
  */
 public interface AuthValidator {
     /**
-     * 이메일과 비밀번호를 검증하고, 유효한 경우 해당 {@link User}를 반환합니다.
+     * 이메일과 비밀번호를 검증하고, 유효한 경우 해당 {@link Member}를 반환합니다.
      *
      * @param email 검증할 사용자 이메일
      * @param password 검증할 사용자 비밀번호
-     * @return 검증된 사용자 {@link User} 객체
+     * @return 검증된 사용자 {@link Member} 객체
      */
-    User validateEmailAndPassword(String email, String password);
+    Member validateEmailAndPassword(String email, String password);
 }
