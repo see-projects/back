@@ -46,7 +46,11 @@ public class Member extends AbstractEntity {
         return member;
     }
 
-    public boolean verifyPassword(String passwordHash, PasswordEncoder passwordEncoder) {
-        return passwordEncoder.matches(passwordHash, this.passwordHash);
+    public boolean verifyPassword(String password, PasswordEncoder passwordEncoder) {
+        return passwordEncoder.matches(password, this.passwordHash);
+    }
+
+    public void changePassword(String password, PasswordEncoder passwordEncoder) {
+        this.passwordHash = requireNonNull(passwordEncoder.encode(password));
     }
 }

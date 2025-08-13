@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 
 import static dooya.see.domain.member.MemberFixture.createMemberRegisterRequest;
 import static dooya.see.domain.member.MemberFixture.createPasswordEncoder;
-import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class MemberTest {
@@ -27,9 +26,17 @@ class MemberTest {
     }
 
     @Test
-    @DisplayName("비밀번호 일치여부 확인")
+    @DisplayName("비밀번호 일치 여부 확인")
     void verifyPassword() {
         assertThat(member.verifyPassword("longsecret", passwordEncoder)).isTrue();
         assertThat(member.verifyPassword("longsecret1", passwordEncoder)).isFalse();
+    }
+
+    @Test
+    @DisplayName("비밀번호 변경 여부 확인")
+    void changePassword() {
+        member.changePassword("verysecret", passwordEncoder);
+
+        assertThat(member.verifyPassword("verysecret", passwordEncoder)).isTrue();
     }
 }
