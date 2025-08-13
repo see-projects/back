@@ -56,6 +56,6 @@ class MemberTest {
         member.deactivate();
 
         assertThatThrownBy(() -> member.deactivate())
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }
