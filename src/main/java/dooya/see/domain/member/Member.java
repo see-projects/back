@@ -53,4 +53,9 @@ public class Member extends AbstractEntity {
     public void changePassword(String password, PasswordEncoder passwordEncoder) {
         this.passwordHash = requireNonNull(passwordEncoder.encode(password));
     }
+
+    public void deactivate() {
+        this.status = MemberStatus.DEACTIVATED;
+        this.detail.deactivate();
+    }
 }

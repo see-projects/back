@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import static dooya.see.domain.member.MemberFixture.createMemberRegisterRequest;
 import static dooya.see.domain.member.MemberFixture.createPasswordEncoder;
+import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class MemberTest {
@@ -38,5 +39,23 @@ class MemberTest {
         member.changePassword("verysecret", passwordEncoder);
 
         assertThat(member.verifyPassword("verysecret", passwordEncoder)).isTrue();
+    }
+
+    @Test
+    @DisplayName("회원 비활성화 여부 확인")
+    void deactivate() {
+        member.deactivate();
+
+        assertThat(member.getStatus()).isEqualTo(MemberStatus.DEACTIVATED);
+        assertThat(member.getDetail().getDeactivatedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("회원 비활성화 여부 실패 확인")
+    void deactivateFail() {
+        member.deactivate();
+
+        assertThatThrownBy(() -> member.deactivate())
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }
