@@ -45,4 +45,8 @@ public class Member extends AbstractEntity {
 
         return member;
     }
+
+    public boolean verifyPassword(String passwordHash, PasswordEncoder passwordEncoder) {
+        return passwordEncoder.matches(passwordHash, this.passwordHash);
+    }
 }
