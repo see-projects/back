@@ -20,21 +20,21 @@ class MemberTest {
     }
 
     @Test
-    @DisplayName("멤버 생성")
+    @DisplayName("등록된 회원은 ACTIVE 상태이고 등록일시가 설정되어 있다")
     void memberRegister() {
         assertThat(member.getStatus()).isEqualTo(MemberStatus.ACTIVE);
         assertThat(member.getDetail().getRegisteredAt()).isNotNull();
     }
 
     @Test
-    @DisplayName("비밀번호 일치 여부 확인")
+    @DisplayName("올바른 비밀번호와 틀린 비밀번호를 구분하여 검증한다")
     void verifyPassword() {
         assertThat(member.verifyPassword("longsecret", passwordEncoder)).isTrue();
         assertThat(member.verifyPassword("longsecret1", passwordEncoder)).isFalse();
     }
 
     @Test
-    @DisplayName("비밀번호 변경 여부 확인")
+    @DisplayName("비밀번호 변경 후 새 비밀번호로만 인증에 성공한다")
     void changePassword() {
         member.changePassword("verysecret", passwordEncoder);
 
@@ -42,7 +42,7 @@ class MemberTest {
     }
 
     @Test
-    @DisplayName("회원 비활성화 여부 확인")
+    @DisplayName("회원 비활성화 시 DEACTIVATED 상태와 비활성화일시가 설정된다")
     void deactivate() {
         member.deactivate();
 
@@ -51,11 +51,11 @@ class MemberTest {
     }
 
     @Test
-    @DisplayName("회원 비활성화 여부 실패 확인")
-    void deactivateFail() {
+    @DisplayName("이미 비활성화된 회원을 다시 비활성화하면 예외가 발생한다")
+    void deactivateAlreadyDeactivatedMember() {
         member.deactivate();
 
         assertThatThrownBy(() -> member.deactivate())
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(IllegalStateException.class);
     }
 }
