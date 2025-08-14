@@ -22,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.UnsupportedEncodingException;
 
 import static dooya.see.domain.member.MemberFixture.*;
-import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
@@ -37,7 +36,7 @@ class MemberApiTest {
     final MemberRegister memberRegister;
 
     @Test
-    @DisplayName("")
+    @DisplayName("회원 등록 요청 시 회원 ID와 이메일이 포함된 응답을 반환하고 데이터베이스에 저장된다")
     void register() throws JsonProcessingException, UnsupportedEncodingException {
         MemberRegisterRequest request = createMemberRegisterRequest();
         String requestJson = objectMapper.writeValueAsString(request);
@@ -62,7 +61,7 @@ class MemberApiTest {
     }
 
     @Test
-    @DisplayName("")
+    @DisplayName("동일한 이메일로 회원 등록 시도 시 409 Conflict 상태 코드를 반환한다")
     void duplicateEmail() throws JsonProcessingException {
         memberRegister.register(createMemberRegisterRequest());
 
