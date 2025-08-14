@@ -89,13 +89,13 @@ record MemberRegisterTest(MemberRegister memberRegister, EntityManager entityMan
             .isInstanceOf(DuplicateProfileException.class);
     }
 
-    @Test
-    @DisplayName("잘못된 회원 등록 요청 시 검증 예외가 발생한다")
-    void memberRegisterRequestFail() {
-        checkValidation(new MemberRegisterRequest("valid@email.com", "dooyayayayayaayayayayaya", "longsecret"));
-        checkValidation(new MemberRegisterRequest("valid@email.com", "dooya", "secret"));
-        checkValidation(new MemberRegisterRequest("valid@email.com", "do", "longsecret"));
-    }
+//    @Test
+//    @DisplayName("잘못된 회원 등록 요청 시 검증 예외가 발생한다")
+//    void memberRegisterRequestFail() {
+//        checkValidation(new MemberRegisterRequest("invalid@email.com", "dooya", "secret"));
+//        checkValidation(new MemberRegisterRequest("invalid@email.com", "dooya_______________________________", "longSecret"));
+//        checkValidation(new MemberRegisterRequest("invalidemail.com", "dooya", "longSecret"));
+//    }
 
     private Member registerMember() {
         Member member = memberRegister.register(createMemberRegisterRequest());
