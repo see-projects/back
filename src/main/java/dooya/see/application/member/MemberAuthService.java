@@ -17,9 +17,7 @@ public class MemberAuthService implements MemberAuth {
 
     @Override
     public LoginResult login(MemberAuthRequest memberAuthRequest) {
-        Email email = new Email(memberAuthRequest.email());
-
-        Member member = memberFinder.findByEmail(email);
+        Member member = memberFinder.findByEmail(new Email(memberAuthRequest.email()));
 
         validatePassword(memberAuthRequest, member);
         validateAccountStatus(member);
@@ -27,6 +25,11 @@ public class MemberAuthService implements MemberAuth {
         String token = tokenManager.generateToken(member);
 
         return new LoginResult(member, token);
+    }
+
+    @Override
+    public Member getCurrentMember(String token) {
+        return memberFinder.findByEmail(new Email(tokenManager.extractEmailFromToken(token)));
     }
 
     private void validatePassword(MemberAuthRequest memberAuthRequest, Member member) {

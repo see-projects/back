@@ -13,7 +13,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Transactional;
 
 import static dooya.see.domain.member.MemberFixture.*;
-import static dooya.see.domain.member.MemberFixture.createMemberAuthRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -55,6 +54,31 @@ record MemberAuthTest(MemberRegister memberRegister, MemberAuth memberAuth, Enti
         memberRegister.deactivate(member.getId());
 
         assertThatThrownBy(() -> memberAuth.login(MemberFixture.createMemberAuthRequest()))
+            .isInstanceOf(AuthenticateException.class);
+    }
+
+    @Test
+    @DisplayName("유효한 액세스 토큰으로 현재 로그인된 회원 정보를 조회한다")
+    void getCurrentMember() {
+        memberRegister.register(createMemberRegisterRequest());
+        entityManager.flush();
+        entityManager.clear();
+
+        LoginResult loginResult = memberAuth.login(MemberFixture.createMemberAuthRequest());
+
+        Member member = memberAuth.getCurrentMember(loginResult.accessToken());
+
+        assertThat(member.getId()).isEqualTo(loginResult.member().getId());
+    }
+
+    @Test
+    @DisplayName("잘못된 액세스 토큰으로 회원 정보 조회 시 인증 예외가 발생한다")
+    void getCurrentMemberFailWithInvalidToken() {
+        memberRegister.register(createMemberRegisterRequest());
+        entityManager.flush();
+        entityManager.clear();
+        
+        assertThatThrownBy(() -> memberAuth.getCurrentMember("invalidToken"))
             .isInstanceOf(AuthenticateException.class);
     }
 }
