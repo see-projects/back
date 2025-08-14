@@ -9,8 +9,10 @@ import dooya.see.domain.member.PasswordEncoder;
 import dooya.see.domain.shared.Email;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class MemberModifyService implements MemberRegister {
     private final MemberRepository memberRepository;

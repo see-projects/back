@@ -11,4 +11,6 @@ public interface MemberRepository extends Repository<Member, Long> {
     Optional<Member> findByEmail(Email email);
 
     Member save(Member member);
+
+    Optional<Member> findById(Long memberId);
 }
