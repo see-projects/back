@@ -8,9 +8,11 @@ import dooya.see.domain.shared.Email;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 @Service
 @Transactional
+@Validated
 @RequiredArgsConstructor
 public class MemberModifyService implements MemberRegister {
     private final MemberRepository memberRepository;

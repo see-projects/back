@@ -3,6 +3,7 @@ package dooya.see.application.member.provided;
 import dooya.see.SeeTestConfiguration;
 import dooya.see.domain.member.*;
 import jakarta.persistence.EntityManager;
+import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -88,6 +89,14 @@ record MemberRegisterTest(MemberRegister memberRegister, EntityManager entityMan
             .isInstanceOf(DuplicateProfileException.class);
     }
 
+    @Test
+    @DisplayName("잘못된 회원 등록 요청 시 검증 예외가 발생한다")
+    void memberRegisterRequestFail() {
+        checkValidation(new MemberRegisterRequest("valid@email.com", "dooyayayayayaayayayayaya", "longsecret"));
+        checkValidation(new MemberRegisterRequest("valid@email.com", "dooya", "secret"));
+        checkValidation(new MemberRegisterRequest("valid@email.com", "do", "longsecret"));
+    }
+
     private Member registerMember() {
         Member member = memberRegister.register(createMemberRegisterRequest());
         entityManager.flush();
@@ -100,5 +109,10 @@ record MemberRegisterTest(MemberRegister memberRegister, EntityManager entityMan
         entityManager.flush();
         entityManager.clear();
         return member;
+    }
+
+    private void checkValidation(MemberRegisterRequest invalid) {
+        assertThatThrownBy(() -> memberRegister.register(invalid))
+                .isInstanceOf(ConstraintViolationException.class);
     }
 }
