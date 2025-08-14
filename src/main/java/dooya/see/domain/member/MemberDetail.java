@@ -24,20 +24,20 @@ public class MemberDetail extends AbstractEntity {
 
     private LocalDateTime deactivatedAt;
 
-    public static MemberDetail create() {
+    static MemberDetail create() {
         MemberDetail memberDetail = new MemberDetail();
         memberDetail.registeredAt = LocalDateTime.now();
 
         return memberDetail;
     }
 
-    public void deactivate() {
+    void deactivate() {
         Assert.isTrue(deactivatedAt == null, "이미 deactivatedAt은 설정되었습니다");
 
         this.deactivatedAt = LocalDateTime.now();
     }
 
-    public void updateInfo(MemberInfoUpdateRequest updateRequest) {
+    void updateInfo(MemberInfoUpdateRequest updateRequest) {
         this.profile = new Profile(updateRequest.profileAddress());
         this.introduction = updateRequest.introduction();
     }
