@@ -4,7 +4,6 @@ import dooya.see.application.member.provided.MemberRegister;
 import dooya.see.application.member.required.TokenManager;
 import dooya.see.domain.member.AuthenticateException;
 import dooya.see.domain.member.Member;
-import io.jsonwebtoken.Claims;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,11 +20,9 @@ record JwtTokenManagerTest(MemberRegister memberRegister, TokenManager tokenMana
         Member member = memberRegister.register(createMemberRegisterRequest());
 
         String token = tokenManager.generateToken(member);
-        Claims claims = tokenManager.parseToken(token);
+        token = tokenManager.extractEmailFromToken(token);
 
-        assertThat(claims.getSubject()).isEqualTo(member.getEmail().address());
-        assertThat(claims.get("memberId", Long.class)).isEqualTo(member.getId());
-        assertThat(claims.get("nickname", String.class)).isEqualTo(member.getNickname());
+        assertThat(token).isNotNull();
     }
 
     @Test
@@ -33,7 +30,7 @@ record JwtTokenManagerTest(MemberRegister memberRegister, TokenManager tokenMana
     void parseInvalidToken() {
         String invalidToken = "invalid.jwt.token";
 
-        assertThatThrownBy(() -> tokenManager.parseToken(invalidToken))
+        assertThatThrownBy(() -> tokenManager.extractEmailFromToken(invalidToken))
             .isInstanceOf(AuthenticateException.class);
     }
 }

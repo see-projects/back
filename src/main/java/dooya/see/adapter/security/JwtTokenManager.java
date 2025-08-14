@@ -39,8 +39,7 @@ public class JwtTokenManager implements TokenManager {
                 .compact();
     }
 
-    @Override
-    public Claims parseToken(String token) {
+    private Claims parseToken(String token) {
         try {
             return Jwts.parser()
                     .verifyWith(key)
@@ -48,7 +47,7 @@ public class JwtTokenManager implements TokenManager {
                     .parseSignedClaims(token)
                     .getPayload();
         } catch (JwtException e) {
-            throw new AuthenticateException("유효하지 않은 토큰입니다: " + e.getMessage());
+            throw new AuthenticateException("유효하지 않은 토큰입니다");
         }
     }
 
