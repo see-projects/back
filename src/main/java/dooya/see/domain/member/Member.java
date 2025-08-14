@@ -2,17 +2,12 @@ package dooya.see.domain.member;
 
 import dooya.see.domain.AbstractEntity;
 import dooya.see.domain.shared.Email;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.annotations.NaturalId;
-
-import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
 
@@ -29,6 +24,7 @@ public class Member extends AbstractEntity {
 
     private String passwordHash;
 
+    @Enumerated(EnumType.STRING)
     private MemberStatus status;
 
     @OneToOne(cascade = CascadeType.ALL)
