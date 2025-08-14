@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @Import(SeeTestConfiguration.class)
 record MemberRegisterTest(MemberRegister memberRegister, EntityManager entityManager) {
     @Test
-    @DisplayName("")
+    @DisplayName("회원 등록 시 ID가 부여되고 ACTIVE 상태로 설정된다")
     void register() {
         Member member = memberRegister.register(createMemberRegisterRequest());
 
@@ -27,7 +27,7 @@ record MemberRegisterTest(MemberRegister memberRegister, EntityManager entityMan
     }
 
     @Test
-    @DisplayName("")
+    @DisplayName("동일한 이메일로 회원 등록 시 중복 예외가 발생한다")
     void duplicateEmailFail() {
         Member member = memberRegister.register(createMemberRegisterRequest());
 
@@ -36,7 +36,7 @@ record MemberRegisterTest(MemberRegister memberRegister, EntityManager entityMan
     }
 
     @Test
-    @DisplayName("")
+    @DisplayName("회원 비활성화 시 DEACTIVATED 상태와 비활성화일시가 설정된다")
     void deactivate() {
         Member member = registerMember();
 
@@ -61,7 +61,7 @@ record MemberRegisterTest(MemberRegister memberRegister, EntityManager entityMan
     }
 
     @Test
-    @DisplayName("")
+    @DisplayName("프로필 주소 중복 검증과 변경 시나리오를 테스트한다")
     void updateInfoFail () {
         Member member = registerMember();
         memberRegister.updateInfo(member.getId(), new MemberInfoUpdateRequest("dooya2", "korea", "자기소개"));
@@ -81,9 +81,9 @@ record MemberRegisterTest(MemberRegister memberRegister, EntityManager entityMan
         memberRegister.updateInfo(member.getId(), new MemberInfoUpdateRequest("dooya", "china", "자기소개"));
 
         // 프로필 주소를 제거하는 것도 가능
-        memberRegister.updateInfo(member.getId(), new MemberInfoUpdateRequest("dooya", "", "자기소개"));
-
-        // 프로필 주소 중복은 허용되지 않음
+        memberRegister.updateInfo(member2.getId(), new MemberInfoUpdateRequest("dooya1441", "", "자기소개"));
+        
+        // member가 다시 "china"를 사용하려고 하면 중복 예외 발생
         assertThatThrownBy(() -> memberRegister.updateInfo(member2.getId(), new MemberInfoUpdateRequest("dooya1441", "china", "자기소개")))
             .isInstanceOf(DuplicateProfileException.class);
     }
