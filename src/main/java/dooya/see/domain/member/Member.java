@@ -62,7 +62,7 @@ public class Member extends AbstractEntity {
     }
 
     public void updateInfo(MemberInfoUpdateRequest updateRequest) {
-        this.nickname = Objects.requireNonNull(updateRequest.nickname());
+        this.nickname = requireNonNull(updateRequest.nickname());
         this.detail.updateInfo(updateRequest);
     }
 }
