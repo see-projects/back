@@ -5,4 +5,6 @@ import dooya.see.domain.member.MemberRegisterRequest;
 
 public interface MemberRegister {
     Member register(MemberRegisterRequest registerRequest);
+
+    Member deactivate(Long memberId);
 }
