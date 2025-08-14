@@ -3,6 +3,7 @@ package dooya.see.adapter.webapi;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dooya.see.adapter.webapi.dto.MemberAuthResponse;
+import dooya.see.adapter.webapi.dto.MemberProfileResponse;
 import dooya.see.adapter.webapi.dto.MemberRegisterResponse;
 import dooya.see.application.member.provided.MemberRegister;
 import dooya.see.application.member.required.MemberRepository;
@@ -129,6 +130,67 @@ class MemberApiTest {
 
         MvcTestResult result = mvcTester.post().uri("/api/members/login").contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson).exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    @DisplayName("유효한 액세스 토큰으로 현재 회원 정보 조회 시 회원 정보를 반환한다")
+    void getCurrentMember() throws JsonProcessingException, UnsupportedEncodingException {
+        memberRegister.register(createMemberRegisterRequest());
+
+        MemberAuthRequest request = createMemberAuthRequest();
+        String requestJson = objectMapper.writeValueAsString(request);
+
+        MvcTestResult loginResult = mvcTester.post().uri("/api/members/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson).exchange();
+
+        MemberAuthResponse authResponse =
+                objectMapper.readValue(loginResult.getResponse().getContentAsString(), MemberAuthResponse.class);
+
+        MvcTestResult getCurrentMemberResult = mvcTester.get().uri("/api/members/my")
+                .header("Authorization", "Bearer " + authResponse.accessToken())
+                .exchange();
+
+        MemberProfileResponse profileResponse =
+                objectMapper.readValue(getCurrentMemberResult.getResponse().getContentAsString(), MemberProfileResponse.class);
+
+        Member member = memberRepository.findById(profileResponse.memberId()).orElseThrow();
+
+        assertThat(member.getId()).isEqualTo(profileResponse.memberId());
+    }
+
+    @Test
+    @DisplayName("Authorization 헤더 없이 현재 회원 정보 조회 시 401 Unauthorized 상태 코드를 반환한다")
+    void getCurrentMemberFailWithoutAuthorizationHeader() {
+        MvcTestResult result = mvcTester.get().uri("/api/members/my").exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    @DisplayName("잘못된 형식의 Authorization 헤더로 현재 회원 정보 조회 시 401 Unauthorized 상태 코드를 반환한다")
+    void getCurrentMemberFailWithInvalidAuthorizationHeader() {
+        MvcTestResult result = mvcTester.get().uri("/api/members/my")
+                .header("Authorization", "InvalidTokenFormat")
+                .exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    @DisplayName("유효하지 않은 토큰으로 현재 회원 정보 조회 시 401 Unauthorized 상태 코드를 반환한다")
+    void getCurrentMemberFailWithInvalidToken() {
+        MvcTestResult result = mvcTester.get().uri("/api/members/my")
+                .header("Authorization", "Bearer invalidToken")
+                .exchange();
 
         assertThat(result)
                 .apply(print())
