@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class MemberStatusTest {
     @Test
-    @DisplayName("기본 상태 테스트")
+    @DisplayName("MemberStatus enum의 ACTIVE와 DEACTIVATED가 정의되어 있다")
     void memberStatusDefault() {
         assertThat(MemberStatus.ACTIVE).isNotNull();
         assertThat(MemberStatus.DEACTIVATED).isNotNull();

@@ -6,6 +6,7 @@ import jakarta.persistence.Entity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.springframework.util.Assert;
 
 import java.time.LocalDateTime;
 
@@ -17,14 +18,27 @@ public class MemberDetail extends AbstractEntity {
     @Embedded
     private Profile profile;
 
+    private String introduction;
+
     private LocalDateTime registeredAt;
 
     private LocalDateTime deactivatedAt;
 
-    public static MemberDetail create() {
+    static MemberDetail create() {
         MemberDetail memberDetail = new MemberDetail();
         memberDetail.registeredAt = LocalDateTime.now();
 
         return memberDetail;
+    }
+
+    void deactivate() {
+        Assert.isTrue(deactivatedAt == null, "이미 deactivatedAt은 설정되었습니다");
+
+        this.deactivatedAt = LocalDateTime.now();
+    }
+
+    void updateInfo(MemberInfoUpdateRequest updateRequest) {
+        this.profile = new Profile(updateRequest.profileAddress());
+        this.introduction = updateRequest.introduction();
     }
 }

@@ -12,6 +12,8 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.annotations.NaturalId;
 
+import java.util.Objects;
+
 import static java.util.Objects.requireNonNull;
 
 @Entity
@@ -44,5 +46,23 @@ public class Member extends AbstractEntity {
         member.detail = MemberDetail.create();
 
         return member;
+    }
+
+    public boolean verifyPassword(String password, PasswordEncoder passwordEncoder) {
+        return passwordEncoder.matches(password, this.passwordHash);
+    }
+
+    public void changePassword(String password, PasswordEncoder passwordEncoder) {
+        this.passwordHash = requireNonNull(passwordEncoder.encode(password));
+    }
+
+    public void deactivate() {
+        this.status = MemberStatus.DEACTIVATED;
+        this.detail.deactivate();
+    }
+
+    public void updateInfo(MemberInfoUpdateRequest updateRequest) {
+        this.nickname = requireNonNull(updateRequest.nickname());
+        this.detail.updateInfo(updateRequest);
     }
 }
