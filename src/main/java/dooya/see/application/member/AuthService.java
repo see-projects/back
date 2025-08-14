@@ -19,16 +19,23 @@ public class AuthService implements MemberAuth {
 
         Member member = memberFinder.findByEmail(email);
 
-        if (!member.verifyPassword(loginRequest.password(), passwordEncoder)) {
-            throw new AuthenticateException("비밀번호가 일치하지 않습니다");
-        }
-
-        if (member.getStatus() == MemberStatus.DEACTIVATED) {
-            throw new AuthenticateException("비활성화된 계정입니다");
-        }
+        validatePassword(loginRequest, member);
+        validateAccountStatus(member);
 
         String token = "abc";
 
         return new LoginResult(member, token);
+    }
+
+    private void validatePassword(LoginRequest loginRequest, Member member) {
+        if (!member.verifyPassword(loginRequest.password(), passwordEncoder)) {
+            throw new AuthenticateException("비밀번호가 일치하지 않습니다");
+        }
+    }
+
+    private static void validateAccountStatus(Member member) {
+        if (member.getStatus() == MemberStatus.DEACTIVATED) {
+            throw new AuthenticateException("비활성화된 계정입니다");
+        }
     }
 }
