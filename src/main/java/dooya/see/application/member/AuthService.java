@@ -2,6 +2,7 @@ package dooya.see.application.member;
 
 import dooya.see.application.member.provided.MemberAuth;
 import dooya.see.application.member.provided.MemberFinder;
+import dooya.see.application.member.required.TokenManager;
 import dooya.see.domain.member.*;
 import dooya.see.domain.shared.Email;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 public class AuthService implements MemberAuth {
     private final MemberFinder memberFinder;
     private final PasswordEncoder passwordEncoder;
+    private final TokenManager tokenManager;
 
     @Override
     public LoginResult login(LoginRequest loginRequest) {
@@ -22,7 +24,7 @@ public class AuthService implements MemberAuth {
         validatePassword(loginRequest, member);
         validateAccountStatus(member);
 
-        String token = "abc";
+        String token = tokenManager.generateToken(member);
 
         return new LoginResult(member, token);
     }
