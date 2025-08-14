@@ -23,19 +23,19 @@ public class MemberFixture {
         };
     }
 
-    public static LoginRequest createLoginRequest() {
-        return createLoginRequest("dooya@see.com");
+    public static MemberAuthRequest createMemberAuthRequest() {
+        return createMemberAuthRequest("dooya@see.com");
     }
 
-    public static LoginRequest createLoginRequest(String email) {
-        return createLoginRequest(email, "longSecret");
+    public static MemberAuthRequest createMemberAuthRequest(String email) {
+        return createMemberAuthRequest(email, "longSecret");
     }
 
-    public static LoginRequest createLoginRequest(String email, String password) {
-        return new LoginRequest(email, password);
+    public static MemberAuthRequest createMemberAuthRequest(String email, String password) {
+        return new MemberAuthRequest(email, password);
     }
 
-    public static LoginRequest createLoginRequestWithPassword(String password) {
-        return createLoginRequest("dooya@see.com", password);
+    public static MemberAuthRequest createAuthRequestWithPassword(String password) {
+        return createMemberAuthRequest("dooya@see.com", password);
     }
 }

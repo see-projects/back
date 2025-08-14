@@ -10,18 +10,18 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class AuthService implements MemberAuth {
+public class MemberAuthService implements MemberAuth {
     private final MemberFinder memberFinder;
     private final PasswordEncoder passwordEncoder;
     private final TokenManager tokenManager;
 
     @Override
-    public LoginResult login(LoginRequest loginRequest) {
-        Email email = new Email(loginRequest.email());
+    public LoginResult login(MemberAuthRequest memberAuthRequest) {
+        Email email = new Email(memberAuthRequest.email());
 
         Member member = memberFinder.findByEmail(email);
 
-        validatePassword(loginRequest, member);
+        validatePassword(memberAuthRequest, member);
         validateAccountStatus(member);
 
         String token = tokenManager.generateToken(member);
@@ -29,8 +29,8 @@ public class AuthService implements MemberAuth {
         return new LoginResult(member, token);
     }
 
-    private void validatePassword(LoginRequest loginRequest, Member member) {
-        if (!member.verifyPassword(loginRequest.password(), passwordEncoder)) {
+    private void validatePassword(MemberAuthRequest memberAuthRequest, Member member) {
+        if (!member.verifyPassword(memberAuthRequest.password(), passwordEncoder)) {
             throw new AuthenticateException("비밀번호가 일치하지 않습니다");
         }
     }

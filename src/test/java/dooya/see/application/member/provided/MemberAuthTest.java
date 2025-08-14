@@ -4,6 +4,7 @@ import dooya.see.SeeTestConfiguration;
 import dooya.see.domain.member.AuthenticateException;
 import dooya.see.domain.member.LoginResult;
 import dooya.see.domain.member.Member;
+import dooya.see.domain.member.MemberFixture;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,7 +13,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Transactional;
 
 import static dooya.see.domain.member.MemberFixture.*;
-import static dooya.see.domain.member.MemberFixture.createLoginRequest;
+import static dooya.see.domain.member.MemberFixture.createMemberAuthRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -27,7 +28,7 @@ record MemberAuthTest(MemberRegister memberRegister, MemberAuth memberAuth, Enti
         entityManager.flush();
         entityManager.clear();
 
-        LoginResult loginResult = memberAuth.login(createLoginRequest());
+        LoginResult loginResult = memberAuth.login(MemberFixture.createMemberAuthRequest());
 
         assertThat(loginResult.member().getId()).isEqualTo(member.getId());
         assertThat(loginResult.accessToken()).isNotNull();
@@ -40,7 +41,7 @@ record MemberAuthTest(MemberRegister memberRegister, MemberAuth memberAuth, Enti
         entityManager.flush();
         entityManager.clear();
 
-        assertThatThrownBy(() -> memberAuth.login(createLoginRequestWithPassword("fakepassword")))
+        assertThatThrownBy(() -> memberAuth.login(createAuthRequestWithPassword("fakepassword")))
             .isInstanceOf(AuthenticateException.class);
     }
 
@@ -53,7 +54,7 @@ record MemberAuthTest(MemberRegister memberRegister, MemberAuth memberAuth, Enti
 
         memberRegister.deactivate(member.getId());
 
-        assertThatThrownBy(() -> memberAuth.login(createLoginRequest()))
+        assertThatThrownBy(() -> memberAuth.login(MemberFixture.createMemberAuthRequest()))
             .isInstanceOf(AuthenticateException.class);
     }
 }
