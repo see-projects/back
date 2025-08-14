@@ -20,9 +20,9 @@ record JwtTokenManagerTest(MemberRegister memberRegister, TokenManager tokenMana
         Member member = memberRegister.register(createMemberRegisterRequest());
 
         String token = tokenManager.generateToken(member);
-        token = tokenManager.extractEmailFromToken(token);
+        String email = tokenManager.extractEmailFromToken(token);
 
-        assertThat(token).isNotNull();
+        assertThat(email).isEqualTo(member.getEmail().address());
     }
 
     @Test
