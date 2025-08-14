@@ -53,16 +53,6 @@ public class JwtTokenManager implements TokenManager {
     }
 
     @Override
-    public boolean isTokenValid(String token) {
-        try {
-            parseToken(token);
-            return true;
-        } catch (AuthenticateException e) {
-            return false;
-        }
-    }
-
-    @Override
     public String extractEmailFromToken(String token) {
         Claims claims = parseToken(token);
         return claims.getSubject();

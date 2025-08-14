@@ -8,7 +8,5 @@ public interface TokenManager {
 
     Claims parseToken(String token);
 
-    boolean isTokenValid(String token);
-
     String extractEmailFromToken(String token);
 }
