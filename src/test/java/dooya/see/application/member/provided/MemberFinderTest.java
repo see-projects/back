@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static dooya.see.domain.member.MemberFixture.createMemberRegisterRequest;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Transactional
@@ -26,5 +27,12 @@ record MemberFinderTest(MemberFinder memberFinder, MemberRegister memberRegister
         Member found = memberFinder.find(member.getId());
 
         assertThat(member.getId()).isEqualTo(found.getId());
+    }
+
+    @Test
+    @DisplayName("")
+    void findFail() {
+        assertThatThrownBy(() -> memberFinder.find(999L))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 }
