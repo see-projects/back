@@ -31,7 +31,7 @@ public class MemberAuthService implements MemberAuth {
 
     private void validatePassword(MemberAuthRequest memberAuthRequest, Member member) {
         if (!member.verifyPassword(memberAuthRequest.password(), passwordEncoder)) {
-            throw new AuthenticateException("비밀번호가 일치하지 않습니다");
+            throw new AuthenticateException("이메일 또는 비밀번호가 일치하지 않습니다");
         }
     }
 
