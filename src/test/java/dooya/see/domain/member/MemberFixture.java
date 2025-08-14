@@ -22,4 +22,8 @@ public class MemberFixture {
             }
         };
     }
+
+    public static LoginRequest createLoginRequest() {
+        return new LoginRequest("dooya@see.com", "longSecret");
+    }
 }
