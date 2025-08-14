@@ -12,8 +12,6 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.annotations.NaturalId;
 
-import java.util.Objects;
-
 import static java.util.Objects.requireNonNull;
 
 @Entity
