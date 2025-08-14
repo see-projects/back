@@ -58,4 +58,15 @@ class MemberTest {
         assertThatThrownBy(() -> member.deactivate())
                 .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    @DisplayName("회원 정보 수정 시 닉네임, 프로필 주소, 자기소개가 변경된다")
+    void updateInfo() {
+        var request = new MemberInfoUpdateRequest("dooya", "korea", "자기소개");
+        member.updateInfo(request);
+
+        assertThat(member.getNickname()).isEqualTo(request.nickname());
+        assertThat(member.getDetail().getProfile().address()).isEqualTo(request.profileAddress());
+        assertThat(member.getDetail().getIntroduction()).isEqualTo(request.introduction());
+    }
 }
