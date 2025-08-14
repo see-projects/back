@@ -3,10 +3,7 @@ package dooya.see.application.member;
 import dooya.see.application.member.provided.MemberFinder;
 import dooya.see.application.member.provided.MemberRegister;
 import dooya.see.application.member.required.MemberRepository;
-import dooya.see.domain.member.DuplicateEmailException;
-import dooya.see.domain.member.Member;
-import dooya.see.domain.member.MemberRegisterRequest;
-import dooya.see.domain.member.PasswordEncoder;
+import dooya.see.domain.member.*;
 import dooya.see.domain.shared.Email;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -38,6 +35,15 @@ public class MemberModifyService implements MemberRegister {
         Member member = memberFinder.find(memberId);
 
         member.deactivate();
+
+        return memberRepository.save(member);
+    }
+
+    @Override
+    public Member updateInfo(Long memberId, MemberInfoUpdateRequest memberInfoUpdateRequest) {
+        Member member = memberFinder.find(memberId);
+
+        member.updateInfo(memberInfoUpdateRequest);
 
         return memberRepository.save(member);
     }
