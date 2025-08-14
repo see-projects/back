@@ -24,6 +24,18 @@ public class MemberFixture {
     }
 
     public static LoginRequest createLoginRequest() {
-        return new LoginRequest("dooya@see.com", "longSecret");
+        return createLoginRequest("dooya@see.com");
+    }
+
+    public static LoginRequest createLoginRequest(String email) {
+        return createLoginRequest(email, "longSecret");
+    }
+
+    public static LoginRequest createLoginRequest(String email, String password) {
+        return new LoginRequest(email, password);
+    }
+
+    public static LoginRequest createLoginRequestWithPassword(String password) {
+        return createLoginRequest("dooya@see.com", password);
     }
 }
