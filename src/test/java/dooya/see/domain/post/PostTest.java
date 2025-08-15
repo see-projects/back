@@ -5,10 +5,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static dooya.see.domain.post.PostFixture.*;
-import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class PostTest {
@@ -123,8 +120,8 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("")
-    void a() {
+    @DisplayName("PUBLISHED 상태의 게시글을 숨김 처리하면 상태가 HIDDEN으로 변경된다")
+    void hidePublishedPost() {
         post.publish();
         post.hide();
 
@@ -132,23 +129,23 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("")
-    void b() {
+    @DisplayName("DRAFT 상태의 게시글을 숨김 처리하려고 하면 IllegalStateException이 발생한다")
+    void hideDraftPostThrowsException() {
         assertThatThrownBy(() -> post.hide())
             .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    @DisplayName("")
-    void c() {
+    @DisplayName("게시글을 삭제하면 상태가 DELETED로 변경된다")
+    void deletePost() {
         post.delete();
 
         assertThat(post.getStatus()).isEqualTo(PostStatus.DELETED);
     }
 
     @Test
-    @DisplayName("")
-    void d() {
+    @DisplayName("이미 삭제된 게시글을 다시 삭제하려고 하면 IllegalStateException이 발생한다")
+    void deleteAlreadyDeletedPostThrowsException() {
         post.delete();
 
         assertThatThrownBy(() -> post.delete())
@@ -156,15 +153,15 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("")
-    void e() {
+    @DisplayName("게시글 작성자 확인 시 올바른 memberId면 true, 다른 memberId면 false를 반환한다")
+    void isWrittenByMember() {
         assertThat(post.isWrittenBy(1L)).isTrue();
         assertThat(post.isWrittenBy(2L)).isFalse();
     }
 
     @Test
-    @DisplayName("")
-    void f() {
+    @DisplayName("PUBLISHED 상태의 게시글 조회수를 증가시키면 viewCount가 1 증가한다")
+    void increaseViewCountForPublishedPost() {
         post.publish();
         post.increaseViewCount();
 
@@ -172,8 +169,8 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("")
-    void g() {
+    @DisplayName("DELETED 상태의 게시글 조회수를 증가시켜도 viewCount는 변경되지 않는다")
+    void increaseViewCountForDeletedPost() {
         post.delete();
         post.increaseViewCount();
 
@@ -181,8 +178,8 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("")
-    void h() {
+    @DisplayName("PUBLISHED 상태의 게시글 좋아요 수를 증가시키면 likeCount가 1 증가한다")
+    void incrementLikeCountForPublishedPost() {
         post.publish();
         post.incrementLikeCount();
 
@@ -190,8 +187,8 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("")
-    void i() {
+    @DisplayName("DELETED 상태의 게시글 좋아요 수를 증가시켜도 likeCount는 변경되지 않는다")
+    void incrementLikeCountForDeletedPost() {
         post.delete();
         post.incrementLikeCount();
 
@@ -199,8 +196,8 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("")
-    void j() {
+    @DisplayName("PUBLISHED 상태의 게시글 댓글 수를 증가시키면 commentCount가 1 증가한다")
+    void incrementCommentCountForPublishedPost() {
         post.publish();
         post.incrementCommentCount();
 
@@ -208,8 +205,8 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("")
-    void k() {
+    @DisplayName("DELETED 상태의 게시글 댓글 수를 증가시켜도 commentCount는 변경되지 않는다")
+    void incrementCommentCountForDeletedPost() {
         post.delete();
         post.incrementCommentCount();
 
