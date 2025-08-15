@@ -77,4 +77,14 @@ public class Post extends AbstractEntity {
 
         this.status = PostStatus.DELETED;
     }
+
+    public boolean isWrittenBy(long memberId) {
+        return this.memberId.equals(memberId);
+    }
+
+    public void increaseViewCount() {
+        if (status == PostStatus.PUBLISHED) {
+            this.metaData = this.metaData.incrementViewCount();
+        }
+    }
 }

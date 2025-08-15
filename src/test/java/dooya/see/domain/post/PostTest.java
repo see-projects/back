@@ -154,4 +154,29 @@ class PostTest {
         assertThatThrownBy(() -> post.delete())
             .isInstanceOf(IllegalStateException.class);
     }
+
+    @Test
+    @DisplayName("")
+    void e() {
+        assertThat(post.isWrittenBy(1L)).isTrue();
+        assertThat(post.isWrittenBy(2L)).isFalse();
+    }
+
+    @Test
+    @DisplayName("")
+    void f() {
+        post.publish();
+        post.increaseViewCount();
+
+        assertThat(post.getMetaData().viewCount()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("")
+    void g() {
+        post.delete();
+        post.increaseViewCount();
+
+        assertThat(post.getMetaData().viewCount()).isZero();
+    }
 }
