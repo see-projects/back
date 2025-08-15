@@ -5,7 +5,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static dooya.see.domain.post.PostFixture.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class PostTest {
@@ -117,5 +119,21 @@ class PostTest {
 
         assertThat(post.getStatus()).isEqualTo(PostStatus.PUBLISHED);
         assertThat(post.getMetaData().publishedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("")
+    void a() {
+        post.publish();
+        post.hide();
+
+        assertThat(post.getStatus()).isEqualTo(PostStatus.HIDDEN);
+    }
+
+    @Test
+    @DisplayName("")
+    void b() {
+        assertThatThrownBy(() -> post.hide())
+            .isInstanceOf(IllegalStateException.class);
     }
 }

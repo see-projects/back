@@ -65,4 +65,10 @@ public class Post extends AbstractEntity {
         this.status = PostStatus.PUBLISHED;
         this.metaData = this.metaData.updatePublishedAt();
     }
+
+    public void hide() {
+        state(this.status == PostStatus.PUBLISHED, "발행된 게시글만 숨김 처리할 수 있습니다");
+
+        this.status = PostStatus.HIDDEN;
+    }
 }
