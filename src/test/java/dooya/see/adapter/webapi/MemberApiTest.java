@@ -25,7 +25,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.UnsupportedEncodingException;
 
 import static dooya.see.domain.member.MemberFixture.*;
-import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
@@ -199,8 +198,8 @@ class MemberApiTest {
     }
 
     @Test
-    @DisplayName("")
-    void deactivated() throws JsonProcessingException, UnsupportedEncodingException {
+    @DisplayName("유효한 토큰으로 회원 탈퇴 요청 시 회원 상태가 DEACTIVATED로 변경되고 성공 응답을 반환한다")
+    void deactivateMyself() throws JsonProcessingException, UnsupportedEncodingException {
         memberRegister.register(createMemberRegisterRequest());
 
         MemberAuthRequest request = createMemberAuthRequest();
@@ -221,5 +220,39 @@ class MemberApiTest {
 
         Member member = memberRepository.findById(authResponse.memberId()).orElseThrow();
         assertThat(member.getStatus()).isEqualTo(MemberStatus.DEACTIVATED);
+    }
+
+    @Test
+    @DisplayName("Authorization 헤더 없이 회원 탈퇴 요청 시 401 Unauthorized 상태 코드를 반환한다")
+    void deactivateMyselfWithoutAuthorizationHeader() {
+        MvcTestResult result = mvcTester.patch().uri("/api/members/my/deactivate").exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    @DisplayName("잘못된 형식의 Authorization 헤더로 회원 탈퇴 요청 시 401 Unauthorized 상태 코드를 반환한다")
+    void deactivateMyselfWithInvalidAuthorizationHeader() {
+        MvcTestResult result = mvcTester.patch().uri("/api/members/my/deactivate")
+                .header("Authorization", "InvalidTokenFormat")
+                .exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.UNAUTHORIZED);
+    }
+    
+    @Test
+    @DisplayName("유효하지 않은 토큰으로 회원 탈퇴 요청 시 401 Unauthorized 상태 코드를 반환한다")
+    void deactivateMyselfWithInvalidToken() {
+        MvcTestResult result = mvcTester.patch().uri("/api/members/my/deactivate")
+                .header("Authorization", "Bearer invalidToken")
+                .exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.UNAUTHORIZED);
     }
 }
