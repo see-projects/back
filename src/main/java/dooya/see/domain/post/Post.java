@@ -21,5 +21,9 @@ public class Post extends AbstractEntity {
     @Enumerated(EnumType.STRING)
     private PostCategory category;
 
+    @Enumerated(EnumType.STRING)
+    private PostStatus status;
+
+    @Embedded
     private PostMetaData metaData;
 }
