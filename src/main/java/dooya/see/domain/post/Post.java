@@ -42,6 +42,23 @@ public class Post extends AbstractEntity {
         return post;
     }
 
+    public void update(PostUpdateRequest request) {
+        state(request.hasAnyUpdate(), "변경사항이 없습니다");
+
+        if (request.title().isPresent() || request.body().isPresent()) {
+            String newTitle = request.title().orElse(this.content.title());
+            String newBody = request.body().orElse(this.content.body());
+
+            this.content = new PostContent(newTitle, newBody);
+        }
+
+        if (request.category().isPresent()) {
+            this.category = request.category().get();
+        }
+
+        this.metaData = this.metaData.updateModifiedAt();
+    }
+
     public void publish() {
         state(this.status == PostStatus.DRAFT, "DRAFT 상태가 아닙니다");
 
