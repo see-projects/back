@@ -255,4 +255,26 @@ class MemberApiTest {
                 .apply(print())
                 .hasStatus(HttpStatus.UNAUTHORIZED);
     }
+
+    @Test
+    @DisplayName("")
+    void a() throws JsonProcessingException, UnsupportedEncodingException {
+        memberRegister.register(createMemberRegisterRequest());
+
+        MemberAuthRequest request = createMemberAuthRequest();
+        String requestJson = objectMapper.writeValueAsString(request);
+
+        MvcTestResult loginResult = mvcTester.post().uri("/api/members/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson).exchange();
+
+        MemberAuthResponse authResponse =
+                objectMapper.readValue(loginResult.getResponse().getContentAsString(), MemberAuthResponse.class);
+
+        MvcTestResult result = mvcTester.put().uri("/api/members/my/updateInfo")
+                .header("Authorization", "Bearer " + authResponse.accessToken())
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+    }
 }
