@@ -213,10 +213,13 @@ class MemberApiTest {
         MemberAuthResponse authResponse =
                 objectMapper.readValue(loginResult.getResponse().getContentAsString(), MemberAuthResponse.class);
 
-        MvcTestResult getCurrentMemberResult = mvcTester.patch().uri("/api/members/my/deactivate")
+        MvcTestResult result = mvcTester.patch().uri("/api/members/my/deactivate")
                 .header("Authorization", "Bearer " + authResponse.accessToken())
                 .exchange();
 
-        assertThat(getCurrentMemberResult).hasStatusOk();
+        assertThat(result).hasStatusOk();
+
+        Member member = memberRepository.findById(authResponse.memberId()).orElseThrow();
+        assertThat(member.getStatus()).isEqualTo(MemberStatus.DEACTIVATED);
     }
 }

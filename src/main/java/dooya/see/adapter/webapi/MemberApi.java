@@ -8,6 +8,7 @@ import dooya.see.application.member.provided.MemberRegister;
 import dooya.see.domain.member.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpHeaders;
 
@@ -37,6 +38,14 @@ public class MemberApi {
         Member member = memberAuth.getCurrentMember(token);
 
         return MemberProfileResponse.from(member);
+    }
+
+    @PatchMapping("/api/members/my/deactivate")
+    public void deactivate(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorizationHeader) {
+        String token = extractTokenFromHeader(authorizationHeader);
+        Member member = memberAuth.getCurrentMember(token);
+
+        memberRegister.deactivate(member.getId());
     }
 
     private String extractTokenFromHeader(String authorizationHeader) {
