@@ -9,6 +9,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import static java.util.Objects.requireNonNull;
+
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -26,4 +28,16 @@ public class Post extends AbstractEntity {
 
     @Embedded
     private PostMetaData metaData;
+
+    public static Post create(PostCreateRequest request, Long memberId) {
+        Post post = new Post();
+
+        post.content = new PostContent(request.title(), request.body());
+        post.memberId = requireNonNull(memberId);
+        post.category = requireNonNull(request.category());
+        post.status = PostStatus.DRAFT;
+        post.metaData = PostMetaData.create();
+
+        return post;
+    }
 }
