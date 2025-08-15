@@ -197,4 +197,22 @@ class PostTest {
 
         assertThat(post.getMetaData().likeCount()).isZero();
     }
+
+    @Test
+    @DisplayName("")
+    void j() {
+        post.publish();
+        post.incrementCommentCount();
+
+        assertThat(post.getMetaData().commentCount()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("")
+    void k() {
+        post.delete();
+        post.incrementCommentCount();
+
+        assertThat(post.getMetaData().commentCount()).isZero();
+    }
 }

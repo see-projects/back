@@ -93,4 +93,10 @@ public class Post extends AbstractEntity {
             this.metaData = this.metaData.incrementLikeCount();
         }
     }
+
+    public void incrementCommentCount() {
+        if (status == PostStatus.PUBLISHED) {
+            this.metaData = this.metaData.incrementCommentCount();
+        }
+    }
 }
