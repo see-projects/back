@@ -31,7 +31,7 @@ public record PostMetaData(
         );
     }
 
-    public PostMetaData updateModifiedAt() {
+    PostMetaData updateModifiedAt() {
         return new PostMetaData(
                 this.createdAt,
                 LocalDateTime.now(),
@@ -42,7 +42,7 @@ public record PostMetaData(
         );
     }
 
-    public PostMetaData updatePublishedAt() {
+    PostMetaData updatePublishedAt() {
         return new PostMetaData(
                 this.createdAt,
                 this.modifiedAt,
@@ -53,7 +53,7 @@ public record PostMetaData(
         );
     }
 
-    public PostMetaData incrementViewCount() {
+    PostMetaData incrementViewCount() {
         return new PostMetaData(
                 this.createdAt,
                 this.modifiedAt,
@@ -64,7 +64,7 @@ public record PostMetaData(
         );
     }
 
-    public PostMetaData incrementLikeCount() {
+    PostMetaData incrementLikeCount() {
         return new PostMetaData(
                 this.createdAt,
                 this.modifiedAt,
@@ -75,7 +75,7 @@ public record PostMetaData(
         );
     }
 
-    public PostMetaData incrementCommentCount() {
+    PostMetaData incrementCommentCount() {
         return new PostMetaData(
                 this.createdAt,
                 this.modifiedAt,
