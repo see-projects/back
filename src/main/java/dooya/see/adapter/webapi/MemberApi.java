@@ -39,6 +39,25 @@ public class MemberApi {
         return MemberProfileResponse.from(member);
     }
 
+    @PatchMapping("/api/members/my/deactivate")
+    public void deactivate(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorizationHeader) {
+        String token = extractTokenFromHeader(authorizationHeader);
+        Member member = memberAuth.getCurrentMember(token);
+
+        memberRegister.deactivate(member.getId());
+    }
+
+    @PutMapping("/api/members/my/updateInfo")
+    public MemberProfileResponse updateInfo(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorizationHeader,
+                                            @RequestBody @Valid MemberInfoUpdateRequest request) {
+        String token = extractTokenFromHeader(authorizationHeader);
+        Member currentMember = memberAuth.getCurrentMember(token);
+
+        Member updatedMember = memberRegister.updateInfo(currentMember.getId(), request);
+
+        return MemberProfileResponse.from(updatedMember);
+    }
+
     private String extractTokenFromHeader(String authorizationHeader) {
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
             throw new AuthenticateException("Authorization 헤더가 올바르지 않습니다");

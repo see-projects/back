@@ -7,10 +7,7 @@ import dooya.see.adapter.webapi.dto.MemberProfileResponse;
 import dooya.see.adapter.webapi.dto.MemberRegisterResponse;
 import dooya.see.application.member.provided.MemberRegister;
 import dooya.see.application.member.required.MemberRepository;
-import dooya.see.domain.member.MemberAuthRequest;
-import dooya.see.domain.member.Member;
-import dooya.see.domain.member.MemberRegisterRequest;
-import dooya.see.domain.member.MemberStatus;
+import dooya.see.domain.member.*;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -190,6 +187,157 @@ class MemberApiTest {
     void getCurrentMemberFailWithInvalidToken() {
         MvcTestResult result = mvcTester.get().uri("/api/members/my")
                 .header("Authorization", "Bearer invalidToken")
+                .exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    @DisplayName("유효한 토큰으로 회원 탈퇴 요청 시 회원 상태가 DEACTIVATED로 변경되고 성공 응답을 반환한다")
+    void deactivateMyself() throws JsonProcessingException, UnsupportedEncodingException {
+        memberRegister.register(createMemberRegisterRequest());
+
+        MemberAuthRequest request = createMemberAuthRequest();
+        String requestJson = objectMapper.writeValueAsString(request);
+
+        MvcTestResult loginResult = mvcTester.post().uri("/api/members/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson).exchange();
+
+        MemberAuthResponse authResponse =
+                objectMapper.readValue(loginResult.getResponse().getContentAsString(), MemberAuthResponse.class);
+
+        MvcTestResult result = mvcTester.patch().uri("/api/members/my/deactivate")
+                .header("Authorization", "Bearer " + authResponse.accessToken())
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+
+        Member member = memberRepository.findById(authResponse.memberId()).orElseThrow();
+        assertThat(member.getStatus()).isEqualTo(MemberStatus.DEACTIVATED);
+    }
+
+    @Test
+    @DisplayName("Authorization 헤더 없이 회원 탈퇴 요청 시 401 Unauthorized 상태 코드를 반환한다")
+    void deactivateMyselfWithoutAuthorizationHeader() {
+        MvcTestResult result = mvcTester.patch().uri("/api/members/my/deactivate").exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    @DisplayName("잘못된 형식의 Authorization 헤더로 회원 탈퇴 요청 시 401 Unauthorized 상태 코드를 반환한다")
+    void deactivateMyselfWithInvalidAuthorizationHeader() {
+        MvcTestResult result = mvcTester.patch().uri("/api/members/my/deactivate")
+                .header("Authorization", "InvalidTokenFormat")
+                .exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.UNAUTHORIZED);
+    }
+    
+    @Test
+    @DisplayName("유효하지 않은 토큰으로 회원 탈퇴 요청 시 401 Unauthorized 상태 코드를 반환한다")
+    void deactivateMyselfWithInvalidToken() {
+        MvcTestResult result = mvcTester.patch().uri("/api/members/my/deactivate")
+                .header("Authorization", "Bearer invalidToken")
+                .exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    @DisplayName("유효한 토큰으로 회원 정보 수정 요청 시 회원 정보가 변경되고 성공 응답을 반환한다")
+    void updateMyInfo() throws JsonProcessingException, UnsupportedEncodingException {
+        memberRegister.register(createMemberRegisterRequest());
+
+        MemberAuthRequest request = createMemberAuthRequest();
+        String requestJson = objectMapper.writeValueAsString(request);
+
+        MvcTestResult loginResult = mvcTester.post().uri("/api/members/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson).exchange();
+
+        MemberAuthResponse authResponse =
+                objectMapper.readValue(loginResult.getResponse().getContentAsString(), MemberAuthResponse.class);
+
+        MemberInfoUpdateRequest updateInfoRequest = createMemberInfoUpdateRequest();
+        String updateRequestJson = objectMapper.writeValueAsString(updateInfoRequest);
+
+        MvcTestResult result = mvcTester.put().uri("/api/members/my/updateInfo")
+                .header("Authorization", "Bearer " + authResponse.accessToken())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(updateRequestJson)
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+
+        Member member = memberRepository.findById(authResponse.memberId()).orElseThrow();
+        assertThat(member.getNickname()).isEqualTo(updateInfoRequest.nickname());
+        assertThat(member.getDetail().getProfile().address()).isEqualTo(updateInfoRequest.profileAddress());
+        assertThat(member.getDetail().getIntroduction()).isEqualTo(updateInfoRequest.introduction());
+    }
+
+    @Test
+    @DisplayName("본문 없이 회원 정보 수정 요청 시 400 Bad Request 상태 코드를 반환한다")
+    void updateMyInfoWithoutRequestBody() {
+        MvcTestResult result = mvcTester.put().uri("/api/members/my/updateInfo").exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    @DisplayName("Authorization 헤더 없이 회원 정보 수정 요청 시 401 Unauthorized 상태 코드를 반환한다")
+    void updateMyInfoWithoutAuthorizationHeader() throws JsonProcessingException {
+        MemberInfoUpdateRequest request = createMemberInfoUpdateRequest();
+        String requestJson = objectMapper.writeValueAsString(request);
+
+        MvcTestResult result = mvcTester.put().uri("/api/members/my/updateInfo")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson)
+                .exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    @DisplayName("잘못된 형식의 Authorization 헤더로 회원 정보 수정 요청 시 401 Unauthorized 상태 코드를 반환한다")
+    void updateMyInfoWithInvalidAuthorizationHeader() throws JsonProcessingException {
+        MemberInfoUpdateRequest request = createMemberInfoUpdateRequest();
+        String requestJson = objectMapper.writeValueAsString(request);
+
+        MvcTestResult result = mvcTester.put().uri("/api/members/my/updateInfo")
+                .header("Authorization", "InvalidTokenFormat")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson)
+                .exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    @DisplayName("유효하지 않은 토큰으로 회원 정보 수정 요청 시 401 Unauthorized 상태 코드를 반환한다")
+    void updateMyInfoWithInvalidToken() throws JsonProcessingException {
+        MemberInfoUpdateRequest request = createMemberInfoUpdateRequest();
+        String requestJson = objectMapper.writeValueAsString(request);
+
+        MvcTestResult result = mvcTester.put().uri("/api/members/my/updateInfo")
+                .header("Authorization", "Bearer invalidToken")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson)
                 .exchange();
 
         assertThat(result)
