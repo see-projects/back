@@ -82,7 +82,7 @@ public class Post extends AbstractEntity {
         return this.memberId.equals(memberId);
     }
 
-    public void increaseViewCount() {
+    public void incrementViewCount() {
         if (status == PostStatus.PUBLISHED) {
             this.metaData = this.metaData.incrementViewCount();
         }

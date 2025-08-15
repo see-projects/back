@@ -161,18 +161,18 @@ class PostTest {
 
     @Test
     @DisplayName("PUBLISHED 상태의 게시글 조회수를 증가시키면 viewCount가 1 증가한다")
-    void increaseViewCountForPublishedPost() {
+    void incrementViewCountForPublishedPost() {
         post.publish();
-        post.increaseViewCount();
+        post.incrementViewCount();
 
         assertThat(post.getMetaData().viewCount()).isEqualTo(1);
     }
 
     @Test
     @DisplayName("DELETED 상태의 게시글 조회수를 증가시켜도 viewCount는 변경되지 않는다")
-    void increaseViewCountForDeletedPost() {
+    void incrementViewCountForDeletedPost() {
         post.delete();
-        post.increaseViewCount();
+        post.incrementViewCount();
 
         assertThat(post.getMetaData().viewCount()).isZero();
     }
