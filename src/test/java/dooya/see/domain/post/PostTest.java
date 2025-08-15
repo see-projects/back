@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class PostTest {
     Post post;
@@ -134,6 +135,23 @@ class PostTest {
     @DisplayName("")
     void b() {
         assertThatThrownBy(() -> post.hide())
+            .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    @DisplayName("")
+    void c() {
+        post.delete();
+
+        assertThat(post.getStatus()).isEqualTo(PostStatus.DELETED);
+    }
+
+    @Test
+    @DisplayName("")
+    void d() {
+        post.delete();
+
+        assertThatThrownBy(() -> post.delete())
             .isInstanceOf(IllegalStateException.class);
     }
 }
