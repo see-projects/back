@@ -179,4 +179,22 @@ class PostTest {
 
         assertThat(post.getMetaData().viewCount()).isZero();
     }
+
+    @Test
+    @DisplayName("")
+    void h() {
+        post.publish();
+        post.incrementLikeCount();
+
+        assertThat(post.getMetaData().likeCount()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("")
+    void i() {
+        post.delete();
+        post.incrementLikeCount();
+
+        assertThat(post.getMetaData().likeCount()).isZero();
+    }
 }
