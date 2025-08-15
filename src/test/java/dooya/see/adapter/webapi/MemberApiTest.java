@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.UnsupportedEncodingException;
 
 import static dooya.see.domain.member.MemberFixture.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
@@ -195,5 +196,27 @@ class MemberApiTest {
         assertThat(result)
                 .apply(print())
                 .hasStatus(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    @DisplayName("")
+    void deactivated() throws JsonProcessingException, UnsupportedEncodingException {
+        memberRegister.register(createMemberRegisterRequest());
+
+        MemberAuthRequest request = createMemberAuthRequest();
+        String requestJson = objectMapper.writeValueAsString(request);
+
+        MvcTestResult loginResult = mvcTester.post().uri("/api/members/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson).exchange();
+
+        MemberAuthResponse authResponse =
+                objectMapper.readValue(loginResult.getResponse().getContentAsString(), MemberAuthResponse.class);
+
+        MvcTestResult getCurrentMemberResult = mvcTester.patch().uri("/api/members/my/deactivate")
+                .header("Authorization", "Bearer " + authResponse.accessToken())
+                .exchange();
+
+        assertThat(getCurrentMemberResult).hasStatusOk();
     }
 }
