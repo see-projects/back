@@ -9,6 +9,10 @@ public class MemberFixture {
         return createMemberRegisterRequest("dooya@see.com");
     }
 
+    public static MemberInfoUpdateRequest createMemberInfoUpdateRequest() {
+        return new MemberInfoUpdateRequest("dooyaya", "niceaddress", "자기소개");
+    }
+
     public static PasswordEncoder createPasswordEncoder() {
         return new PasswordEncoder() {
             @Override

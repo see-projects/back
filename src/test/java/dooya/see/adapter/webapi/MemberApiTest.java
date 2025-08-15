@@ -7,10 +7,7 @@ import dooya.see.adapter.webapi.dto.MemberProfileResponse;
 import dooya.see.adapter.webapi.dto.MemberRegisterResponse;
 import dooya.see.application.member.provided.MemberRegister;
 import dooya.see.application.member.required.MemberRepository;
-import dooya.see.domain.member.MemberAuthRequest;
-import dooya.see.domain.member.Member;
-import dooya.see.domain.member.MemberRegisterRequest;
-import dooya.see.domain.member.MemberStatus;
+import dooya.see.domain.member.*;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.UnsupportedEncodingException;
 
 import static dooya.see.domain.member.MemberFixture.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
@@ -271,10 +269,20 @@ class MemberApiTest {
         MemberAuthResponse authResponse =
                 objectMapper.readValue(loginResult.getResponse().getContentAsString(), MemberAuthResponse.class);
 
+        MemberInfoUpdateRequest updateInfoRequest = createMemberInfoUpdateRequest();
+        String updateRequestJson = objectMapper.writeValueAsString(updateInfoRequest);
+
         MvcTestResult result = mvcTester.put().uri("/api/members/my/updateInfo")
                 .header("Authorization", "Bearer " + authResponse.accessToken())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(updateRequestJson)
                 .exchange();
 
         assertThat(result).hasStatusOk();
+
+        Member member = memberRepository.findById(authResponse.memberId()).orElseThrow();
+        assertThat(member.getNickname()).isEqualTo(updateInfoRequest.nickname());
+        assertThat(member.getDetail().getProfile().address()).isEqualTo(updateInfoRequest.profileAddress());
+        assertThat(member.getDetail().getIntroduction()).isEqualTo(updateInfoRequest.introduction());
     }
 }
