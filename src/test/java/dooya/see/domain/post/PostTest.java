@@ -27,4 +27,13 @@ class PostTest {
         assertThat(post.getMetaData().likeCount()).isZero();
         assertThat(post.getMetaData().commentCount()).isZero();
     }
+
+    @Test
+    @DisplayName("DRAFT 상태의 게시글을 발행하면 상태가 PUBLISHED로 변경되고 발행일시가 설정된다")
+    void publishDraftPost() {
+        post.publish();
+
+        assertThat(post.getStatus()).isEqualTo(PostStatus.PUBLISHED);
+        assertThat(post.getMetaData().publishedAt()).isNotNull();
+    }
 }

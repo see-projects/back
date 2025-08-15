@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import static java.util.Objects.requireNonNull;
+import static org.springframework.util.Assert.state;
 
 @Entity
 @Getter
@@ -39,5 +40,12 @@ public class Post extends AbstractEntity {
         post.metaData = PostMetaData.create();
 
         return post;
+    }
+
+    public void publish() {
+        state(this.status == PostStatus.DRAFT, "DRAFT 상태가 아닙니다");
+
+        this.status = PostStatus.PUBLISHED;
+        this.metaData = this.metaData.updatePublishedAt();
     }
 }
