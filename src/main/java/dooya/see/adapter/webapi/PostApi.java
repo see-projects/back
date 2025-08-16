@@ -80,6 +80,20 @@ public class PostApi {
         return PostDetailResponse.of(post);
     }
 
+    @PostMapping("/api/posts/{id}/like")
+    public PostDetailResponse likePost(@PathVariable Long id) {
+        Post post = postManager.incrementLikeCount(id);
+
+        return PostDetailResponse.of(post);
+    }
+
+    @PostMapping("/api/posts/{id}/comment")
+    public PostDetailResponse addComment(@PathVariable Long id) {
+        Post post = postManager.incrementCommentCount(id);
+
+        return PostDetailResponse.of(post);
+    }
+
     private Long getCurrentMemberId(String token) {
         String extractedToken = AuthTokenExtractor.extractToken(token);
         return tokenManager.extractMemberIdFromToken(extractedToken);

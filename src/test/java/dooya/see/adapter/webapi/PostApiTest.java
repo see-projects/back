@@ -497,6 +497,74 @@ class PostApiTest {
         assertThat(response.status()).isEqualTo(PostStatus.DELETED);
     }
 
+    @Test
+    @DisplayName("발행된 게시글에 좋아요를 누르면 좋아요 수가 1 증가한다")
+    void likePublishedPost() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long postId = createAndPublishPost(token);
+
+        MvcTestResult result = mvcTester.post().uri("/api/posts/{id}/like", postId)
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+
+        PostDetailResponse response =
+                objectMapper.readValue(result.getResponse().getContentAsString(), PostDetailResponse.class);
+
+        assertThat(response.likeCount()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("DRAFT 상태의 게시글에 좋아요를 누르면 좋아요 수는 변경되지 않는다")
+    void likeDraftPost() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long postId = createAndDraftPost(token);
+
+        MvcTestResult result = mvcTester.post().uri("/api/posts/{id}/like", postId)
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+
+        PostDetailResponse response =
+                objectMapper.readValue(result.getResponse().getContentAsString(), PostDetailResponse.class);
+
+        assertThat(response.likeCount()).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("발행된 게시글에 댓글을 추가하면 댓글 수가 1 증가한다")
+    void addCommentToPublishedPost() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long postId = createAndPublishPost(token);
+
+        MvcTestResult result = mvcTester.post().uri("/api/posts/{id}/comment", postId)
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+
+        PostDetailResponse response =
+                objectMapper.readValue(result.getResponse().getContentAsString(), PostDetailResponse.class);
+
+        assertThat(response.commentCount()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("DRAFT 상태의 게시글에 댓글을 추가하면 댓글 수는 변경되지 않는다")
+    void addCommentToDraftPost() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long postId = createAndDraftPost(token);
+
+        MvcTestResult result = mvcTester.post().uri("/api/posts/{id}/comment", postId)
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+
+        PostDetailResponse response =
+                objectMapper.readValue(result.getResponse().getContentAsString(), PostDetailResponse.class);
+
+        assertThat(response.commentCount()).isEqualTo(0);
+    }
+
     private String createMemberAndGetToken() throws JsonProcessingException, UnsupportedEncodingException {
         memberRegister.register(createMemberRegisterRequest());
 
