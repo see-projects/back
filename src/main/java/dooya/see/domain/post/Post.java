@@ -78,7 +78,7 @@ public class Post extends AbstractEntity {
         this.status = PostStatus.DELETED;
     }
 
-    public boolean isWrittenBy(long memberId) {
+    public boolean isWrittenBy(Long memberId) {
         return this.memberId.equals(memberId);
     }
 
