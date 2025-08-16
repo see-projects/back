@@ -13,16 +13,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static dooya.see.domain.post.PostFixture.*;
 import static org.assertj.core.api.Assertions.*;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Transactional
 @Import(SeeTestConfiguration.class)
 record PostManagerTest(PostManager postManager) {
+    
     @Test
-    @DisplayName("")
-    void a() {
+    @DisplayName("게시글 생성 시 ID가 할당되고 초기 상태는 DRAFT가 된다")
+    void createPost() {
         Post post = postManager.create(createPostRequest(), 1L);
 
         assertThat(post.getId()).isNotNull();
@@ -32,8 +31,8 @@ record PostManagerTest(PostManager postManager) {
     }
 
     @Test
-    @DisplayName("")
-    void b() {
+    @DisplayName("모든 필드를 수정하면 제목, 내용, 카테고리가 모두 변경된다")
+    void updateAllFields() {
         Post post = postManager.create(createPostRequest(), 1L);
 
         postManager.update(updateAllFieldsRequest(), post.getId());
@@ -44,8 +43,59 @@ record PostManagerTest(PostManager postManager) {
     }
 
     @Test
-    @DisplayName("")
-    void c() {
+    @DisplayName("제목만 수정하면 제목만 변경되고 내용과 카테고리는 기존 값을 유지한다")
+    void updateTitleOnly() {
+        Post post = postManager.create(createPostRequest(), 1L);
+        String originalBody = post.getContent().body();
+        PostCategory originalCategory = post.getCategory();
+
+        postManager.update(updateTitleOnlyRequest(), post.getId());
+
+        assertThat(post.getContent().title()).isEqualTo("새로운 제목");
+        assertThat(post.getContent().body()).isEqualTo(originalBody);
+        assertThat(post.getCategory()).isEqualTo(originalCategory);
+    }
+
+    @Test
+    @DisplayName("내용만 수정하면 내용만 변경되고 제목과 카테고리는 기존 값을 유지한다")
+    void updateBodyOnly() {
+        Post post = postManager.create(createPostRequest(), 1L);
+        String originalTitle = post.getContent().title();
+        PostCategory originalCategory = post.getCategory();
+
+        postManager.update(updateBodyOnlyRequest(), post.getId());
+
+        assertThat(post.getContent().title()).isEqualTo(originalTitle);
+        assertThat(post.getContent().body()).isEqualTo("새로운 내용");
+        assertThat(post.getCategory()).isEqualTo(originalCategory);
+    }
+
+    @Test
+    @DisplayName("카테고리만 수정하면 카테고리만 변경되고 제목과 내용은 기존 값을 유지한다")
+    void updateCategoryOnly() {
+        Post post = postManager.create(createPostRequest(), 1L);
+        String originalTitle = post.getContent().title();
+        String originalBody = post.getContent().body();
+
+        postManager.update(updateCategoryOnlyRequest(), post.getId());
+
+        assertThat(post.getContent().title()).isEqualTo(originalTitle);
+        assertThat(post.getContent().body()).isEqualTo(originalBody);
+        assertThat(post.getCategory()).isEqualTo(PostCategory.NOTICE);
+    }
+
+    @Test
+    @DisplayName("변경사항이 없는 요청으로 수정 시 IllegalStateException이 발생한다")
+    void updateWithNoChanges() {
+        postManager.create(createPostRequest(), 1L);
+
+        assertThatThrownBy(() -> postManager.update(noUpdateRequest(), 1L))
+            .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 게시글을 수정하려고 하면 PostNotFoundException이 발생한다")
+    void updateNonExistentPost() {
         assertThatThrownBy(() -> postManager.update(updateAllFieldsRequest(), 999L))
             .isInstanceOf(PostNotFoundException.class);
     }
