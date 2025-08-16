@@ -5,7 +5,6 @@ import dooya.see.application.post.provided.PostManager;
 import dooya.see.application.post.required.PostRepository;
 import dooya.see.domain.post.Post;
 import dooya.see.domain.post.PostCreateRequest;
-import dooya.see.domain.post.PostNotFoundException;
 import dooya.see.domain.post.PostUpdateRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
