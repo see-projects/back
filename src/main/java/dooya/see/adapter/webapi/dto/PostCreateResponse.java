@@ -1,5 +1,6 @@
 package dooya.see.adapter.webapi.dto;
 
+import dooya.see.domain.post.Post;
 import dooya.see.domain.post.PostCategory;
 import dooya.see.domain.post.PostStatus;
 
@@ -12,4 +13,14 @@ public record PostCreateResponse(
         PostStatus status,
         LocalDateTime createdAt
 ) {
+
+    public static PostCreateResponse of(Post post) {
+        return new PostCreateResponse(
+                post.getId(),
+                post.getContent().title(),
+                post.getCategory(),
+                post.getStatus(),
+                post.getMetaData().createdAt()
+        );
+    }
 }
