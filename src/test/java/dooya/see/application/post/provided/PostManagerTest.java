@@ -5,6 +5,7 @@ import dooya.see.domain.post.Post;
 import dooya.see.domain.post.PostCategory;
 import dooya.see.domain.post.PostNotFoundException;
 import dooya.see.domain.post.PostStatus;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,12 +18,12 @@ import static org.assertj.core.api.Assertions.*;
 @SpringBootTest
 @Transactional
 @Import(SeeTestConfiguration.class)
-record PostManagerTest(PostManager postManager) {
+record PostManagerTest(PostManager postManager, EntityManager entityManager) {
     
     @Test
     @DisplayName("게시글 생성 시 ID가 할당되고 초기 상태는 DRAFT가 된다")
-    void createPost() {
-        Post post = postManager.create(createPostRequest(), 1L);
+    void create() {
+        Post post = createPost();
 
         assertThat(post.getId()).isNotNull();
         assertThat(post.getMemberId()).isEqualTo(1L);
@@ -33,7 +34,7 @@ record PostManagerTest(PostManager postManager) {
     @Test
     @DisplayName("모든 필드를 수정하면 제목, 내용, 카테고리가 모두 변경된다")
     void updateAllFields() {
-        Post post = postManager.create(createPostRequest(), 1L);
+        Post post = createPost();
 
         postManager.update(updateAllFieldsRequest(), post.getId());
 
@@ -45,7 +46,8 @@ record PostManagerTest(PostManager postManager) {
     @Test
     @DisplayName("제목만 수정하면 제목만 변경되고 내용과 카테고리는 기존 값을 유지한다")
     void updateTitleOnly() {
-        Post post = postManager.create(createPostRequest(), 1L);
+        Post post = createPost();
+
         String originalBody = post.getContent().body();
         PostCategory originalCategory = post.getCategory();
 
@@ -59,7 +61,7 @@ record PostManagerTest(PostManager postManager) {
     @Test
     @DisplayName("내용만 수정하면 내용만 변경되고 제목과 카테고리는 기존 값을 유지한다")
     void updateBodyOnly() {
-        Post post = postManager.create(createPostRequest(), 1L);
+        Post post = createPost();
         String originalTitle = post.getContent().title();
         PostCategory originalCategory = post.getCategory();
 
@@ -73,7 +75,7 @@ record PostManagerTest(PostManager postManager) {
     @Test
     @DisplayName("카테고리만 수정하면 카테고리만 변경되고 제목과 내용은 기존 값을 유지한다")
     void updateCategoryOnly() {
-        Post post = postManager.create(createPostRequest(), 1L);
+        Post post = createPost();
         String originalTitle = post.getContent().title();
         String originalBody = post.getContent().body();
 
@@ -98,5 +100,22 @@ record PostManagerTest(PostManager postManager) {
     void updateNonExistentPost() {
         assertThatThrownBy(() -> postManager.update(updateAllFieldsRequest(), 999L))
             .isInstanceOf(PostNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("")
+    void a() {
+        Post post = createPost();
+
+        postManager.publish(post.getId());
+
+        assertThat(post.getMetaData().publishedAt()).isNotNull();
+    }
+
+    private Post createPost() {
+        Post post = postManager.create(createPostRequest(), 1L);
+        entityManager.flush();
+        entityManager.clear();
+        return post;
     }
 }
