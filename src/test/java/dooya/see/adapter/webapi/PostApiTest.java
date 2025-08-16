@@ -37,8 +37,8 @@ class PostApiTest {
     final MemberRegister memberRegister;
     
     @Test
-    @DisplayName("")
-    void a() throws JsonProcessingException, UnsupportedEncodingException {
+    @DisplayName("로그인한 사용자가 게시글을 생성할 수 있다")
+    void createPost() throws JsonProcessingException, UnsupportedEncodingException {
         String token = createMemberAndGetToken();
 
         PostCreateRequest request = PostFixture.createPostRequest(true);
@@ -62,8 +62,8 @@ class PostApiTest {
     }
 
     @Test
-    @DisplayName("")
-    void b() throws JsonProcessingException {
+    @DisplayName("토큰 없이 게시글 생성 요청 시 401 Unauthorized가 발생한다")
+    void createPostWithoutToken() throws JsonProcessingException {
         PostCreateRequest request = PostFixture.createPostRequest(true);
         String requestJson = objectMapper.writeValueAsString(request);
 
