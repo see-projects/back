@@ -83,6 +83,10 @@ public class PostModifyService implements PostManager {
 
     @Override
     public Post incrementCommentCount(Long postId) {
-        return null;
+        Post post = postFinder.find(postId);
+
+        post.incrementCommentCount();
+
+        return postRepository.save(post);
     }
 }

@@ -208,6 +208,27 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
         assertThat(post.getMetaData().likeCount()).isZero();
     }
 
+    @Test
+    @DisplayName("")
+    void k() {
+        Post post = createPost();
+        postManager.publish(post.getId());
+
+        postManager.incrementCommentCount(post.getId());
+
+        assertThat(post.getMetaData().commentCount()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("")
+    void l() {
+        Post post = createPost();
+
+        postManager.incrementCommentCount(post.getId());
+
+        assertThat(post.getMetaData().commentCount()).isZero();
+    }
+
     private Post createPost() {
         Post post = postManager.create(createPostRequest(), 1L);
         entityManager.flush();
