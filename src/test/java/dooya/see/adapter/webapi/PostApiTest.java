@@ -9,6 +9,7 @@ import dooya.see.application.member.provided.MemberRegister;
 import dooya.see.domain.member.MemberAuthRequest;
 import dooya.see.domain.member.MemberFixture;
 import dooya.see.domain.member.MemberRegisterRequest;
+import dooya.see.domain.post.PostCategory;
 import dooya.see.domain.post.PostCreateRequest;
 import dooya.see.domain.post.PostStatus;
 import dooya.see.domain.post.PostUpdateRequest;
@@ -563,6 +564,125 @@ class PostApiTest {
                 objectMapper.readValue(result.getResponse().getContentAsString(), PostDetailResponse.class);
 
         assertThat(response.commentCount()).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("공개된 게시글 목록을 조회할 수 있다")
+    void getPublicPosts() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        createAndPublishPost(token);
+        createAndPublishPost(token);
+        createAndDraftPost(token);
+
+        MvcTestResult result = mvcTester.get().uri("/api/posts")
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+
+        String responseContent = result.getResponse().getContentAsString();
+        PostDetailResponse[] posts = objectMapper.readValue(responseContent, PostDetailResponse[].class);
+
+        assertThat(posts).hasSize(2);
+        assertThat(posts[0].status()).isEqualTo(PostStatus.PUBLISHED);
+        assertThat(posts[1].status()).isEqualTo(PostStatus.PUBLISHED);
+    }
+
+    @Test
+    @DisplayName("특정 카테고리의 공개 게시글 목록을 조회할 수 있다")
+    void getPostsByCategory() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        createAndPublishPost(token); // TECH 카테고리
+
+        MvcTestResult result = mvcTester.get().uri("/api/posts/category/TECH")
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+
+        String responseContent = result.getResponse().getContentAsString();
+        PostDetailResponse[] posts = objectMapper.readValue(responseContent, PostDetailResponse[].class);
+
+        assertThat(posts).hasSize(1);
+        assertThat(posts[0].category()).isEqualTo(PostCategory.TECH);
+        assertThat(posts[0].status()).isEqualTo(PostStatus.PUBLISHED);
+    }
+
+    @Test
+    @DisplayName("본인의 게시글 목록을 조회하면 모든 상태의 게시글이 반환된다")
+    void getMyPosts() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+
+        Long publishedPostId = createAndPublishPost(token);
+        createAndDraftPost(token);
+
+        MvcTestResult postResult = mvcTester.get().uri("/api/posts/{id}", publishedPostId)
+                .exchange();
+        PostDetailResponse postDetail = objectMapper.readValue(
+                postResult.getResponse().getContentAsString(), PostDetailResponse.class);
+        Long actualMemberId = postDetail.authorId();
+
+        MvcTestResult result = mvcTester.get().uri("/api/members/{memberId}/posts", actualMemberId)
+                .header("Authorization", "Bearer " + token)
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+
+        String responseContent = result.getResponse().getContentAsString();
+        PostDetailResponse[] posts = objectMapper.readValue(responseContent, PostDetailResponse[].class);
+
+        assertThat(posts).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("다른 사용자의 게시글 목록을 조회하면 공개된 게시글만 반환된다")
+    void getOtherUserPosts() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long publishedPostId = createAndPublishPost(token);
+        createAndDraftPost(token);
+
+        MvcTestResult postResult = mvcTester.get().uri("/api/posts/{id}", publishedPostId)
+                .exchange();
+        PostDetailResponse postDetail = objectMapper.readValue(
+                postResult.getResponse().getContentAsString(), PostDetailResponse.class);
+        Long authorMemberId = postDetail.authorId();
+
+        String readerToken = createSecondMemberAndGetToken();
+
+        MvcTestResult result = mvcTester.get().uri("/api/members/{memberId}/posts", authorMemberId)
+                .header("Authorization", "Bearer " + readerToken)
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+
+        String responseContent = result.getResponse().getContentAsString();
+        PostDetailResponse[] posts = objectMapper.readValue(responseContent, PostDetailResponse[].class);
+
+        assertThat(posts).hasSize(1); // PUBLISHED 게시글만 조회
+        assertThat(posts[0].status()).isEqualTo(PostStatus.PUBLISHED);
+    }
+
+    @Test
+    @DisplayName("비로그인 상태로 다른 사용자 게시글을 조회하면 공개된 게시글만 반환된다")
+    void getOtherUserPostsWithoutToken() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long publishedPostId = createAndPublishPost(token);
+        createAndDraftPost(token);
+
+        MvcTestResult postResult = mvcTester.get().uri("/api/posts/{id}", publishedPostId)
+                .exchange();
+        PostDetailResponse postDetail = objectMapper.readValue(
+                postResult.getResponse().getContentAsString(), PostDetailResponse.class);
+        Long authorMemberId = postDetail.authorId();
+
+        MvcTestResult result = mvcTester.get().uri("/api/members/{memberId}/posts", authorMemberId)
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+
+        String responseContent = result.getResponse().getContentAsString();
+        PostDetailResponse[] posts = objectMapper.readValue(responseContent, PostDetailResponse[].class);
+
+        assertThat(posts).hasSize(1);
+        assertThat(posts[0].status()).isEqualTo(PostStatus.PUBLISHED);
     }
 
     private String createMemberAndGetToken() throws JsonProcessingException, UnsupportedEncodingException {

@@ -6,12 +6,16 @@ import dooya.see.application.member.required.TokenManager;
 import dooya.see.application.post.provided.PostFinder;
 import dooya.see.application.post.provided.PostManager;
 import dooya.see.domain.post.Post;
+import dooya.see.domain.post.PostCategory;
 import dooya.see.domain.post.PostCreateRequest;
+import dooya.see.domain.post.PostStatus;
 import dooya.see.domain.post.PostUpdateRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -92,6 +96,56 @@ public class PostApi {
         Post post = postManager.incrementCommentCount(id);
 
         return PostDetailResponse.of(post);
+    }
+
+    @GetMapping("/api/posts")
+    public List<PostDetailResponse> getPublicPosts() {
+        List<Post> posts = postFinder.findPublicPosts();
+        
+        return posts.stream()
+                .map(PostDetailResponse::of)
+                .toList();
+    }
+
+    @GetMapping("/api/posts/category/{category}")
+    public List<PostDetailResponse> getPostsByCategory(@PathVariable PostCategory category) {
+        List<Post> posts = postFinder.findPublicPostsByCategory(category);
+        
+        return posts.stream()
+                .map(PostDetailResponse::of)
+                .toList();
+    }
+
+    @GetMapping("/api/members/{memberId}/posts")
+    public List<PostDetailResponse> getPostsByMember(@PathVariable Long memberId,
+                                                     @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token) {
+        if (token != null) {
+            Long currentMemberId = getCurrentMemberId(token);
+            if (currentMemberId.equals(memberId)) {
+                List<Post> posts = postFinder.findByMemberId(memberId);
+                return posts.stream()
+                        .map(PostDetailResponse::of)
+                        .toList();
+            }
+        }
+
+        List<Post> posts = postFinder.findByMemberId(memberId);
+        return posts.stream()
+                .filter(post -> post.getStatus() == PostStatus.PUBLISHED)
+                .map(PostDetailResponse::of)
+                .toList();
+    }
+
+    @GetMapping("/api/posts/status/{status}")
+    public List<PostDetailResponse> getPostsByStatus(@PathVariable PostStatus status,
+                                                     @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token) {
+        // 관리자나 특별한 권한이 있는 경우에만 허용하는 것이 좋지만, 
+        // 일단 기본 구현으로 진행
+        List<Post> posts = postFinder.findByStatus(status);
+        
+        return posts.stream()
+                .map(PostDetailResponse::of)
+                .toList();
     }
 
     private Long getCurrentMemberId(String token) {
