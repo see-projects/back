@@ -1,7 +1,6 @@
 package dooya.see.application.post.provided;
 
 import dooya.see.SeeTestConfiguration;
-import dooya.see.application.member.provided.MemberFinder;
 import dooya.see.domain.post.Post;
 import dooya.see.domain.post.PostCategory;
 import dooya.see.domain.post.PostNotFoundException;
@@ -14,16 +13,14 @@ import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Transactional;
 
 import static dooya.see.domain.post.PostFixture.*;
-import static org.assertj.core.api.Assertions.*;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Transactional
 @Import(SeeTestConfiguration.class)
 record PostManagerTest(PostManager postManager, EntityManager entityManager, PostFinder postFinder) {
-    
+
     @Test
     @DisplayName("게시글 생성 시 ID가 할당되고 초기 상태는 DRAFT가 된다")
     void create() {
@@ -96,39 +93,40 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
         Post post = createPost();
 
         assertThatThrownBy(() -> postManager.update(noUpdateRequest(), post.getId()))
-            .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
     @DisplayName("존재하지 않는 게시글을 수정하려고 하면 PostNotFoundException이 발생한다")
     void updateNonExistentPost() {
         assertThatThrownBy(() -> postManager.update(updateAllFieldsRequest(), 999L))
-            .isInstanceOf(PostNotFoundException.class);
+                .isInstanceOf(PostNotFoundException.class);
     }
 
     @Test
-    @DisplayName("")
-    void a() {
+    @DisplayName("게시글을 발행하면 PUBLISHED 상태가 되고 발행 시간이 기록된다")
+    void publishDraftPost() {
         Post post = createPost();
 
         postManager.publish(post.getId());
 
+        assertThat(post.getStatus()).isEqualTo(PostStatus.PUBLISHED);
         assertThat(post.getMetaData().publishedAt()).isNotNull();
     }
 
     @Test
-    @DisplayName("")
-    void b() {
+    @DisplayName("이미 발행된 게시글을 다시 발행하려고 하면 IllegalStateException이 발생한다")
+    void publishAlreadyPublishedPost() {
         Post post = createPost();
         postManager.publish(post.getId());
 
         assertThatThrownBy(() -> postManager.publish(post.getId()))
-            .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    @DisplayName("")
-    void c() {
+    @DisplayName("발행된 게시글을 숨김 처리하면 HIDDEN 상태로 변경된다")
+    void hidePublishedPost() {
         Post post = createPost();
         postManager.publish(post.getId());
 
@@ -138,17 +136,17 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
     }
 
     @Test
-    @DisplayName("")
-    void d() {
+    @DisplayName("DRAFT 상태의 게시글을 숨김 처리하려고 하면 IllegalStateException이 발생한다")
+    void hideDraftPost() {
         Post post = createPost();
 
         assertThatThrownBy(() -> postManager.hide(post.getId()))
-            .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    @DisplayName("")
-    void e() {
+    @DisplayName("게시글을 삭제하면 DELETED 상태로 변경된다")
+    void deletePost() {
         Post post = createPost();
 
         postManager.delete(post.getId());
@@ -157,18 +155,18 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
     }
 
     @Test
-    @DisplayName("")
-    void f() {
+    @DisplayName("이미 삭제된 게시글을 다시 삭제하려고 하면 IllegalStateException이 발생한다")
+    void deleteAlreadyDeletedPost() {
         Post post = createPost();
         postManager.delete(post.getId());
 
         assertThatThrownBy(() -> postManager.delete(post.getId()))
-            .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    @DisplayName("")
-    void g() {
+    @DisplayName("발행된 게시글의 조회수를 증가시키면 viewCount가 1 증가한다")
+    void incrementViewCountOnPublishedPost() {
         Post post = createPost();
         postManager.publish(post.getId());
 
@@ -178,18 +176,18 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
     }
 
     @Test
-    @DisplayName("")
-    void h() {
+    @DisplayName("DRAFT 상태의 게시글에 조회수 증가를 시도하면 viewCount는 변경되지 않는다")
+    void incrementViewCountOnDraftPost() {
         Post post = createPost();
 
-        postManager.incrementLikeCount(post.getId());
+        postManager.incrementViewCount(post.getId());
 
         assertThat(post.getMetaData().viewCount()).isZero();
     }
 
     @Test
-    @DisplayName("")
-    void i() {
+    @DisplayName("발행된 게시글의 좋아요 수를 증가시키면 likeCount가 1 증가한다")
+    void incrementLikeCountOnPublishedPost() {
         Post post = createPost();
         postManager.publish(post.getId());
 
@@ -199,8 +197,8 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
     }
 
     @Test
-    @DisplayName("")
-    void j() {
+    @DisplayName("DRAFT 상태의 게시글에 좋아요 수 증가를 시도하면 likeCount는 변경되지 않는다")
+    void incrementLikeCountOnDraftPost() {
         Post post = createPost();
 
         postManager.incrementLikeCount(post.getId());
@@ -209,8 +207,8 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
     }
 
     @Test
-    @DisplayName("")
-    void k() {
+    @DisplayName("발행된 게시글의 댓글 수를 증가시키면 commentCount가 1 증가한다")
+    void incrementCommentCountOnPublishedPost() {
         Post post = createPost();
         postManager.publish(post.getId());
 
@@ -220,8 +218,8 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
     }
 
     @Test
-    @DisplayName("")
-    void l() {
+    @DisplayName("DRAFT 상태의 게시글에 댓글 수 증가를 시도하면 commentCount는 변경되지 않는다")
+    void incrementCommentCountOnDraftPost() {
         Post post = createPost();
 
         postManager.incrementCommentCount(post.getId());
