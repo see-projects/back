@@ -5,7 +5,7 @@ import java.util.Optional;
 public class PostFixture {
     
     public static PostCreateRequest createPostRequest(boolean publishImmediately) {
-        return new PostCreateRequest("제목", "내용", PostCategory.TECH, publishImmediately);
+        return new PostCreateRequest("테스트 게시글 제목입니다", "테스트 게시글 내용입니다", PostCategory.TECH, publishImmediately);
     }
 
     public static PostCreateRequest createPostRequest() {
