@@ -129,10 +129,10 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("DRAFT 상태의 게시글을 숨김 처리하려고 하면 IllegalStateException이 발생한다")
+    @DisplayName("DRAFT 상태의 게시글을 숨김 처리하려고 하면 InvalidPostStatusTransitionException이 발생한다")
     void hideDraftPostThrowsException() {
         assertThatThrownBy(() -> post.hide())
-            .isInstanceOf(IllegalStateException.class);
+            .isInstanceOf(InvalidPostStatusTransitionException.class);
     }
 
     @Test

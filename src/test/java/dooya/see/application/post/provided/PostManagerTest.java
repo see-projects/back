@@ -1,11 +1,7 @@
 package dooya.see.application.post.provided;
 
 import dooya.see.SeeTestConfiguration;
-import dooya.see.domain.post.Post;
-import dooya.see.domain.post.PostCategory;
-import dooya.see.domain.post.PostNotFoundException;
-import dooya.see.domain.post.PostStatus;
-import dooya.see.domain.post.UnauthorizedPostAccessException;
+import dooya.see.domain.post.*;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -131,7 +127,7 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
         postManager.publish(post.getId(), 1L);
 
         assertThatThrownBy(() -> postManager.publish(post.getId(), 1L))
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(InvalidPostStatusTransitionException.class);
     }
 
     @Test
@@ -151,7 +147,7 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
         Post post = createPost();
 
         assertThatThrownBy(() -> postManager.hide(post.getId(), 1L))
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(InvalidPostStatusTransitionException.class);
     }
 
     @Test
