@@ -1,9 +1,11 @@
 package dooya.see.application.post;
 
+import dooya.see.application.post.provided.PostFinder;
 import dooya.see.application.post.provided.PostManager;
 import dooya.see.application.post.required.PostRepository;
 import dooya.see.domain.post.Post;
 import dooya.see.domain.post.PostCreateRequest;
+import dooya.see.domain.post.PostNotFoundException;
 import dooya.see.domain.post.PostUpdateRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class PostModifyService implements PostManager {
     private final PostRepository postRepository;
+    private final PostFinder postFinder;
 
     @Override
     public Post create(PostCreateRequest request, Long memberId) {
@@ -26,7 +29,11 @@ public class PostModifyService implements PostManager {
 
     @Override
     public Post update(PostUpdateRequest request, Long postId) {
-        return null;
+        Post post = postFinder.find(postId);
+
+        post.update(request);
+
+        return postRepository.save(post);
     }
 
     @Override
