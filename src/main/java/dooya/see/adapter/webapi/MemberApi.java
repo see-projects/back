@@ -32,36 +32,33 @@ public class MemberApi {
     }
 
     @GetMapping("/api/members/my")
-    public MemberProfileResponse getCurrentMember(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorizationHeader) {
-        String token = extractTokenFromHeader(authorizationHeader);
-        Member member = memberAuth.getCurrentMember(token);
+    public MemberProfileResponse getCurrentMember(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token) {
+        String extractedToken = extractTokenFromHeader(token);
+        Member member = memberAuth.getCurrentMember(extractedToken);
 
         return MemberProfileResponse.from(member);
     }
 
     @PatchMapping("/api/members/my/deactivate")
-    public void deactivate(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorizationHeader) {
-        String token = extractTokenFromHeader(authorizationHeader);
-        Member member = memberAuth.getCurrentMember(token);
+    public void deactivate(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token) {
+        String extractedToken = extractTokenFromHeader(token);
+        Member member = memberAuth.getCurrentMember(extractedToken);
 
         memberRegister.deactivate(member.getId());
     }
 
     @PutMapping("/api/members/my/updateInfo")
-    public MemberProfileResponse updateInfo(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorizationHeader,
+    public MemberProfileResponse updateInfo(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token,
                                             @RequestBody @Valid MemberInfoUpdateRequest request) {
-        String token = extractTokenFromHeader(authorizationHeader);
-        Member currentMember = memberAuth.getCurrentMember(token);
+        String extractedToken = extractTokenFromHeader(token);
+        Member currentMember = memberAuth.getCurrentMember(extractedToken);
 
         Member updatedMember = memberRegister.updateInfo(currentMember.getId(), request);
 
         return MemberProfileResponse.from(updatedMember);
     }
 
-    private String extractTokenFromHeader(String authorizationHeader) {
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            throw new AuthenticateException("Authorization 헤더가 올바르지 않습니다");
-        }
-        return authorizationHeader.substring(7);
+    private String extractTokenFromHeader(String token) {
+        return AuthTokenExtractor.extractToken(token);
     }
 }
