@@ -14,4 +14,8 @@ public interface PostFinder {
     List<Post> findByCategory(PostCategory category);
 
     List<Post> findByStatus(PostStatus status);
+
+    List<Post> findPublicPosts();
+
+    List<Post> findPublicPostsByCategory(PostCategory category);
 }

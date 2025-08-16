@@ -18,4 +18,6 @@ public interface PostRepository extends Repository<Post, Long> {
     List<Post> findByCategory(PostCategory category);
 
     List<Post> findByStatus(PostStatus status);
+
+    List<Post> findByCategoryAndStatus(PostCategory category, PostStatus status);
 }

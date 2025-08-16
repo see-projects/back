@@ -37,4 +37,14 @@ public class PostQueryService implements PostFinder {
     public List<Post> findByStatus(PostStatus status) {
         return postRepository.findByStatus(status);
     }
+
+    @Override
+    public List<Post> findPublicPosts() {
+        return postRepository.findByStatus(PostStatus.PUBLISHED);
+    }
+
+    @Override
+    public List<Post> findPublicPostsByCategory(PostCategory category) {
+        return postRepository.findByCategoryAndStatus(category, PostStatus.PUBLISHED);
+    }
 }
