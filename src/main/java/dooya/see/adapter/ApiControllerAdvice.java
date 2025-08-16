@@ -4,6 +4,7 @@ import dooya.see.domain.member.AuthenticateException;
 import dooya.see.domain.member.DuplicateEmailException;
 import dooya.see.domain.member.DuplicateProfileException;
 import dooya.see.domain.member.MemberNotFoundException;
+import dooya.see.domain.post.InvalidPostStatusTransitionException;
 import dooya.see.domain.post.PostNotFoundException;
 import dooya.see.domain.post.UnauthorizedPostAccessException;
 import org.springframework.http.HttpStatus;
@@ -21,7 +22,7 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
         return getProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, exception);
     }
 
-    @ExceptionHandler({DuplicateEmailException.class, DuplicateProfileException.class})
+    @ExceptionHandler({DuplicateEmailException.class, DuplicateProfileException.class, InvalidPostStatusTransitionException.class})
     public ProblemDetail conflictExceptionHandler(Exception exception) {
         return getProblemDetail(HttpStatus.CONFLICT, exception);
     }
