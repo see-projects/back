@@ -4,6 +4,7 @@ import dooya.see.application.post.provided.PostFinder;
 import dooya.see.application.post.required.PostRepository;
 import dooya.see.domain.post.Post;
 import dooya.see.domain.post.PostCategory;
+import dooya.see.domain.post.PostNotFoundException;
 import dooya.see.domain.post.PostStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,26 +20,21 @@ public class PostQueryService implements PostFinder {
 
     @Override
     public Post find(Long postId) {
-        return null;
-    }
-
-    @Override
-    public boolean isWrittenBy(Long postId, Long memberId) {
-        return false;
+        return postRepository.findById(postId).orElseThrow(() -> new PostNotFoundException("게시물을 찾을 수 없습니다"));
     }
 
     @Override
     public List<Post> findByMemberId(Long memberId) {
-        return List.of();
+        return postRepository.findByMemberId(memberId);
     }
 
     @Override
     public List<Post> findByCategory(PostCategory category) {
-        return List.of();
+        return postRepository.findByCategory(category);
     }
 
     @Override
     public List<Post> findByStatus(PostStatus status) {
-        return List.of();
+        return postRepository.findByStatus(status);
     }
 }
