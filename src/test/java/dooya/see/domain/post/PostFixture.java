@@ -5,7 +5,7 @@ import java.util.Optional;
 public class PostFixture {
     
     public static PostCreateRequest createPostRequest() {
-        return new PostCreateRequest("제목", "내용", PostCategory.TECH);
+        return new PostCreateRequest("제목", "내용", PostCategory.TECH, false);
     }
 
     public static PostUpdateRequest updateAllFieldsRequest() {
