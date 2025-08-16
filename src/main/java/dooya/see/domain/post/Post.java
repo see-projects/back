@@ -36,8 +36,14 @@ public class Post extends AbstractEntity {
         post.content = new PostContent(request.title(), request.body());
         post.memberId = requireNonNull(memberId);
         post.category = requireNonNull(request.category());
-        post.status = PostStatus.DRAFT;
-        post.metaData = PostMetaData.create();
+
+        if (request.publishImmediately()) {
+            post.status = PostStatus.PUBLISHED;
+            post.metaData = PostMetaData.createPublished();
+        } else {
+            post.status = PostStatus.DRAFT;
+            post.metaData = PostMetaData.create();
+        }
 
         return post;
     }

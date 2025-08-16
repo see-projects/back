@@ -31,6 +31,18 @@ public record PostMetaData(
         );
     }
 
+    public static PostMetaData createPublished() {
+        LocalDateTime now = LocalDateTime.now();
+        return new PostMetaData(
+                now,      // createdAt
+                null,     // modifiedAt
+                now,      // publishedAt
+                0,        // viewCount
+                0,        // likeCount
+                0         // commentCount
+        );
+    }
+
     PostMetaData updateModifiedAt() {
         return new PostMetaData(
                 this.createdAt,
