@@ -7,5 +7,5 @@ public interface TokenManager {
 
     String extractEmailFromToken(String token);
 
-    String extractMemberIdFromToken(String token);
+    Long extractMemberIdFromToken(String token);
 }
