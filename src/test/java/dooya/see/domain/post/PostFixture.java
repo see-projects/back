@@ -4,8 +4,12 @@ import java.util.Optional;
 
 public class PostFixture {
     
+    public static PostCreateRequest createPostRequest(boolean publishImmediately) {
+        return new PostCreateRequest("제목", "내용", PostCategory.TECH, publishImmediately);
+    }
+
     public static PostCreateRequest createPostRequest() {
-        return new PostCreateRequest("제목", "내용", PostCategory.TECH);
+        return createPostRequest(false);
     }
 
     public static PostUpdateRequest updateAllFieldsRequest() {

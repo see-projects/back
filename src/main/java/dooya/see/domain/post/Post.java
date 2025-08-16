@@ -36,8 +36,14 @@ public class Post extends AbstractEntity {
         post.content = new PostContent(request.title(), request.body());
         post.memberId = requireNonNull(memberId);
         post.category = requireNonNull(request.category());
-        post.status = PostStatus.DRAFT;
-        post.metaData = PostMetaData.create();
+
+        if (request.publishImmediately()) {
+            post.status = PostStatus.PUBLISHED;
+            post.metaData = PostMetaData.createPublished();
+        } else {
+            post.status = PostStatus.DRAFT;
+            post.metaData = PostMetaData.create();
+        }
 
         return post;
     }
@@ -78,7 +84,7 @@ public class Post extends AbstractEntity {
         this.status = PostStatus.DELETED;
     }
 
-    public boolean isWrittenBy(long memberId) {
+    public boolean isWrittenBy(Long memberId) {
         return this.memberId.equals(memberId);
     }
 

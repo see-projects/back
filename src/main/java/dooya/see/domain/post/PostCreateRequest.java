@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Size;
 public record PostCreateRequest(
         @Size(min = 5, max = 100) String title,
         @Size(min = 5, max = 50000) String body,
-        @NotNull PostCategory category
+        @NotNull PostCategory category,
+        boolean publishImmediately
 ) {
 }
