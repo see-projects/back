@@ -75,7 +75,10 @@ public class Post extends AbstractEntity {
     }
 
     public void hide() {
-        if (this.status != PostStatus.PUBLISHED) {
+        if (this.status == PostStatus.HIDDEN) {
+            throw new InvalidPostStatusTransitionException(this.status, "숨김");
+        }
+        if (this.status == PostStatus.DELETED) {
             throw new InvalidPostStatusTransitionException(this.status, "숨김");
         }
 

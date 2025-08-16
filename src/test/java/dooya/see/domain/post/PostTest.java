@@ -141,10 +141,11 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("DRAFT 상태의 게시글을 숨김 처리하려고 하면 InvalidPostStatusTransitionException이 발생한다")
-    void hideDraftPostThrowsException() {
-        assertThatThrownBy(() -> post.hide())
-            .isInstanceOf(InvalidPostStatusTransitionException.class);
+    @DisplayName("DRAFT 상태의 게시글을 숨김 처리하면 상태가 HIDDEN으로 변경된다")
+    void hideDraftPost() {
+        post.hide();
+
+        assertThat(post.getStatus()).isEqualTo(PostStatus.HIDDEN);
     }
 
     @Test
@@ -153,6 +154,16 @@ class PostTest {
         post.publish();
         
         assertThatThrownBy(() -> post.publish())
+            .isInstanceOf(InvalidPostStatusTransitionException.class);
+    }
+
+    @Test
+    @DisplayName("HIDDEN 상태의 게시글을 다시 숨기려고 하면 InvalidPostStatusTransitionException이 발생한다")
+    void hideAlreadyHiddenPostThrowsException() {
+        post.publish();
+        post.hide();
+        
+        assertThatThrownBy(() -> post.hide())
             .isInstanceOf(InvalidPostStatusTransitionException.class);
     }
 
