@@ -7,6 +7,7 @@ import dooya.see.domain.post.Post;
 import dooya.see.domain.post.PostCreateRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -19,7 +20,7 @@ public class PostApi {
     private final TokenManager tokenManager;
 
     @PostMapping("/api/posts")
-    public PostCreateResponse createPost(@RequestHeader("Authorization") String token,
+    public PostCreateResponse createPost(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token,
                                          @RequestBody @Valid PostCreateRequest request) {
         Long currentMemberId = getCurrentMemberId(token);
         Post post = postManager.create(request, currentMemberId);
@@ -28,7 +29,7 @@ public class PostApi {
     }
 
     private Long getCurrentMemberId(String token) {
-        String actualToken = token.replace("Bearer ", "");
-        return tokenManager.extractMemberIdFromToken(actualToken);
+        String extractedToken = AuthTokenExtractor.extractToken(token);
+        return tokenManager.extractMemberIdFromToken(extractedToken);
     }
 }
