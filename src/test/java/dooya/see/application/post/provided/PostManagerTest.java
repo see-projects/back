@@ -17,6 +17,7 @@ import static dooya.see.domain.post.PostFixture.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Transactional
@@ -142,6 +143,26 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
         Post post = createPost();
 
         assertThatThrownBy(() -> postManager.hide(post.getId()))
+            .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    @DisplayName("")
+    void e() {
+        Post post = createPost();
+
+        postManager.delete(post.getId());
+
+        assertThat(post.getStatus()).isEqualTo(PostStatus.DELETED);
+    }
+
+    @Test
+    @DisplayName("")
+    void f() {
+        Post post = createPost();
+        postManager.delete(post.getId());
+
+        assertThatThrownBy(() -> postManager.delete(post.getId()))
             .isInstanceOf(IllegalStateException.class);
     }
 

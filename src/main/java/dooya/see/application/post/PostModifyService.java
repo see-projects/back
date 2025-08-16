@@ -56,7 +56,11 @@ public class PostModifyService implements PostManager {
 
     @Override
     public Post delete(Long postId) {
-        return null;
+        Post post = postFinder.find(postId);
+
+        post.delete();
+
+        return postRepository.save(post);
     }
 
     @Override
