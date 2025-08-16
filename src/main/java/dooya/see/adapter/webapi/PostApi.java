@@ -119,7 +119,7 @@ public class PostApi {
     @GetMapping("/api/members/{memberId}/posts")
     public List<PostDetailResponse> getPostsByMember(@PathVariable Long memberId,
                                                      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token) {
-        if (token != null) {
+        if (AuthTokenExtractor.isValidBearerToken(token)) {
             Long currentMemberId = getCurrentMemberId(token);
             if (currentMemberId.equals(memberId)) {
                 List<Post> posts = postFinder.findByMemberId(memberId);
@@ -154,7 +154,7 @@ public class PostApi {
     }
 
     private Post processViewCountIncrement(Long id, String token, Post post) {
-        if (token != null) {
+        if (AuthTokenExtractor.isValidBearerToken(token)) {
             Long currentMemberId = getCurrentMemberId(token);
             if (!post.isWrittenBy(currentMemberId)) {
                 postManager.incrementViewCount(id);
