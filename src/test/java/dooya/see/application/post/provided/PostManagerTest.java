@@ -1,6 +1,7 @@
 package dooya.see.application.post.provided;
 
 import dooya.see.SeeTestConfiguration;
+import dooya.see.application.member.provided.MemberFinder;
 import dooya.see.domain.post.Post;
 import dooya.see.domain.post.PostCategory;
 import dooya.see.domain.post.PostNotFoundException;
@@ -18,7 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 @SpringBootTest
 @Transactional
 @Import(SeeTestConfiguration.class)
-record PostManagerTest(PostManager postManager, EntityManager entityManager) {
+record PostManagerTest(PostManager postManager, EntityManager entityManager, PostFinder postFinder) {
     
     @Test
     @DisplayName("게시글 생성 시 ID가 할당되고 초기 상태는 DRAFT가 된다")
@@ -89,9 +90,9 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager) {
     @Test
     @DisplayName("변경사항이 없는 요청으로 수정 시 IllegalStateException이 발생한다")
     void updateWithNoChanges() {
-        postManager.create(createPostRequest(), 1L);
+        Post post = createPost();
 
-        assertThatThrownBy(() -> postManager.update(noUpdateRequest(), 1L))
+        assertThatThrownBy(() -> postManager.update(noUpdateRequest(), post.getId()))
             .isInstanceOf(IllegalStateException.class);
     }
 
@@ -116,6 +117,7 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager) {
         Post post = postManager.create(createPostRequest(), 1L);
         entityManager.flush();
         entityManager.clear();
-        return post;
+
+        return postFinder.find(post.getId());
     }
 }
