@@ -65,7 +65,11 @@ public class PostModifyService implements PostManager {
 
     @Override
     public Post incrementViewCount(Long postId) {
-        return null;
+        Post post = postFinder.find(postId);
+
+        post.incrementViewCount();
+
+        return postRepository.save(post);
     }
 
     @Override

@@ -166,6 +166,27 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
             .isInstanceOf(IllegalStateException.class);
     }
 
+    @Test
+    @DisplayName("")
+    void g() {
+        Post post = createPost();
+        postManager.publish(post.getId());
+
+        postManager.incrementViewCount(post.getId());
+
+        assertThat(post.getMetaData().viewCount()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("")
+    void h() {
+        Post post = createPost();
+
+        postManager.incrementLikeCount(post.getId());
+        
+        assertThat(post.getMetaData().viewCount()).isZero();
+    }
+
     private Post createPost() {
         Post post = postManager.create(createPostRequest(), 1L);
         entityManager.flush();
