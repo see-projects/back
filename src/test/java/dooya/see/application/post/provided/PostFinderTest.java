@@ -114,7 +114,63 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
         assertThat(found).isEmpty();
     }
 
+    @Test
+    @DisplayName("발행된 게시글들만 공개 조회할 수 있다")
+    void findPublicPosts() {
+        Post post1 = createPublicPost();
+        Post post2 = createPublicPost();
+        entityManager.flush();
+        entityManager.clear();
+
+        List<Post> found = postFinder.findPublicPosts();
+
+        assertThat(found).hasSize(2);
+        assertThat(found).extracting(Post::getStatus)
+                .containsOnly(PostStatus.PUBLISHED);
+        assertThat(found).extracting(Post::getId)
+                .containsExactlyInAnyOrder(post1.getId(), post2.getId());
+    }
+
+    @Test
+    @DisplayName("발행된 게시글이 없으면 공개 조회 시 빈 리스트가 반환된다")
+    void findPublicPostsWhenNonePublished() {
+        List<Post> found = postFinder.findPublicPosts();
+
+        assertThat(found).isEmpty();
+    }
+
+    @Test
+    @DisplayName("특정 카테고리의 발행된 게시글들만 공개 조회할 수 있다")
+    void findPublicPostsByCategory() {
+        Post post1 = createPublicPost();
+        Post post2 = createPublicPost();
+        entityManager.flush();
+        entityManager.clear();
+
+        List<Post> found = postFinder.findPublicPostsByCategory(PostCategory.TECH);
+
+        assertThat(found).hasSize(2);
+        assertThat(found).extracting(Post::getStatus)
+                .containsOnly(PostStatus.PUBLISHED);
+        assertThat(found).extracting(Post::getCategory)
+                .containsOnly(PostCategory.TECH);
+        assertThat(found).extracting(Post::getId)
+                .containsExactlyInAnyOrder(post1.getId(), post2.getId());
+    }
+
+    @Test
+    @DisplayName("해당 카테고리에 발행된 게시글이 없으면 빈 리스트가 반환된다")
+    void findPublicPostsByNonExistentCategory() {
+        List<Post> found = postFinder.findPublicPostsByCategory(PostCategory.TECH);
+        
+        assertThat(found).isEmpty();
+    }
+
     private Post createPost() {
         return postManager.create(createPostRequest(), 1L);
+    }
+
+    private Post createPublicPost() {
+        return postManager.create(createPostRequest(true), 1L);
     }
 }
