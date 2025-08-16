@@ -10,7 +10,6 @@ import dooya.see.domain.member.MemberAuthRequest;
 import dooya.see.domain.member.MemberFixture;
 import dooya.see.domain.member.MemberRegisterRequest;
 import dooya.see.domain.post.PostCreateRequest;
-import dooya.see.domain.post.PostFixture;
 import dooya.see.domain.post.PostStatus;
 import dooya.see.domain.post.PostUpdateRequest;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +28,6 @@ import java.io.UnsupportedEncodingException;
 import static dooya.see.domain.member.MemberFixture.createMemberAuthRequest;
 import static dooya.see.domain.member.MemberFixture.createMemberRegisterRequest;
 import static dooya.see.domain.post.PostFixture.*;
-import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
@@ -83,8 +81,8 @@ class PostApiTest {
     }
     
     @Test
-    @DisplayName("")
-    void a() throws UnsupportedEncodingException, JsonProcessingException {
+    @DisplayName("게시글 조회 시 조회수가 1 증가한다")
+    void getPostIncreasesViewCount() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndPublishPost(token);
 
@@ -101,8 +99,8 @@ class PostApiTest {
     }
 
     @Test
-    @DisplayName("")
-    void b() throws UnsupportedEncodingException, JsonProcessingException {
+    @DisplayName("로그인한 다른 사용자가 게시글을 조회할 수 있다")
+    void getPostWithDifferentUser() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndPublishPost(token);
 
@@ -122,8 +120,8 @@ class PostApiTest {
     }
 
     @Test
-    @DisplayName("")
-    void c() throws UnsupportedEncodingException, JsonProcessingException {
+    @DisplayName("작성자가 게시글을 수정할 수 있다")
+    void updatePostByAuthor() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndPublishPost(token);
 
@@ -146,8 +144,8 @@ class PostApiTest {
     }
 
     @Test
-    @DisplayName("")
-    void d() throws UnsupportedEncodingException, JsonProcessingException {
+    @DisplayName("토큰 없이 게시글 수정 요청 시 401 Unauthorized가 발생한다")
+    void updatePostWithoutToken() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndPublishPost(token);
 
@@ -165,8 +163,8 @@ class PostApiTest {
     }
 
     @Test
-    @DisplayName("")
-    void e() throws UnsupportedEncodingException, JsonProcessingException {
+    @DisplayName("작성자가 아닌 사용자가 게시글 수정 시 403 Forbidden이 발생한다")
+    void updatePostWithoutAuthorization() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndPublishPost(token);
 
@@ -187,8 +185,8 @@ class PostApiTest {
     }
 
     @Test
-    @DisplayName("")
-    void f() throws UnsupportedEncodingException, JsonProcessingException {
+    @DisplayName("작성자가 임시저장된 게시글을 발행할 수 있다")
+    void publishPostByAuthor() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndDraftPost(token);
 
@@ -205,8 +203,8 @@ class PostApiTest {
     }
 
     @Test
-    @DisplayName("")
-    void g() throws UnsupportedEncodingException, JsonProcessingException {
+    @DisplayName("토큰 없이 게시글 발행 요청 시 401 Unauthorized가 발생한다")
+    void publishPostWithoutToken() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndDraftPost(token);
 
@@ -219,8 +217,8 @@ class PostApiTest {
     }
 
     @Test
-    @DisplayName("")
-    void h() throws UnsupportedEncodingException, JsonProcessingException {
+    @DisplayName("작성자가 아닌 사용자가 게시글 발행 시 403 Forbidden이 발생한다")
+    void publishPostWithoutAuthorization() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndDraftPost(token);
 
@@ -236,8 +234,8 @@ class PostApiTest {
     }
 
     @Test
-    @DisplayName("")
-    void i() throws UnsupportedEncodingException, JsonProcessingException {
+    @DisplayName("작성자가 발행된 게시글을 숨김 처리할 수 있다")
+    void hidePostByAuthor() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndPublishPost(token);
 
@@ -254,8 +252,8 @@ class PostApiTest {
     }
 
     @Test
-    @DisplayName("")
-    void j() throws UnsupportedEncodingException, JsonProcessingException {
+    @DisplayName("토큰 없이 게시글 숨김 요청 시 401 Unauthorized가 발생한다")
+    void hidePostWithoutToken() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndPublishPost(token);
 
@@ -268,8 +266,8 @@ class PostApiTest {
     }
 
     @Test
-    @DisplayName("")
-    void k() throws UnsupportedEncodingException, JsonProcessingException {
+    @DisplayName("작성자가 아닌 사용자가 게시글 숨김 시 403 Forbidden이 발생한다")
+    void hidePostWithoutAuthorization() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndPublishPost(token);
 
