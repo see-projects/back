@@ -7,6 +7,7 @@ import dooya.see.application.post.provided.PostFinder;
 import dooya.see.application.post.provided.PostManager;
 import dooya.see.domain.post.Post;
 import dooya.see.domain.post.PostCreateRequest;
+import dooya.see.domain.post.PostUpdateRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -38,6 +39,22 @@ public class PostApi {
         return PostDetailResponse.of(post);
     }
 
+    @PutMapping("/api/posts/{id}")
+    public PostDetailResponse updatePost(@PathVariable Long id,
+                                         @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token,
+                                         @RequestBody @Valid PostUpdateRequest request) {
+        Long currentMemberId = getCurrentMemberId(token);
+
+        Post post = postManager.update(request, id, currentMemberId);
+
+        return PostDetailResponse.of(post);
+    }
+
+    private Long getCurrentMemberId(String token) {
+        String extractedToken = AuthTokenExtractor.extractToken(token);
+        return tokenManager.extractMemberIdFromToken(extractedToken);
+    }
+
     private Post processViewCountIncrement(Long id, String token, Post post) {
         if (token != null) {
             Long currentMemberId = getCurrentMemberId(token);
@@ -50,10 +67,5 @@ public class PostApi {
             post = postFinder.find(id);
         }
         return post;
-    }
-
-    private Long getCurrentMemberId(String token) {
-        String extractedToken = AuthTokenExtractor.extractToken(token);
-        return tokenManager.extractMemberIdFromToken(extractedToken);
     }
 }

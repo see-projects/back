@@ -12,6 +12,7 @@ import dooya.see.domain.member.MemberRegisterRequest;
 import dooya.see.domain.post.PostCreateRequest;
 import dooya.see.domain.post.PostFixture;
 import dooya.see.domain.post.PostStatus;
+import dooya.see.domain.post.PostUpdateRequest;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -118,6 +119,71 @@ class PostApiTest {
 
         assertThat(response.postId()).isEqualTo(postId);
         assertThat(response.viewCount()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("")
+    void c() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long postId = createAndPublishPost(token);
+
+        PostUpdateRequest request = updateAllFieldsRequest();
+
+        String requestJson = objectMapper.writeValueAsString(request);
+
+        MvcTestResult result = mvcTester.put().uri("/api/posts/{id}", postId)
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson).exchange();
+
+        assertThat(result).hasStatusOk();
+
+        PostDetailResponse response =
+                objectMapper.readValue(result.getResponse().getContentAsString(), PostDetailResponse.class);
+
+        assertThat(response.title()).isEqualTo("수정된 제목");
+        assertThat(response.body()).isEqualTo("수정된 내용");
+    }
+
+    @Test
+    @DisplayName("")
+    void d() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long postId = createAndPublishPost(token);
+
+        PostUpdateRequest request = updateAllFieldsRequest();
+
+        String requestJson = objectMapper.writeValueAsString(request);
+
+        MvcTestResult result = mvcTester.put().uri("/api/posts/{id}", postId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson).exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    @DisplayName("")
+    void e() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long postId = createAndPublishPost(token);
+
+        PostUpdateRequest request = updateAllFieldsRequest();
+
+        String requestJson = objectMapper.writeValueAsString(request);
+
+        String readerToken = createSecondMemberAndGetToken();
+
+        MvcTestResult result = mvcTester.put().uri("/api/posts/{id}", postId)
+                .header("Authorization", "Bearer " + readerToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson).exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.FORBIDDEN);
     }
 
     private String createMemberAndGetToken() throws JsonProcessingException, UnsupportedEncodingException {
