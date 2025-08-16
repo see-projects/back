@@ -3,10 +3,12 @@ package dooya.see.adapter.webapi;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dooya.see.adapter.webapi.dto.MemberAuthResponse;
+import dooya.see.adapter.webapi.dto.PostCreateResponse;
 import dooya.see.application.member.provided.MemberRegister;
 import dooya.see.domain.member.MemberAuthRequest;
 import dooya.see.domain.post.PostCreateRequest;
 import dooya.see.domain.post.PostFixture;
+import dooya.see.domain.post.PostStatus;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,8 +39,8 @@ class PostApiTest {
     void a() throws JsonProcessingException, UnsupportedEncodingException {
         String token = createMemberAndGetToken();
 
-        PostCreateRequest createRequest = PostFixture.createPostRequest(true);
-        String requestJson = objectMapper.writeValueAsString(createRequest);
+        PostCreateRequest request = PostFixture.createPostRequest(true);
+        String requestJson = objectMapper.writeValueAsString(request);
 
         MvcTestResult result = mvcTester.post().uri("/api/posts")
                 .header("Authorization", "Bearer " + token)
@@ -46,6 +48,16 @@ class PostApiTest {
                 .content(requestJson).exchange();
 
         assertThat(result).hasStatusOk();
+
+        PostCreateResponse response =
+                objectMapper.readValue(result.getResponse().getContentAsString(), PostCreateResponse.class);
+
+        assertThat(response.postId()).isNotNull();
+        assertThat(response.title()).isEqualTo(request.title());
+        assertThat(response.category()).isEqualTo(request.category());
+        assertThat(response.status()).isEqualTo(PostStatus.PUBLISHED);
+        assertThat(response.createdAt()).isNotNull();
+
     }
 
     private String createMemberAndGetToken() throws JsonProcessingException, UnsupportedEncodingException {
