@@ -142,12 +142,37 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
     }
 
     @Test
-    @DisplayName("DRAFT 상태의 게시글을 숨김 처리하려고 하면 IllegalStateException이 발생한다")
-    void hideDraftPost() {
+    @DisplayName("HIDDEN 상태의 게시글을 발행하면 PUBLISHED 상태로 변경된다")
+    void publishHiddenPost() {
         Post post = createPost();
+        postManager.publish(post.getId(), 1L);
+        postManager.hide(post.getId(), 1L);
+
+        postManager.publish(post.getId(), 1L);
+
+        assertThat(post.getStatus()).isEqualTo(PostStatus.PUBLISHED);
+        assertThat(post.getMetaData().publishedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("이미 숨김 처리된 게시글을 다시 숨기려고 하면 InvalidPostStatusTransitionException이 발생한다")
+    void hideAlreadyHiddenPost() {
+        Post post = createPost();
+        postManager.publish(post.getId(), 1L);
+        postManager.hide(post.getId(), 1L);
 
         assertThatThrownBy(() -> postManager.hide(post.getId(), 1L))
                 .isInstanceOf(InvalidPostStatusTransitionException.class);
+    }
+
+    @Test
+    @DisplayName("DRAFT 상태의 게시글을 숨김 처리하면 HIDDEN 상태로 변경된다")
+    void hideDraftPost() {
+        Post post = createPost();
+
+        postManager.hide(post.getId(), 1L);
+
+        assertThat(post.getStatus()).isEqualTo(PostStatus.HIDDEN);
     }
 
     @Test
