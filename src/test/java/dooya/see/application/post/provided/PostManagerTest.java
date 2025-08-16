@@ -183,8 +183,29 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
         Post post = createPost();
 
         postManager.incrementLikeCount(post.getId());
-        
+
         assertThat(post.getMetaData().viewCount()).isZero();
+    }
+
+    @Test
+    @DisplayName("")
+    void i() {
+        Post post = createPost();
+        postManager.publish(post.getId());
+
+        postManager.incrementLikeCount(post.getId());
+
+        assertThat(post.getMetaData().likeCount()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("")
+    void j() {
+        Post post = createPost();
+
+        postManager.incrementLikeCount(post.getId());
+
+        assertThat(post.getMetaData().likeCount()).isZero();
     }
 
     private Post createPost() {

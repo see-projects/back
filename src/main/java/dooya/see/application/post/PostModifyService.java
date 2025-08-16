@@ -74,7 +74,11 @@ public class PostModifyService implements PostManager {
 
     @Override
     public Post incrementLikeCount(Long postId) {
-        return null;
+        Post post = postFinder.find(postId);
+
+        post.incrementLikeCount();
+
+        return postRepository.save(post);
     }
 
     @Override
