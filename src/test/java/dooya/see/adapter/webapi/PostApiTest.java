@@ -14,6 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
@@ -24,6 +25,7 @@ import java.io.UnsupportedEncodingException;
 import static dooya.see.domain.member.MemberFixture.createMemberAuthRequest;
 import static dooya.see.domain.member.MemberFixture.createMemberRegisterRequest;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -57,7 +59,21 @@ class PostApiTest {
         assertThat(response.category()).isEqualTo(request.category());
         assertThat(response.status()).isEqualTo(PostStatus.PUBLISHED);
         assertThat(response.createdAt()).isNotNull();
+    }
 
+    @Test
+    @DisplayName("")
+    void b() throws JsonProcessingException {
+        PostCreateRequest request = PostFixture.createPostRequest(true);
+        String requestJson = objectMapper.writeValueAsString(request);
+
+        MvcTestResult result = mvcTester.post().uri("/api/posts")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson).exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.UNAUTHORIZED);
     }
 
     private String createMemberAndGetToken() throws JsonProcessingException, UnsupportedEncodingException {
