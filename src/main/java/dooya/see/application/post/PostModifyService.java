@@ -6,6 +6,7 @@ import dooya.see.application.post.required.PostRepository;
 import dooya.see.domain.post.Post;
 import dooya.see.domain.post.PostCreateRequest;
 import dooya.see.domain.post.PostUpdateRequest;
+import dooya.see.domain.post.UnauthorizedPostAccessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,8 +28,12 @@ public class PostModifyService implements PostManager {
     }
 
     @Override
-    public Post update(PostUpdateRequest request, Long postId) {
+    public Post update(PostUpdateRequest request, Long postId, Long memberId) {
         Post post = postFinder.find(postId);
+
+        if (!post.isWrittenBy(memberId)) {
+            throw new UnauthorizedPostAccessException("본인이 작성한 게시글만 수정할 수 있습니다.");
+        }
 
         post.update(request);
 
@@ -36,8 +41,12 @@ public class PostModifyService implements PostManager {
     }
 
     @Override
-    public Post publish(Long postId) {
+    public Post publish(Long postId, Long memberId) {
         Post post = postFinder.find(postId);
+
+        if (!post.isWrittenBy(memberId)) {
+            throw new UnauthorizedPostAccessException("본인이 작성한 게시글만 발행할 수 있습니다.");
+        }
 
         post.publish();
 
@@ -45,8 +54,12 @@ public class PostModifyService implements PostManager {
     }
 
     @Override
-    public Post hide(Long postId) {
+    public Post hide(Long postId, Long memberId) {
         Post post = postFinder.find(postId);
+
+        if (!post.isWrittenBy(memberId)) {
+            throw new UnauthorizedPostAccessException("본인이 작성한 게시글만 숨김 처리할 수 있습니다.");
+        }
 
         post.hide();
 
@@ -54,8 +67,12 @@ public class PostModifyService implements PostManager {
     }
 
     @Override
-    public Post delete(Long postId) {
+    public Post delete(Long postId, Long memberId) {
         Post post = postFinder.find(postId);
+
+        if (!post.isWrittenBy(memberId)) {
+            throw new UnauthorizedPostAccessException("본인이 작성한 게시글만 삭제할 수 있습니다.");
+        }
 
         post.delete();
 
