@@ -7,13 +7,13 @@ import dooya.see.domain.post.PostUpdateRequest;
 public interface PostManager {
     Post create(PostCreateRequest request, Long memberId);
 
-    Post update(PostUpdateRequest request, Long postId);
+    Post update(PostUpdateRequest request, Long postId, Long memberId);
 
-    Post publish(Long postId);
+    Post publish(Long postId, Long memberId);
 
-    Post hide(Long postId);
+    Post hide(Long postId, Long memberId);
 
-    Post delete(Long postId);
+    Post delete(Long postId, Long memberId);
 
     Post incrementViewCount(Long postId);
 

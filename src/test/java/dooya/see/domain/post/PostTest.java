@@ -129,10 +129,42 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("DRAFT 상태의 게시글을 숨김 처리하려고 하면 IllegalStateException이 발생한다")
-    void hideDraftPostThrowsException() {
+    @DisplayName("HIDDEN 상태의 게시글을 발행하면 상태가 PUBLISHED로 변경되고 발행일시가 갱신된다")
+    void publishHiddenPost() {
+        post.publish();
+        post.hide();
+        
+        post.publish();
+
+        assertThat(post.getStatus()).isEqualTo(PostStatus.PUBLISHED);
+        assertThat(post.getMetaData().publishedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("DRAFT 상태의 게시글을 숨김 처리하면 상태가 HIDDEN으로 변경된다")
+    void hideDraftPost() {
+        post.hide();
+
+        assertThat(post.getStatus()).isEqualTo(PostStatus.HIDDEN);
+    }
+
+    @Test
+    @DisplayName("PUBLISHED 상태의 게시글을 다시 발행하려고 하면 InvalidPostStatusTransitionException이 발생한다")
+    void publishAlreadyPublishedPostThrowsException() {
+        post.publish();
+        
+        assertThatThrownBy(() -> post.publish())
+            .isInstanceOf(InvalidPostStatusTransitionException.class);
+    }
+
+    @Test
+    @DisplayName("HIDDEN 상태의 게시글을 다시 숨기려고 하면 InvalidPostStatusTransitionException이 발생한다")
+    void hideAlreadyHiddenPostThrowsException() {
+        post.publish();
+        post.hide();
+        
         assertThatThrownBy(() -> post.hide())
-            .isInstanceOf(IllegalStateException.class);
+            .isInstanceOf(InvalidPostStatusTransitionException.class);
     }
 
     @Test
@@ -144,12 +176,12 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("이미 삭제된 게시글을 다시 삭제하려고 하면 IllegalStateException이 발생한다")
+    @DisplayName("이미 삭제된 게시글을 다시 삭제하려고 하면 InvalidPostStatusTransitionException이 발생한다")
     void deleteAlreadyDeletedPostThrowsException() {
         post.delete();
 
         assertThatThrownBy(() -> post.delete())
-            .isInstanceOf(IllegalStateException.class);
+            .isInstanceOf(InvalidPostStatusTransitionException.class);
     }
 
     @Test

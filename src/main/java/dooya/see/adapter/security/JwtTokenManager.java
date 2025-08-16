@@ -56,4 +56,18 @@ public class JwtTokenManager implements TokenManager {
         Claims claims = parseToken(token);
         return claims.getSubject();
     }
+
+    @Override
+    public Long extractMemberIdFromToken(String token) {
+        Claims claims = parseToken(token);
+        Object memberId = claims.get("memberId");
+
+        if (memberId instanceof Integer) {
+            return ((Integer) memberId).longValue();
+        } else if (memberId instanceof Long) {
+            return (Long) memberId;
+        }
+
+        throw new AuthenticateException("토큰에서 회원 ID를 찾을 수 없습니다");
+    }
 }

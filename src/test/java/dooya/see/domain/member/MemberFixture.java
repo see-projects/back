@@ -42,4 +42,12 @@ public class MemberFixture {
     public static MemberAuthRequest createAuthRequestWithPassword(String password) {
         return createMemberAuthRequest("dooya@see.com", password);
     }
+
+    public static MemberRegisterRequest createSecondMemberRegisterRequest() {
+        return new MemberRegisterRequest("dooya1441@see.com", "dooya144", "longSecret");
+    }
+
+    public static MemberAuthRequest createSecondMemberAuthRequest() {
+        return new MemberAuthRequest("dooya1441@see.com", "longSecret");
+    }
 }

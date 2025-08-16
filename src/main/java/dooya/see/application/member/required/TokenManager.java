@@ -6,4 +6,6 @@ public interface TokenManager {
     String generateToken(Member member);
 
     String extractEmailFromToken(String token);
+
+    Long extractMemberIdFromToken(String token);
 }
