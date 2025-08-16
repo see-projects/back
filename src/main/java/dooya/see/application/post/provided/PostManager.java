@@ -7,7 +7,7 @@ import dooya.see.domain.post.PostUpdateRequest;
 public interface PostManager {
     Post create(PostCreateRequest request, Long memberId);
 
-    Post update(Long postId, PostUpdateRequest request);
+    Post update(PostUpdateRequest request, Long postId);
 
     Post publish(Long postId);
 

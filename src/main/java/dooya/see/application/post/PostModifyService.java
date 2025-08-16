@@ -25,7 +25,7 @@ public class PostModifyService implements PostManager {
     }
 
     @Override
-    public Post update(Long postId, PostUpdateRequest request) {
+    public Post update(PostUpdateRequest request, Long postId) {
         return null;
     }
 
