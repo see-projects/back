@@ -66,14 +66,18 @@ public class Post extends AbstractEntity {
     }
 
     public void publish() {
-        state(this.status == PostStatus.DRAFT, "임시저장 상태의 게시글만 발행할 수 있습니다");
+        if (this.status != PostStatus.DRAFT) {
+            throw new InvalidPostStatusTransitionException(this.status, "발행");
+        }
 
         this.status = PostStatus.PUBLISHED;
         this.metaData = this.metaData.updatePublishedAt();
     }
 
     public void hide() {
-        state(this.status == PostStatus.PUBLISHED, "발행된 게시글만 숨김 처리할 수 있습니다");
+        if (this.status != PostStatus.PUBLISHED) {
+            throw new InvalidPostStatusTransitionException(this.status, "숨김");
+        }
 
         this.status = PostStatus.HIDDEN;
     }
