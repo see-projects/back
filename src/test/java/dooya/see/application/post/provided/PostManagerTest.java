@@ -186,13 +186,13 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
     }
 
     @Test
-    @DisplayName("이미 삭제된 게시글을 다시 삭제하려고 하면 IllegalStateException이 발생한다")
+    @DisplayName("이미 삭제된 게시글을 다시 삭제하려고 하면 InvalidPostStatusTransitionException이 발생한다")
     void deleteAlreadyDeletedPost() {
         Post post = createPost();
         postManager.delete(post.getId(), 1L);
 
         assertThatThrownBy(() -> postManager.delete(post.getId(), 1L))
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(InvalidPostStatusTransitionException.class);
     }
 
     @Test
