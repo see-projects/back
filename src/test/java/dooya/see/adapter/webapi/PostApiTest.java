@@ -200,6 +200,7 @@ class PostApiTest {
                 objectMapper.readValue(result.getResponse().getContentAsString(), PostDetailResponse.class);
 
         assertThat(response.status()).isEqualTo(PostStatus.PUBLISHED);
+        assertThat(response.publishedAt()).isNotNull();
     }
 
     @Test
@@ -231,6 +232,21 @@ class PostApiTest {
         assertThat(result)
                 .apply(print())
                 .hasStatus(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    @DisplayName("이미 발행된 게시글을 다시 발행하려고 하면 409 Conflict가 발생한다")
+    void publishPostAlreadyPublished() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long postId = createAndPublishPost(token);
+
+        MvcTestResult result = mvcTester.post().uri("/api/posts/{id}/publish", postId)
+                .header("Authorization", "Bearer " + token)
+                .exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.CONFLICT);
     }
 
     @Test
@@ -280,6 +296,83 @@ class PostApiTest {
         assertThat(result)
                 .apply(print())
                 .hasStatus(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    @DisplayName("이미 숨김 처리된 게시글을 다시 숨기려고 하면 409 Conflict가 발생한다")
+    void hidePostAlreadyHidden() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long postId = createAndPublishPost(token);
+
+        mvcTester.post().uri("/api/posts/{id}/hide", postId)
+                .header("Authorization", "Bearer " + token)
+                .exchange();
+
+        MvcTestResult result = mvcTester.post().uri("/api/posts/{id}/hide", postId)
+                .header("Authorization", "Bearer " + token)
+                .exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.CONFLICT);
+    }
+
+    @Test
+    @DisplayName("작성자가 아닌 사용자가 임시저장 게시글 숨김 시 403 Forbidden이 발생한다")
+    void hideDraftPostWithoutAuthorization() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long postId = createAndDraftPost(token);
+
+        String readerToken = createSecondMemberAndGetToken();
+
+        MvcTestResult result = mvcTester.post().uri("/api/posts/{id}/hide", postId)
+                .header("Authorization", "Bearer " + readerToken)
+                .exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    @DisplayName("작성자가 임시저장 게시글을 숨김 처리할 수 있다")
+    void hideDraftPostByAuthor() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long postId = createAndDraftPost(token);
+
+        MvcTestResult result = mvcTester.post().uri("/api/posts/{id}/hide", postId)
+                .header("Authorization", "Bearer " + token)
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+
+        PostDetailResponse response =
+                objectMapper.readValue(result.getResponse().getContentAsString(), PostDetailResponse.class);
+
+        assertThat(response.status()).isEqualTo(PostStatus.HIDDEN);
+    }
+
+    @Test
+    @DisplayName("숨김 상태의 게시글을 다시 발행할 수 있다")
+    void publishPostFromHiddenStatus() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long postId = createAndPublishPost(token);
+
+        mvcTester.post().uri("/api/posts/{id}/hide", postId)
+                .header("Authorization", "Bearer " + token)
+                .exchange();
+
+        MvcTestResult result = mvcTester.post().uri("/api/posts/{id}/publish", postId)
+                .header("Authorization", "Bearer " + token)
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+
+        PostDetailResponse response =
+                objectMapper.readValue(result.getResponse().getContentAsString(), PostDetailResponse.class);
+
+        assertThat(response.status()).isEqualTo(PostStatus.PUBLISHED);
+        assertThat(response.publishedAt()).isNotNull();
     }
 
     private String createMemberAndGetToken() throws JsonProcessingException, UnsupportedEncodingException {
