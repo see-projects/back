@@ -186,6 +186,55 @@ class PostApiTest {
                 .hasStatus(HttpStatus.FORBIDDEN);
     }
 
+    @Test
+    @DisplayName("")
+    void f() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long postId = createAndDraftPost(token);
+
+        MvcTestResult result = mvcTester.post().uri("/api/posts/{id}/publish", postId)
+                .header("Authorization", "Bearer " + token)
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+
+        PostDetailResponse response =
+                objectMapper.readValue(result.getResponse().getContentAsString(), PostDetailResponse.class);
+
+        assertThat(response.status()).isEqualTo(PostStatus.PUBLISHED);
+    }
+
+    @Test
+    @DisplayName("")
+    void g() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long postId = createAndDraftPost(token);
+
+        MvcTestResult result = mvcTester.post().uri("/api/posts/{id}/publish", postId)
+                .exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    @DisplayName("")
+    void h() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long postId = createAndDraftPost(token);
+
+        String readerToken = createSecondMemberAndGetToken();
+
+        MvcTestResult result = mvcTester.post().uri("/api/posts/{id}/publish", postId)
+                .header("Authorization", "Bearer " + readerToken)
+                .exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.FORBIDDEN);
+    }
+
     private String createMemberAndGetToken() throws JsonProcessingException, UnsupportedEncodingException {
         memberRegister.register(createMemberRegisterRequest());
 
@@ -204,6 +253,23 @@ class PostApiTest {
 
     private Long createAndPublishPost(String token) throws JsonProcessingException, UnsupportedEncodingException {
         PostCreateRequest createRequest = createPostRequest(true);
+        String requestJson = objectMapper.writeValueAsString(createRequest);
+
+        MvcTestResult createResult = mvcTester.post().uri("/api/posts")
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson).exchange();
+
+        PostCreateResponse createResponse = objectMapper.readValue(
+                createResult.getResponse().getContentAsString(),
+                PostCreateResponse.class
+        );
+
+        return createResponse.postId();
+    }
+
+    private Long createAndDraftPost(String token) throws JsonProcessingException, UnsupportedEncodingException {
+        PostCreateRequest createRequest = createPostRequest(false);
         String requestJson = objectMapper.writeValueAsString(createRequest);
 
         MvcTestResult createResult = mvcTester.post().uri("/api/posts")
