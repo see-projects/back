@@ -66,7 +66,7 @@ public class Post extends AbstractEntity {
     }
 
     public void publish() {
-        if (this.status != PostStatus.DRAFT) {
+        if (this.status != PostStatus.DRAFT && this.status != PostStatus.HIDDEN) {
             throw new InvalidPostStatusTransitionException(this.status, "발행");
         }
 

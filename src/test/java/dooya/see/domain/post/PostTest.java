@@ -129,9 +129,30 @@ class PostTest {
     }
 
     @Test
+    @DisplayName("HIDDEN 상태의 게시글을 발행하면 상태가 PUBLISHED로 변경되고 발행일시가 갱신된다")
+    void publishHiddenPost() {
+        post.publish();
+        post.hide();
+        
+        post.publish();
+
+        assertThat(post.getStatus()).isEqualTo(PostStatus.PUBLISHED);
+        assertThat(post.getMetaData().publishedAt()).isNotNull();
+    }
+
+    @Test
     @DisplayName("DRAFT 상태의 게시글을 숨김 처리하려고 하면 InvalidPostStatusTransitionException이 발생한다")
     void hideDraftPostThrowsException() {
         assertThatThrownBy(() -> post.hide())
+            .isInstanceOf(InvalidPostStatusTransitionException.class);
+    }
+
+    @Test
+    @DisplayName("PUBLISHED 상태의 게시글을 다시 발행하려고 하면 InvalidPostStatusTransitionException이 발생한다")
+    void publishAlreadyPublishedPostThrowsException() {
+        post.publish();
+        
+        assertThatThrownBy(() -> post.publish())
             .isInstanceOf(InvalidPostStatusTransitionException.class);
     }
 
