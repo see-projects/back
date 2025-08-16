@@ -9,8 +9,6 @@ import java.util.List;
 public interface PostFinder {
     Post find(Long postId);
 
-    boolean isWrittenBy(Long postId, Long memberId);
-
     List<Post> findByMemberId(Long memberId);
 
     List<Post> findByCategory(PostCategory category);
