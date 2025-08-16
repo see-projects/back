@@ -86,7 +86,9 @@ public class Post extends AbstractEntity {
     }
 
     public void delete() {
-        state(this.status != PostStatus.DELETED, "이미 삭제된 게시글입니다");
+        if (this.status == PostStatus.DELETED) {
+            throw new InvalidPostStatusTransitionException(this.status, "삭제");
+        }
 
         this.status = PostStatus.DELETED;
     }

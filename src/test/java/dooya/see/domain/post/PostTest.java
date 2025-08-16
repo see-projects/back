@@ -176,12 +176,12 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("이미 삭제된 게시글을 다시 삭제하려고 하면 IllegalStateException이 발생한다")
+    @DisplayName("이미 삭제된 게시글을 다시 삭제하려고 하면 InvalidPostStatusTransitionException이 발생한다")
     void deleteAlreadyDeletedPostThrowsException() {
         post.delete();
 
         assertThatThrownBy(() -> post.delete())
-            .isInstanceOf(IllegalStateException.class);
+            .isInstanceOf(InvalidPostStatusTransitionException.class);
     }
 
     @Test
