@@ -5,11 +5,7 @@ import dooya.see.adapter.webapi.dto.PostDetailResponse;
 import dooya.see.application.member.required.TokenManager;
 import dooya.see.application.post.provided.PostFinder;
 import dooya.see.application.post.provided.PostManager;
-import dooya.see.domain.post.Post;
-import dooya.see.domain.post.PostCategory;
-import dooya.see.domain.post.PostCreateRequest;
-import dooya.see.domain.post.PostStatus;
-import dooya.see.domain.post.PostUpdateRequest;
+import dooya.see.domain.post.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -37,6 +33,8 @@ public class PostApi {
     public PostDetailResponse getPost(@PathVariable Long id,
                                       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token) {
         Post post = postFinder.find(id);
+
+        validatePostAccessPermission(token, post);
 
         post = processViewCountIncrement(id, token, post);
 
@@ -101,7 +99,7 @@ public class PostApi {
     @GetMapping("/api/posts")
     public List<PostDetailResponse> getPublicPosts() {
         List<Post> posts = postFinder.findPublicPosts();
-        
+
         return posts.stream()
                 .map(PostDetailResponse::of)
                 .toList();
@@ -110,7 +108,7 @@ public class PostApi {
     @GetMapping("/api/posts/category/{category}")
     public List<PostDetailResponse> getPostsByCategory(@PathVariable PostCategory category) {
         List<Post> posts = postFinder.findPublicPostsByCategory(category);
-        
+
         return posts.stream()
                 .map(PostDetailResponse::of)
                 .toList();
@@ -139,10 +137,10 @@ public class PostApi {
     @GetMapping("/api/posts/status/{status}")
     public List<PostDetailResponse> getPostsByStatus(@PathVariable PostStatus status,
                                                      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token) {
-        // 관리자나 특별한 권한이 있는 경우에만 허용하는 것이 좋지만, 
+        // 관리자나 특별한 권한이 있는 경우에만 허용하는 것이 좋지만,
         // 일단 기본 구현으로 진행
         List<Post> posts = postFinder.findByStatus(status);
-        
+
         return posts.stream()
                 .map(PostDetailResponse::of)
                 .toList();
@@ -165,5 +163,18 @@ public class PostApi {
             post = postFinder.find(id);
         }
         return post;
+    }
+
+    private void validatePostAccessPermission(String token, Post post) {
+        if (!AuthTokenExtractor.isValidBearerToken(token)) {
+            if (post.getStatus() != PostStatus.PUBLISHED) {
+                throw new UnauthorizedPostAccessException("게시글을 조회할 권한이 없습니다");
+            }
+        } else {
+            Long currentMemberId = getCurrentMemberId(token);
+            if (!post.isWrittenBy(currentMemberId) && post.getStatus() != PostStatus.PUBLISHED) {
+                throw new UnauthorizedPostAccessException("게시글을 조회할 권한이 없습니다");
+            }
+        }
     }
 }

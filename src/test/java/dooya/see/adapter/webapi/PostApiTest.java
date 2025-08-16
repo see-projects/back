@@ -80,7 +80,7 @@ class PostApiTest {
                 .apply(print())
                 .hasStatus(HttpStatus.UNAUTHORIZED);
     }
-    
+
     @Test
     @DisplayName("게시글 조회 시 조회수가 1 증가한다")
     void getPostIncreasesViewCount() throws UnsupportedEncodingException, JsonProcessingException {
@@ -97,6 +97,121 @@ class PostApiTest {
 
         assertThat(response.postId()).isEqualTo(postId);
         assertThat(response.viewCount()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("비로그인 사용자가 공개되지 않은 게시글 조회 시 403 Forbidden이 발생한다")
+    void getUnpublishedPostWithoutToken() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long draftPostId = createAndDraftPost(token);
+
+        MvcTestResult result = mvcTester.get().uri("/api/posts/{id}", draftPostId)
+                .exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    @DisplayName("로그인한 사용자가 다른 사용자의 비공개 게시글 조회 시 403 Forbidden이 발생한다")
+    void getOtherUserUnpublishedPost() throws UnsupportedEncodingException, JsonProcessingException {
+        String authorToken = createMemberAndGetToken();
+        Long draftPostId = createAndDraftPost(authorToken);
+
+        String readerToken = createSecondMemberAndGetToken();
+
+        MvcTestResult result = mvcTester.get().uri("/api/posts/{id}", draftPostId)
+                .header("Authorization", "Bearer " + readerToken)
+                .exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    @DisplayName("작성자는 본인의 비공개 게시글을 조회할 수 있다")
+    void getMyUnpublishedPost() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long draftPostId = createAndDraftPost(token);
+
+        MvcTestResult result = mvcTester.get().uri("/api/posts/{id}", draftPostId)
+                .header("Authorization", "Bearer " + token)
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+
+        PostDetailResponse response =
+                objectMapper.readValue(result.getResponse().getContentAsString(), PostDetailResponse.class);
+
+        assertThat(response.postId()).isEqualTo(draftPostId);
+        assertThat(response.status()).isEqualTo(PostStatus.DRAFT);
+    }
+
+    @Test
+    @DisplayName("비로그인 사용자가 숨김 처리된 게시글 조회 시 403 Forbidden이 발생한다")
+    void getHiddenPostWithoutToken() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long postId = createAndPublishPost(token);
+
+        // 게시글을 숨김 처리
+        mvcTester.post().uri("/api/posts/{id}/hide", postId)
+                .header("Authorization", "Bearer " + token)
+                .exchange();
+
+        MvcTestResult result = mvcTester.get().uri("/api/posts/{id}", postId)
+                .exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    @DisplayName("작성자는 본인의 숨김 처리된 게시글을 조회할 수 있다")
+    void getMyHiddenPost() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long postId = createAndPublishPost(token);
+
+        // 게시글을 숨김 처리
+        mvcTester.post().uri("/api/posts/{id}/hide", postId)
+                .header("Authorization", "Bearer " + token)
+                .exchange();
+
+        MvcTestResult result = mvcTester.get().uri("/api/posts/{id}", postId)
+                .header("Authorization", "Bearer " + token)
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+
+        PostDetailResponse response =
+                objectMapper.readValue(result.getResponse().getContentAsString(), PostDetailResponse.class);
+
+        assertThat(response.postId()).isEqualTo(postId);
+        assertThat(response.status()).isEqualTo(PostStatus.HIDDEN);
+    }
+
+    @Test
+    @DisplayName("다른 사용자가 숨김 처리된 게시글 조회 시 403 Forbidden이 발생한다")
+    void getOtherUserHiddenPost() throws UnsupportedEncodingException, JsonProcessingException {
+        String authorToken = createMemberAndGetToken();
+        Long postId = createAndPublishPost(authorToken);
+
+        // 게시글을 숨김 처리
+        mvcTester.post().uri("/api/posts/{id}/hide", postId)
+                .header("Authorization", "Bearer " + authorToken)
+                .exchange();
+
+        String readerToken = createSecondMemberAndGetToken();
+
+        MvcTestResult result = mvcTester.get().uri("/api/posts/{id}", postId)
+                .header("Authorization", "Bearer " + readerToken)
+                .exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.FORBIDDEN);
     }
 
     @Test
