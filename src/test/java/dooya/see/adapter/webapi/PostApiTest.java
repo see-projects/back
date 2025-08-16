@@ -235,6 +235,55 @@ class PostApiTest {
                 .hasStatus(HttpStatus.FORBIDDEN);
     }
 
+    @Test
+    @DisplayName("")
+    void i() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long postId = createAndPublishPost(token);
+
+        MvcTestResult result = mvcTester.post().uri("/api/posts/{id}/hide", postId)
+                .header("Authorization", "Bearer " + token)
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+
+        PostDetailResponse response =
+                objectMapper.readValue(result.getResponse().getContentAsString(), PostDetailResponse.class);
+
+        assertThat(response.status()).isEqualTo(PostStatus.HIDDEN);
+    }
+
+    @Test
+    @DisplayName("")
+    void j() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long postId = createAndPublishPost(token);
+
+        MvcTestResult result = mvcTester.post().uri("/api/posts/{id}/hide", postId)
+                .exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    @DisplayName("")
+    void k() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long postId = createAndPublishPost(token);
+
+        String readerToken = createSecondMemberAndGetToken();
+
+        MvcTestResult result = mvcTester.post().uri("/api/posts/{id}/hide", postId)
+                .header("Authorization", "Bearer " + readerToken)
+                .exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.FORBIDDEN);
+    }
+
     private String createMemberAndGetToken() throws JsonProcessingException, UnsupportedEncodingException {
         memberRegister.register(createMemberRegisterRequest());
 

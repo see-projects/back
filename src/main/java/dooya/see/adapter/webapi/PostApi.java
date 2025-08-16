@@ -60,6 +60,16 @@ public class PostApi {
         return PostDetailResponse.of(post);
     }
 
+    @PostMapping("/api/posts/{id}/hide")
+    public PostDetailResponse hidePost(@PathVariable Long id,
+                                       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token) {
+        Long currentMemberId = getCurrentMemberId(token);
+
+        Post post = postManager.hide(id, currentMemberId);
+
+        return PostDetailResponse.of(post);
+    }
+
     private Long getCurrentMemberId(String token) {
         String extractedToken = AuthTokenExtractor.extractToken(token);
         return tokenManager.extractMemberIdFromToken(extractedToken);
