@@ -70,6 +70,16 @@ public class PostApi {
         return PostDetailResponse.of(post);
     }
 
+    @PostMapping("/api/posts/{id}/delete")
+    public PostDetailResponse deletePost(@PathVariable Long id,
+                                         @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token) {
+        Long currentMemberId = getCurrentMemberId(token);
+
+        Post post = postManager.delete(id, currentMemberId);
+
+        return PostDetailResponse.of(post);
+    }
+
     private Long getCurrentMemberId(String token) {
         String extractedToken = AuthTokenExtractor.extractToken(token);
         return tokenManager.extractMemberIdFromToken(extractedToken);

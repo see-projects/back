@@ -375,6 +375,128 @@ class PostApiTest {
         assertThat(response.publishedAt()).isNotNull();
     }
 
+    @Test
+    @DisplayName("작성자가 게시글을 삭제할 수 있다")
+    void deletePostByAuthor() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long postId = createAndPublishPost(token);
+
+        MvcTestResult result = mvcTester.post().uri("/api/posts/{id}/delete", postId)
+                .header("Authorization", "Bearer " + token)
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+
+        PostDetailResponse response =
+                objectMapper.readValue(result.getResponse().getContentAsString(), PostDetailResponse.class);
+
+        assertThat(response.status()).isEqualTo(PostStatus.DELETED);
+    }
+
+    @Test
+    @DisplayName("토큰 없이 게시글 삭제 요청 시 401 Unauthorized가 발생한다")
+    void deletePostWithoutToken() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long postId = createAndPublishPost(token);
+
+        MvcTestResult result = mvcTester.post().uri("/api/posts/{id}/delete", postId)
+                .exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    @DisplayName("작성자가 아닌 사용자가 게시글 삭제 시 403 Forbidden이 발생한다")
+    void deletePostWithoutAuthorization() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long postId = createAndPublishPost(token);
+
+        String readerToken = createSecondMemberAndGetToken();
+
+        MvcTestResult result = mvcTester.post().uri("/api/posts/{id}/delete", postId)
+                .header("Authorization", "Bearer " + readerToken)
+                .exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    @DisplayName("이미 삭제된 게시글을 다시 삭제하려고 하면 409 Conflict가 발생한다")
+    void deletePostAlreadyDeleted() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long postId = createAndPublishPost(token);
+
+        mvcTester.post().uri("/api/posts/{id}/delete", postId)
+                .header("Authorization", "Bearer " + token)
+                .exchange();
+
+        MvcTestResult result = mvcTester.post().uri("/api/posts/{id}/delete", postId)
+                .header("Authorization", "Bearer " + token)
+                .exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.CONFLICT);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 게시글을 삭제하려고 하면 404 Not Found가 발생한다")
+    void deleteNonExistentPost() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+
+        MvcTestResult result = mvcTester.post().uri("/api/posts/{id}/delete", 999L)
+                .header("Authorization", "Bearer " + token)
+                .exchange();
+
+        assertThat(result)
+                .apply(print())
+                .hasStatus(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("임시저장 상태의 게시글을 삭제할 수 있다")
+    void deleteDraftPost() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long postId = createAndDraftPost(token);
+
+        MvcTestResult result = mvcTester.post().uri("/api/posts/{id}/delete", postId)
+                .header("Authorization", "Bearer " + token)
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+
+        PostDetailResponse response =
+                objectMapper.readValue(result.getResponse().getContentAsString(), PostDetailResponse.class);
+
+        assertThat(response.status()).isEqualTo(PostStatus.DELETED);
+    }
+
+    @Test
+    @DisplayName("숨김 상태의 게시글을 삭제할 수 있다")
+    void deleteHiddenPost() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long postId = createAndPublishPost(token);
+
+        mvcTester.post().uri("/api/posts/{id}/hide", postId)
+                .header("Authorization", "Bearer " + token)
+                .exchange();
+
+        MvcTestResult result = mvcTester.post().uri("/api/posts/{id}/delete", postId)
+                .header("Authorization", "Bearer " + token)
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+
+        PostDetailResponse response =
+                objectMapper.readValue(result.getResponse().getContentAsString(), PostDetailResponse.class);
+
+        assertThat(response.status()).isEqualTo(PostStatus.DELETED);
+    }
+
     private String createMemberAndGetToken() throws JsonProcessingException, UnsupportedEncodingException {
         memberRegister.register(createMemberRegisterRequest());
 
