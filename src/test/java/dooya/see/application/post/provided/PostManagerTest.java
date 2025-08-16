@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static dooya.see.domain.post.PostFixture.*;
 import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Transactional
@@ -111,6 +112,16 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
         postManager.publish(post.getId());
 
         assertThat(post.getMetaData().publishedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("")
+    void b() {
+        Post post = createPost();
+        postManager.publish(post.getId());
+
+        assertThatThrownBy(() -> postManager.publish(post.getId()))
+            .isInstanceOf(IllegalStateException.class);
     }
 
     private Post createPost() {
