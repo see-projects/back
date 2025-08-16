@@ -5,6 +5,7 @@ import dooya.see.domain.post.Post;
 import dooya.see.domain.post.PostCategory;
 import dooya.see.domain.post.PostNotFoundException;
 import dooya.see.domain.post.PostStatus;
+import dooya.see.domain.post.UnauthorizedPostAccessException;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,7 +38,7 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
     void updateAllFields() {
         Post post = createPost();
 
-        postManager.update(updateAllFieldsRequest(), post.getId());
+        postManager.update(updateAllFieldsRequest(), post.getId(), 1L);
 
         assertThat(post.getContent().title()).isEqualTo("수정된 제목");
         assertThat(post.getContent().body()).isEqualTo("수정된 내용");
@@ -52,7 +53,7 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
         String originalBody = post.getContent().body();
         PostCategory originalCategory = post.getCategory();
 
-        postManager.update(updateTitleOnlyRequest(), post.getId());
+        postManager.update(updateTitleOnlyRequest(), post.getId(), 1L);
 
         assertThat(post.getContent().title()).isEqualTo("새로운 제목");
         assertThat(post.getContent().body()).isEqualTo(originalBody);
@@ -66,7 +67,7 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
         String originalTitle = post.getContent().title();
         PostCategory originalCategory = post.getCategory();
 
-        postManager.update(updateBodyOnlyRequest(), post.getId());
+        postManager.update(updateBodyOnlyRequest(), post.getId(), 1L);
 
         assertThat(post.getContent().title()).isEqualTo(originalTitle);
         assertThat(post.getContent().body()).isEqualTo("새로운 내용");
@@ -80,7 +81,7 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
         String originalTitle = post.getContent().title();
         String originalBody = post.getContent().body();
 
-        postManager.update(updateCategoryOnlyRequest(), post.getId());
+        postManager.update(updateCategoryOnlyRequest(), post.getId(), 1L);
 
         assertThat(post.getContent().title()).isEqualTo(originalTitle);
         assertThat(post.getContent().body()).isEqualTo(originalBody);
@@ -92,15 +93,24 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
     void updateWithNoChanges() {
         Post post = createPost();
 
-        assertThatThrownBy(() -> postManager.update(noUpdateRequest(), post.getId()))
+        assertThatThrownBy(() -> postManager.update(noUpdateRequest(), post.getId(), 1L))
                 .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
     @DisplayName("존재하지 않는 게시글을 수정하려고 하면 PostNotFoundException이 발생한다")
     void updateNonExistentPost() {
-        assertThatThrownBy(() -> postManager.update(updateAllFieldsRequest(), 999L))
+        assertThatThrownBy(() -> postManager.update(updateAllFieldsRequest(), 999L, 1L))
                 .isInstanceOf(PostNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("작성자가 아닌 사용자가 게시글 수정 시도 시 UnauthorizedPostAccessException이 발생한다")
+    void updateByNonOwner() {
+        Post post = createPost();
+
+        assertThatThrownBy(() -> postManager.update(updateAllFieldsRequest(), post.getId(), 2L))
+                .isInstanceOf(UnauthorizedPostAccessException.class);
     }
 
     @Test
@@ -108,7 +118,7 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
     void publishDraftPost() {
         Post post = createPost();
 
-        postManager.publish(post.getId());
+        postManager.publish(post.getId(), 1L);
 
         assertThat(post.getStatus()).isEqualTo(PostStatus.PUBLISHED);
         assertThat(post.getMetaData().publishedAt()).isNotNull();
@@ -118,9 +128,9 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
     @DisplayName("이미 발행된 게시글을 다시 발행하려고 하면 IllegalStateException이 발생한다")
     void publishAlreadyPublishedPost() {
         Post post = createPost();
-        postManager.publish(post.getId());
+        postManager.publish(post.getId(), 1L);
 
-        assertThatThrownBy(() -> postManager.publish(post.getId()))
+        assertThatThrownBy(() -> postManager.publish(post.getId(), 1L))
                 .isInstanceOf(IllegalStateException.class);
     }
 
@@ -128,9 +138,9 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
     @DisplayName("발행된 게시글을 숨김 처리하면 HIDDEN 상태로 변경된다")
     void hidePublishedPost() {
         Post post = createPost();
-        postManager.publish(post.getId());
+        postManager.publish(post.getId(), 1L);
 
-        postManager.hide(post.getId());
+        postManager.hide(post.getId(), 1L);
 
         assertThat(post.getStatus()).isEqualTo(PostStatus.HIDDEN);
     }
@@ -140,7 +150,7 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
     void hideDraftPost() {
         Post post = createPost();
 
-        assertThatThrownBy(() -> postManager.hide(post.getId()))
+        assertThatThrownBy(() -> postManager.hide(post.getId(), 1L))
                 .isInstanceOf(IllegalStateException.class);
     }
 
@@ -149,7 +159,7 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
     void deletePost() {
         Post post = createPost();
 
-        postManager.delete(post.getId());
+        postManager.delete(post.getId(), 1L);
 
         assertThat(post.getStatus()).isEqualTo(PostStatus.DELETED);
     }
@@ -158,9 +168,9 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
     @DisplayName("이미 삭제된 게시글을 다시 삭제하려고 하면 IllegalStateException이 발생한다")
     void deleteAlreadyDeletedPost() {
         Post post = createPost();
-        postManager.delete(post.getId());
+        postManager.delete(post.getId(), 1L);
 
-        assertThatThrownBy(() -> postManager.delete(post.getId()))
+        assertThatThrownBy(() -> postManager.delete(post.getId(), 1L))
                 .isInstanceOf(IllegalStateException.class);
     }
 
@@ -168,7 +178,7 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
     @DisplayName("발행된 게시글의 조회수를 증가시키면 viewCount가 1 증가한다")
     void incrementViewCountOnPublishedPost() {
         Post post = createPost();
-        postManager.publish(post.getId());
+        postManager.publish(post.getId(), 1L);
 
         postManager.incrementViewCount(post.getId());
 
@@ -189,7 +199,7 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
     @DisplayName("발행된 게시글의 좋아요 수를 증가시키면 likeCount가 1 증가한다")
     void incrementLikeCountOnPublishedPost() {
         Post post = createPost();
-        postManager.publish(post.getId());
+        postManager.publish(post.getId(), 1L);
 
         postManager.incrementLikeCount(post.getId());
 
@@ -210,7 +220,7 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
     @DisplayName("발행된 게시글의 댓글 수를 증가시키면 commentCount가 1 증가한다")
     void incrementCommentCountOnPublishedPost() {
         Post post = createPost();
-        postManager.publish(post.getId());
+        postManager.publish(post.getId(), 1L);
 
         postManager.incrementCommentCount(post.getId());
 
