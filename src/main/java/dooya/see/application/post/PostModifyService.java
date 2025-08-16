@@ -38,7 +38,11 @@ public class PostModifyService implements PostManager {
 
     @Override
     public Post publish(Long postId) {
-        return null;
+        Post post = postFinder.find(postId);
+
+        post.publish();
+
+        return postRepository.save(post);
     }
 
     @Override
