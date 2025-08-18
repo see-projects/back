@@ -195,5 +195,15 @@ public class HexagonalArchitectureTest {
                     .because("도메인 계층은 Spring 애노테이션을 사용하지 않아야 합니다")
                     .check(classes);
         }
+        
+        @Test
+        @DisplayName("@Transactional은 애플리케이션 서비스에서만 사용한다")
+        void b() {
+            classes()
+                    .that().areAnnotatedWith("org.springframework.transaction.annotation.Transactional")
+                    .should().resideInAPackage("..application..")
+                    .because("트랜잭션 경계는 애플리케이션 서비스에서 관리해야 합니다")
+                    .check(classes);
+        }
     }
 }
