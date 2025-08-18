@@ -24,7 +24,6 @@ public class HexagonalArchitectureTest {
     @Nested
     @DisplayName("계층형 아키텍처 검증")
     class LayeredArchitectureTest {
-
         @Test
         @DisplayName("헥사고날 아키텍처 계층 의존성 규칙을 준수한다")
         void a() {
@@ -58,6 +57,23 @@ public class HexagonalArchitectureTest {
                     .that().resideInAPackage("..application..")
                     .should().dependOnClassesThat()
                     .resideInAPackage("..adapter..")
+                    .check(classes);
+        }
+    }
+
+    @Nested
+    @DisplayName("도메인 비즈니스 로직")
+    class DomainBusinessLogicTest {
+        @Test
+        @DisplayName("도메인은 Spring 컨테이너 애노테이션을 사용하면 안된다")
+        void d() {
+            noClasses()
+                    .that().resideInAPackage("..domain..")
+                    .should().beAnnotatedWith("org.springframework.stereotype.Component")
+                    .orShould().beAnnotatedWith("org.springframework.stereotype.Service")
+                    .orShould().beAnnotatedWith("org.springframework.stereotype.Repository")
+                    .orShould().beAnnotatedWith("org.springframework.context.annotation.Configuration")
+                    .because("도메인은 Spring 컨테이너에 의존하지 않고 순수한 비즈니스 로직에 집중해야 합니다")
                     .check(classes);
         }
     }
