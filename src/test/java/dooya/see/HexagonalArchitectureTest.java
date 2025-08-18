@@ -179,4 +179,21 @@ public class HexagonalArchitectureTest {
                     .check(classes);
         }
     }
+
+    @Nested
+    @DisplayName("Spring 애노테이션 사용 규칙")
+    class SpringAnnotationTest {
+        @Test
+        @DisplayName("@Component 계열 애노테이션은 어댑터와 애플리케이션 서비스에서 사용된다")
+        void a() {
+            noClasses()
+                    .that().resideInAPackage("..domain..")
+                    .should().beAnnotatedWith("org.springframework.stereotype.Component")
+                    .orShould().beAnnotatedWith("org.springframework.stereotype.Service")
+                    .orShould().beAnnotatedWith("org.springframework.stereotype.Repository")
+                    .orShould().beAnnotatedWith("org.springframework.web.bind.annotation.RestController")
+                    .because("도메인 계층은 Spring 애노테이션을 사용하지 않아야 합니다")
+                    .check(classes);
+        }
+    }
 }
