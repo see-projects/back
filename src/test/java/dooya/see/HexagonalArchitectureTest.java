@@ -161,8 +161,8 @@ public class HexagonalArchitectureTest {
             classes()
                     .that().areInterfaces()
                     .and().resideInAPackage("..application..required..")
-                    .and().haveSimpleNameEndingWith("Repository")
                     .should().haveSimpleNameEndingWith("Repository")
+                    .orShould().haveSimpleNameEndingWith("Manager")
                     .because("리포지토리는 명확한 명명 규칙을 따라야 합니다")
                     .check(classes);
         }
