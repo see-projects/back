@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
 public class HexagonalArchitectureTest {
     private JavaClasses classes;
@@ -134,6 +135,20 @@ public class HexagonalArchitectureTest {
             // 예시: 리포지토리 어댑터는 Secondary Port를 구현
             
             // 향후 구체적인 어댑터 구현 시 개별 테스트 추가 예정
+        }
+    }
+
+    @Nested
+    @DisplayName("애그리거트와 경계")
+    class AggregateAndBoundaryTest {
+        @Test
+        @DisplayName("애그리거트 내부 패키지는 순환 의존성이 없어야 한다")
+        void a() {
+            slices()
+                    .matching("..domain.(*)..")
+                    .should().beFreeOfCycles()
+                    .because("애그리거트 간에는 순환 의존성이 없어야 합니다")
+                    .check(classes);
         }
     }
 }
