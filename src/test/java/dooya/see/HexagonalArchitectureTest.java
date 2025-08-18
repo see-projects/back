@@ -3,12 +3,14 @@ package dooya.see;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
+import com.tngtech.archunit.lang.syntax.ArchRuleDefinition;
 import com.tngtech.archunit.library.Architectures;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 public class HexagonalArchitectureTest {
@@ -93,6 +95,21 @@ public class HexagonalArchitectureTest {
         void f() {
             // JPA 애노테이션이 도메인 로직에 미치는 영향을 최소화하면서, 매핑을 위한 애노테이션 사용은 허용
             // 이 테스트는 문서화 목적으로 JPA 사용이 허용됨을 명시
+        }
+    }
+
+    @Nested
+    @DisplayName("포트와 어댑터 패턴")
+    class PortAndAdapterTest {
+        @Test
+        @DisplayName("Primary Port는 application.provided 패키지에 위치한다")
+        void a() {
+            classes()
+                    .that().areInterfaces()
+                    .and().resideInAPackage("..application..provided..")
+                    .should().bePublic()
+                    .because("Primary Port는 외부에서 애플리케이션을 호출하는 인터페이스입니다")
+                    .check(classes);
         }
     }
 }
