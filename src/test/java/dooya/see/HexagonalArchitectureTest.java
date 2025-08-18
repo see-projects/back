@@ -151,4 +151,20 @@ public class HexagonalArchitectureTest {
                     .check(classes);
         }
     }
+
+    @Nested
+    @DisplayName("명명 규칙")
+    class NamingConventionTest {
+        @Test
+        @DisplayName("리포지토리 인터페이스는 Repository로 끝나야 한다")
+        void a() {
+            classes()
+                    .that().areInterfaces()
+                    .and().resideInAPackage("..application..required..")
+                    .and().haveSimpleNameEndingWith("Repository")
+                    .should().haveSimpleNameEndingWith("Repository")
+                    .because("리포지토리는 명확한 명명 규칙을 따라야 합니다")
+                    .check(classes);
+        }
+    }
 }
