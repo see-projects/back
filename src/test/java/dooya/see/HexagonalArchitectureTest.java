@@ -200,6 +200,7 @@ public class HexagonalArchitectureTest {
         void b() {
             classes()
                     .that().areAnnotatedWith("org.springframework.transaction.annotation.Transactional")
+                    .or().areAnnotatedWith("jakarta.transaction.Transactional")
                     .should().resideInAPackage("..application..")
                     .because("트랜잭션 경계는 애플리케이션 서비스에서 관리해야 합니다")
                     .check(classes);
