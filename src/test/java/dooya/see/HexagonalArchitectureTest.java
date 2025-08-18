@@ -172,8 +172,7 @@ public class HexagonalArchitectureTest {
         void b() {
             classes()
                     .that().resideInAPackage("..application..")
-                    .and().areNotInterfaces()
-                    .and().haveSimpleNameContaining("Service")
+                    .and().areAnnotatedWith("org.springframework.stereotype.Service")
                     .should().haveSimpleNameEndingWith("Service")
                     .because("애플리케이션 서비스는 명확한 명명 규칙을 따라야 합니다")
                     .check(classes);
