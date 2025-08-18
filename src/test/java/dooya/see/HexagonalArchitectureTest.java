@@ -76,5 +76,16 @@ public class HexagonalArchitectureTest {
                     .because("도메인은 Spring 컨테이너에 의존하지 않고 순수한 비즈니스 로직에 집중해야 합니다")
                     .check(classes);
         }
+
+        @Test
+        @DisplayName("도메인은 웹 관련 애노테이션을 사용하면 안된다")
+        void e() {
+            noClasses()
+                    .that().resideInAPackage("..domain..")
+                    .should().dependOnClassesThat()
+                    .resideInAnyPackage("org.springframework.web..", "jakarta.servlet..")
+                    .because("도메인은 웹 계층과 독립적이어야 합니다")
+                    .check(classes);
+        }
     }
 }
