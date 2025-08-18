@@ -244,4 +244,14 @@ class PostTest {
 
         assertThat(post.getMetaData().commentCount()).isZero();
     }
+
+    @Test
+    @DisplayName("")
+    void a() {
+        post.publish();
+
+        PostSearchRequest request = PostFixture.titleKeywordSearchRequest("테스트 게시글 제목입니다");
+        
+        assertThat(post.matches(request)).isTrue();
+    }
 }
