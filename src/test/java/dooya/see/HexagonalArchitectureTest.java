@@ -111,5 +111,16 @@ public class HexagonalArchitectureTest {
                     .because("Primary Port는 외부에서 애플리케이션을 호출하는 인터페이스입니다")
                     .check(classes);
         }
+
+        @Test
+        @DisplayName("Secondary Post는 application.required 패키지에 위치한다")
+        void b() {
+            classes()
+                    .that().areInterfaces()
+                    .and().resideInAnyPackage("..application..required..")
+                    .should().bePublic()
+                    .because("Secondary Port는 애플리케이션이 외부를 호출하는 인터페이스입니다")
+                    .check(classes);
+        }
     }
 }
