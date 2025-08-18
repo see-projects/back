@@ -9,6 +9,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+
 public class HexagonalArchitectureTest {
     private JavaClasses classes;
 
@@ -36,6 +38,16 @@ public class HexagonalArchitectureTest {
                     .whereLayer("Application").mayOnlyBeAccessedByLayers("Adapter")
                     .whereLayer("Adapter").mayNotBeAccessedByAnyLayer()
 
+                    .check(classes);
+        }
+
+        @Test
+        @DisplayName("도메인 계층은 외부 의존성이 없어야 한다")
+        void b() {
+            noClasses()
+                    .that().resideInAPackage("..domain..")
+                    .should().dependOnClassesThat()
+                    .resideInAnyPackage("..application..", "..adapter..")
                     .check(classes);
         }
     }
