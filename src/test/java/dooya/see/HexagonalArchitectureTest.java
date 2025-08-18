@@ -52,7 +52,7 @@ public class HexagonalArchitectureTest {
                     .resideInAnyPackage("..application..", "..adapter..")
                     .check(classes);
         }
-        
+
         @Test
         @DisplayName("애플리케이션 계층은 어댑터에 의존하면 안된다")
         void c() {
@@ -127,13 +127,13 @@ public class HexagonalArchitectureTest {
         @Test
         @DisplayName("어댑터는 포트 인터페이스를 구현해야 한다")
         void c() {
-            // 이 테스트는 실제로는 복잡한 검증이 필요하므로 
+            // 이 테스트는 실제로는 복잡한 검증이 필요하므로
             // 문서화 목적으로 어댑터가 포트 인터페이스를 구현해야 함을 명시
             // 실제 구현체들은 개별적으로 확인하는 것이 더 실용적임
-            
+
             // 예시: 웹 어댑터는 Primary Port를 주입받아 사용
             // 예시: 리포지토리 어댑터는 Secondary Port를 구현
-            
+
             // 향후 구체적인 어댑터 구현 시 개별 테스트 추가 예정
         }
     }
@@ -164,6 +164,18 @@ public class HexagonalArchitectureTest {
                     .and().haveSimpleNameEndingWith("Repository")
                     .should().haveSimpleNameEndingWith("Repository")
                     .because("리포지토리는 명확한 명명 규칙을 따라야 합니다")
+                    .check(classes);
+        }
+
+        @Test
+        @DisplayName("애플리케이션 서비스는 Service로 끝나야 한다")
+        void b() {
+            classes()
+                    .that().resideInAPackage("..application..")
+                    .and().areNotInterfaces()
+                    .and().haveSimpleNameContaining("Service")
+                    .should().haveSimpleNameEndingWith("Service")
+                    .because("애플리케이션 서비스는 명확한 명명 규칙을 따라야 합니다")
                     .check(classes);
         }
     }
