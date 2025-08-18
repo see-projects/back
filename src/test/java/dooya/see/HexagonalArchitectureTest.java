@@ -26,7 +26,7 @@ public class HexagonalArchitectureTest {
     class LayeredArchitectureTest {
 
         @Test
-        @DisplayName("헥사고날 아키텍처 계층 의존성 규칙 검증")
+        @DisplayName("헥사고날 아키텍처 계층 의존성 규칙을 준수한다")
         void a() {
             Architectures.layeredArchitecture()
                     .consideringOnlyDependenciesInLayers()
@@ -48,6 +48,16 @@ public class HexagonalArchitectureTest {
                     .that().resideInAPackage("..domain..")
                     .should().dependOnClassesThat()
                     .resideInAnyPackage("..application..", "..adapter..")
+                    .check(classes);
+        }
+        
+        @Test
+        @DisplayName("애플리케이션 계층은 어댑터에 의존하면 안된다")
+        void c() {
+            noClasses()
+                    .that().resideInAPackage("..application..")
+                    .should().dependOnClassesThat()
+                    .resideInAPackage("..adapter..")
                     .check(classes);
         }
     }
