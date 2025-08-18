@@ -2,7 +2,7 @@ package dooya.see.domain.post;
 
 import java.time.LocalDateTime;
 
-public record PostSearchCondition(
+public record PostSearchRequest(
         String keyword,
         String titleKeyword,
         String contentKeyword,
