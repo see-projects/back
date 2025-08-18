@@ -87,5 +87,12 @@ public class HexagonalArchitectureTest {
                     .because("도메인은 웹 계층과 독립적이어야 합니다")
                     .check(classes);
         }
+
+        @Test
+        @DisplayName("도메인은 JPA/Hibernate를 사용할 수 있다")
+        void f() {
+            // JPA 애노테이션이 도메인 로직에 미치는 영향을 최소화하면서, 매핑을 위한 애노테이션 사용은 허용
+            // 이 테스트는 문서화 목적으로 JPA 사용이 허용됨을 명시
+        }
     }
 }
