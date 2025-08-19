@@ -79,4 +79,15 @@ public class PostFixture {
 
         return Post.create(request, 1L);
     }
+
+    public static Post createDraftPost(String title, String body) {
+        PostCreateRequest request = new PostCreateRequest(
+                title,
+                body,
+                PostCategory.TECH,
+                false
+        );
+
+        return Post.create(request, 1L);
+    }
 }

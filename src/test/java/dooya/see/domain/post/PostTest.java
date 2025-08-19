@@ -257,4 +257,16 @@ class PostTest {
 
         assertThat(matches).isTrue();
     }
+
+    @Test
+    @DisplayName("")
+    void b() {
+        Post post = createDraftPost("스프링 부트 강의", "스프링 부트를 배워보자");
+        PostSearchRequest request = new PostSearchRequest(
+                "스프링", null, null, null, null, null, null, null);
+
+        boolean matches = post.matchesSearchRequest(request);
+
+        assertThat(matches).isFalse();
+    }
 }
