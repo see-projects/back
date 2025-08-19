@@ -2,10 +2,7 @@ package dooya.see.application.post;
 
 import dooya.see.application.post.provided.PostFinder;
 import dooya.see.application.post.required.PostRepository;
-import dooya.see.domain.post.Post;
-import dooya.see.domain.post.PostCategory;
-import dooya.see.domain.post.PostNotFoundException;
-import dooya.see.domain.post.PostStatus;
+import dooya.see.domain.post.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,5 +43,10 @@ public class PostQueryService implements PostFinder {
     @Override
     public List<Post> findPublicPostsByCategory(PostCategory category) {
         return postRepository.findByCategoryAndStatus(category, PostStatus.PUBLISHED);
+    }
+
+    @Override
+    public List<Post> search(PostSearchRequest searchRequest) {
+        return postRepository.search(searchRequest);
     }
 }
