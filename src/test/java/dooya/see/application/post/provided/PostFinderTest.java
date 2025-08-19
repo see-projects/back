@@ -166,6 +166,33 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
         assertThat(found).isEmpty();
     }
 
+    @Test
+    @DisplayName("키워드로 제목 검색하면 해당 키워드가 포함된 게시물들이 반환된다")
+    void searchPostsByTitleKeyword() {
+        Post post1 = postManager.create(createPostRequest("Spring Boot 튜토리얼", "내용1"), 1L);
+        Post post2 = postManager.create(createPostRequest("Spring Security 가이드", "내용2"), 1L);
+        Post post3 = postManager.create(createPostRequest("Java 기초", "내용3"), 1L);
+        entityManager.flush();
+        entityManager.clear();
+
+        PostSearchRequest searchRequest = new PostSearchRequest(
+            null,           // keyword
+            "Spring",       // titleKeyword  
+            null,           // contentKeyword
+            null,           // category
+            null,           // memberId
+            null,           // status
+            null,           // fromDate
+            null            // toDate
+        );
+
+        List<Post> found = postFinder.search(searchRequest);
+
+        assertThat(found).hasSize(2);
+        assertThat(found).extracting(post -> post.getContent().title())
+            .containsExactlyInAnyOrder("Spring Boot 튜토리얼", "Spring Security 가이드");
+    }
+
     private Post createPost() {
         return postManager.create(createPostRequest(), 1L);
     }

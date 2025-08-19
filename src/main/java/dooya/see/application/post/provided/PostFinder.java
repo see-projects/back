@@ -2,6 +2,7 @@ package dooya.see.application.post.provided;
 
 import dooya.see.domain.post.Post;
 import dooya.see.domain.post.PostCategory;
+import dooya.see.domain.post.PostSearchRequest;
 import dooya.see.domain.post.PostStatus;
 
 import java.util.List;
@@ -18,4 +19,6 @@ public interface PostFinder {
     List<Post> findPublicPosts();
 
     List<Post> findPublicPostsByCategory(PostCategory category);
+
+    List<Post> search(PostSearchRequest searchRequest);
 }
