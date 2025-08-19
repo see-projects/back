@@ -12,6 +12,10 @@ public class PostFixture {
         return createPostRequest(false);
     }
 
+    public static PostCreateRequest createPostRequest(String title, String body) {
+        return new PostCreateRequest(title, body, PostCategory.TECH, true);
+    }
+
     public static PostUpdateRequest updateAllFieldsRequest() {
         return new PostUpdateRequest(
                 Optional.of("수정된 제목"),
