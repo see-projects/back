@@ -117,9 +117,16 @@ public class PostFixture {
         return Post.create(request, memberId);
     }
 
-    public static PostSearchRequest searchPostRequest() {
-        return new PostSearchRequest(
-                "테스트", null, null, null, null, null, null, null);
+    public static PostCreateRequest createPostRequestWithCategory(String title, String body, PostCategory category) {
+        return new PostCreateRequest(title, body, category, true);
+    }
+
+    public static PostCreateRequest createPostRequestWithCategory(String title, String body, PostCategory category, boolean publishImmediately) {
+        return new PostCreateRequest(title, body, category, publishImmediately);
+    }
+
+    public static PostCreateRequest createDraftPostRequest(String title, String body) {
+        return new PostCreateRequest(title, body, PostCategory.TECH, false);
     }
 
     public static Post createPublishedWithCategory(String title, String body, PostCategory category) {
