@@ -69,122 +69,14 @@ public class PostFixture {
         );
     }
 
-    // ======================== PostSearchRequest Fixtures ========================
-    
-    /**
-     * 빈 검색 조건 (모든 조건이 null)
-     */
-    public static PostSearchRequest emptySearchRequest() {
-        return new PostSearchRequest(
-                null, null, null, null, null, null, null, null
+    public static Post createPublishedPost(String title, String body) {
+        PostCreateRequest request = new PostCreateRequest(
+                title,
+                body,
+                PostCategory.TECH,
+                true
         );
-    }
-    
-    /**
-     * 키워드 통합 검색 요청
-     */
-    public static PostSearchRequest keywordSearchRequest(String keyword) {
-        return new PostSearchRequest(
-                keyword, null, null, null, null, null, null, null
-        );
-    }
-    
-    /**
-     * 제목 전용 키워드 검색 요청
-     */
-    public static PostSearchRequest titleKeywordSearchRequest(String titleKeyword) {
-        return new PostSearchRequest(
-                null, titleKeyword, null, null, null, null, null, null
-        );
-    }
-    
-    /**
-     * 내용 전용 키워드 검색 요청
-     */
-    public static PostSearchRequest contentKeywordSearchRequest(String contentKeyword) {
-        return new PostSearchRequest(
-                null, null, contentKeyword, null, null, null, null, null
-        );
-    }
-    
-    /**
-     * 카테고리 필터 검색 요청
-     */
-    public static PostSearchRequest categorySearchRequest(PostCategory category) {
-        return new PostSearchRequest(
-                null, null, null, category, null, null, null, null
-        );
-    }
-    
-    /**
-     * 작성자 필터 검색 요청
-     */
-    public static PostSearchRequest memberSearchRequest(Long memberId) {
-        return new PostSearchRequest(
-                null, null, null, null, memberId, null, null, null
-        );
-    }
-    
-    /**
-     * 상태 필터 검색 요청
-     */
-    public static PostSearchRequest statusSearchRequest(PostStatus status) {
-        return new PostSearchRequest(
-                null, null, null, null, null, status, null, null
-        );
-    }
-    
-    /**
-     * 날짜 범위 검색 요청
-     */
-    public static PostSearchRequest dateRangeSearchRequest(java.time.LocalDateTime fromDate, java.time.LocalDateTime toDate) {
-        return new PostSearchRequest(
-                null, null, null, null, null, null, fromDate, toDate
-        );
-    }
-    
-    /**
-     * 복합 조건 검색 요청 (키워드 + 카테고리)
-     */
-    public static PostSearchRequest keywordAndCategorySearchRequest(String keyword, PostCategory category) {
-        return new PostSearchRequest(
-                keyword, null, null, category, null, null, null, null
-        );
-    }
-    
-    /**
-     * 복합 조건 검색 요청 (키워드 + 상태)
-     */
-    public static PostSearchRequest keywordAndStatusSearchRequest(String keyword, PostStatus status) {
-        return new PostSearchRequest(
-                keyword, null, null, null, null, status, null, null
-        );
-    }
-    
-    /**
-     * 발행된 게시물만 검색하는 기본 요청
-     */
-    public static PostSearchRequest publishedPostsOnlyRequest() {
-        return new PostSearchRequest(
-                null, null, null, null, null, PostStatus.PUBLISHED, null, null
-        );
-    }
-    
-    /**
-     * 커스텀 검색 요청 생성 헬퍼
-     */
-    public static PostSearchRequest customSearchRequest(
-            String keyword, 
-            String titleKeyword, 
-            String contentKeyword,
-            PostCategory category, 
-            Long memberId, 
-            PostStatus status,
-            java.time.LocalDateTime fromDate, 
-            java.time.LocalDateTime toDate) {
-        return new PostSearchRequest(
-                keyword, titleKeyword, contentKeyword, category, 
-                memberId, status, fromDate, toDate
-        );
+
+        return Post.create(request, 1L);
     }
 }
