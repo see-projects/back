@@ -90,4 +90,9 @@ public class PostFixture {
 
         return Post.create(request, 1L);
     }
+
+    public static PostSearchRequest searchPostRequest() {
+        return new PostSearchRequest(
+                "테스트", null, null, null, null, null, null, null);
+    }
 }

@@ -249,9 +249,8 @@ class PostTest {
     @Test
     @DisplayName("")
     void a() {
-        Post post = createPublishedPost("스프링 부트 강의", "스프링 부트를 배워보자");
-        PostSearchRequest request = new PostSearchRequest(
-                "스프링", null, null, null, null, null, null, null);
+        post.publish();
+        PostSearchRequest request = PostFixture.searchPostRequest();
 
         boolean matches = post.matchesSearchRequest(request);
 
@@ -261,9 +260,18 @@ class PostTest {
     @Test
     @DisplayName("")
     void b() {
-        Post post = createDraftPost("스프링 부트 강의", "스프링 부트를 배워보자");
-        PostSearchRequest request = new PostSearchRequest(
-                "스프링", null, null, null, null, null, null, null);
+        PostSearchRequest request = PostFixture.searchPostRequest();
+
+        boolean matches = post.matchesSearchRequest(request);
+
+        assertThat(matches).isFalse();
+    }
+
+    @Test
+    @DisplayName("")
+    void c() {
+        post.hide();
+        PostSearchRequest request = PostFixture.searchPostRequest();
 
         boolean matches = post.matchesSearchRequest(request);
 
