@@ -114,11 +114,4 @@ public class Post extends AbstractEntity {
             this.metaData = this.metaData.incrementCommentCount();
         }
     }
-
-    public boolean matches(PostSearchRequest request) {
-        if (request.keyword() != null) {
-            return this.content.title().contains(request.keyword());
-        }
-        return true;
-    }
 }

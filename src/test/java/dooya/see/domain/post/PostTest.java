@@ -5,6 +5,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static dooya.see.domain.post.PostFixture.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -243,15 +244,5 @@ class PostTest {
         post.incrementCommentCount();
 
         assertThat(post.getMetaData().commentCount()).isZero();
-    }
-
-    @Test
-    @DisplayName("")
-    void a() {
-        post.publish();
-
-        PostSearchRequest request = PostFixture.titleKeywordSearchRequest("테스트 게시글 제목입니다");
-        
-        assertThat(post.matches(request)).isTrue();
     }
 }
