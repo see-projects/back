@@ -9,6 +9,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 import static java.util.Objects.requireNonNull;
 import static org.springframework.util.Assert.state;
 
@@ -128,10 +130,45 @@ public class Post extends AbstractEntity {
             return false;
         }
 
+        if (request.titleKeyword() != null && !this.content.title().contains(request.titleKeyword())) {
+            return false;
+        }
+
+        if (request.contentKeyword() != null && !this.content.body().contains(request.contentKeyword())) {
+            return false;
+        }
+
+        if (request.memberId() != null && !this.memberId.equals(request.memberId())) {
+            return false;
+        }
+
+        // 날짜 범위 조건 확인
+        if (!matchesDateRange(request)) {
+            return false;
+        }
+
         return true;
     }
 
     private boolean isSearchable() {
         return status == PostStatus.PUBLISHED;
+    }
+
+    private boolean matchesDateRange(PostSearchRequest request) {
+        if (request.fromDate() == null && request.toDate() == null) {
+            return true; // 날짜 조건이 없으면 매칭
+        }
+
+        LocalDateTime createdAt = this.metaData.createdAt();
+        
+        if (request.fromDate() != null && createdAt.isBefore(request.fromDate())) {
+            return false;
+        }
+        
+        if (request.toDate() != null && createdAt.isAfter(request.toDate())) {
+            return false;
+        }
+        
+        return true;
     }
 }
