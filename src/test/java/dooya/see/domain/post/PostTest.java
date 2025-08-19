@@ -250,6 +250,7 @@ class PostTest {
     @DisplayName("")
     void a() {
         post.publish();
+
         PostSearchRequest request = PostFixture.searchPostRequest();
 
         boolean matches = post.matchesSearchRequest(request);
@@ -271,6 +272,7 @@ class PostTest {
     @DisplayName("")
     void c() {
         post.hide();
+
         PostSearchRequest request = PostFixture.searchPostRequest();
 
         boolean matches = post.matchesSearchRequest(request);
@@ -282,6 +284,7 @@ class PostTest {
     @DisplayName("")
     void d() {
         Post post = createPublishedPost("Spring Boot Tutorial", "자바 웹 개발 강의");
+
         PostSearchRequest request = new PostSearchRequest(
                 "spring", null, null, null, null, null, null, null);
 
@@ -301,4 +304,5 @@ class PostTest {
 
         assertThat(matches).isTrue();
     }
+
 }
