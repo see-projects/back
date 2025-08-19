@@ -68,4 +68,64 @@ public class PostFixture {
                 category != null ? Optional.of(category) : Optional.empty()
         );
     }
+
+    public static Post createPublishedPost(String title, String body) {
+        PostCreateRequest request = new PostCreateRequest(
+                title,
+                body,
+                PostCategory.TECH,
+                true
+        );
+
+        return Post.create(request, 1L);
+    }
+
+    public static Post createDraftPost(String title, String body) {
+        PostCreateRequest request = new PostCreateRequest(
+                title,
+                body,
+                PostCategory.TECH,
+                false
+        );
+
+        return Post.create(request, 1L);
+    }
+
+    public static Post createPublishedPostWithCategory(String title, String body, PostCategory category) {
+        PostCreateRequest request = new PostCreateRequest(
+                title,
+                body,
+                category,
+                true
+        );
+
+        return Post.create(request, 1L);
+    }
+
+    public static Post createPostWithMember(String title, String body, Long memberId, boolean publishImmediately) {
+        PostCreateRequest request = new PostCreateRequest(
+                title,
+                body,
+                PostCategory.TECH,
+                publishImmediately
+        );
+
+        return Post.create(request, memberId);
+    }
+
+    public static PostSearchRequest searchPostRequest() {
+        return new PostSearchRequest(
+                "테스트", null, null, null, null, null, null, null);
+    }
+
+    public static Post createPublishedWithCategory(String title, String body, PostCategory category) {
+        PostCreateRequest request = new PostCreateRequest(
+                title,
+                body,
+                category,
+                true
+        );
+
+        return Post.create(request, 1L);
+    }
 }

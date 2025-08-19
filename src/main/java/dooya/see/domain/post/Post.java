@@ -9,6 +9,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 import static java.util.Objects.requireNonNull;
 import static org.springframework.util.Assert.state;
 
@@ -113,5 +115,60 @@ public class Post extends AbstractEntity {
         if (status == PostStatus.PUBLISHED) {
             this.metaData = this.metaData.incrementCommentCount();
         }
+    }
+
+    public boolean matchesSearchRequest(PostSearchRequest request) {
+        if (!isSearchable()) {
+            return false;
+        }
+
+        if (request.keyword() != null && !this.content.containsKeyword(request.keyword())) {
+            return false;
+        }
+
+        if (request.category() != null && !this.category.equals(request.category())) {
+            return false;
+        }
+        
+        if (request.titleKeyword() != null && !this.content.titleContainsKeyword(request.titleKeyword())) {
+            return false;
+        }
+
+        if (request.contentKeyword() != null && !this.content.bodyContainsKeyword(request.contentKeyword())) {
+            return false;
+        }
+
+        if (request.memberId() != null && !this.memberId.equals(request.memberId())) {
+            return false;
+        }
+
+        // 날짜 범위 조건 확인
+        if (!matchesDateRange(request)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean isSearchable() {
+        return status == PostStatus.PUBLISHED;
+    }
+
+    private boolean matchesDateRange(PostSearchRequest request) {
+        if (request.fromDate() == null && request.toDate() == null) {
+            return true;
+        }
+
+        LocalDateTime createdAt = this.metaData.createdAt();
+        
+        if (request.fromDate() != null && createdAt.isBefore(request.fromDate())) {
+            return false;
+        }
+        
+        if (request.toDate() != null && createdAt.isAfter(request.toDate())) {
+            return false;
+        }
+        
+        return true;
     }
 }

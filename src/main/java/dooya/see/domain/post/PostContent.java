@@ -31,4 +31,29 @@ public record PostContent(
     }
 
 
+    public boolean containsKeyword(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return false;
+        }
+
+        String lowerKeyword = keyword.toLowerCase();
+
+        return titleContainsKeyword(lowerKeyword) || bodyContainsKeyword(lowerKeyword);
+    }
+
+    public boolean titleContainsKeyword(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return false;
+        }
+
+        return title.toLowerCase().contains(keyword.toLowerCase());
+    }
+
+    public boolean bodyContainsKeyword(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return false;
+        }
+
+        return body.toLowerCase().contains(keyword.toLowerCase());
+    }
 }
