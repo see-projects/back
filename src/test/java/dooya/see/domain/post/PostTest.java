@@ -245,4 +245,16 @@ class PostTest {
 
         assertThat(post.getMetaData().commentCount()).isZero();
     }
+
+    @Test
+    @DisplayName("")
+    void a() {
+        Post post = createPublishedPost("스프링 부트 강의", "스프링 부트를 배워보자");
+        PostSearchRequest request = new PostSearchRequest(
+                "스프링", null, null, null, null, null, null, null);
+
+        boolean matches = post.matchesSearchRequest(request);
+
+        assertThat(matches).isTrue();
+    }
 }

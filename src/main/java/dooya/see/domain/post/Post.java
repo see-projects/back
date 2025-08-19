@@ -114,4 +114,20 @@ public class Post extends AbstractEntity {
             this.metaData = this.metaData.incrementCommentCount();
         }
     }
+
+    public boolean matchesSearchRequest(PostSearchRequest request) {
+        if (!isSearchable()) {
+            return false;
+        }
+
+        if (request.keyword() != null && !this.content.containsKeyword(request.keyword())) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean isSearchable() {
+        return status == PostStatus.PUBLISHED;
+    }
 }
