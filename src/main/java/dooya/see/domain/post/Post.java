@@ -124,6 +124,10 @@ public class Post extends AbstractEntity {
             return false;
         }
 
+        if (request.category() != null && !this.category.equals(request.category())) {
+            return false;
+        }
+
         return true;
     }
 

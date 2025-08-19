@@ -305,4 +305,16 @@ class PostTest {
         assertThat(matches).isTrue();
     }
 
+    @Test
+    @DisplayName("")
+    void f() {
+        Post techPost = createPublishedWithCategory("자바 강의", "객체지향 프로그래밍", PostCategory.TECH);
+        Post noticePost = createPublishedWithCategory("공지 입니다", "공지 내용", PostCategory.NOTICE);
+
+        PostSearchRequest request = new PostSearchRequest(
+                null, null, null, PostCategory.TECH, null, null, null, null);
+
+        assertThat(techPost.matchesSearchRequest(request)).isTrue();
+        assertThat(noticePost.matchesSearchRequest(request)).isFalse();
+    }
 }

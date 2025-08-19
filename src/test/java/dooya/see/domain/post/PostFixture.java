@@ -95,4 +95,15 @@ public class PostFixture {
         return new PostSearchRequest(
                 "테스트", null, null, null, null, null, null, null);
     }
+
+    public static Post createPublishedWithCategory(String title, String body, PostCategory category) {
+        PostCreateRequest request = new PostCreateRequest(
+                title,
+                body,
+                category,
+                true
+        );
+
+        return Post.create(request, 1L);
+    }
 }
