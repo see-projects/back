@@ -129,12 +129,12 @@ public class Post extends AbstractEntity {
         if (request.category() != null && !this.category.equals(request.category())) {
             return false;
         }
-
-        if (request.titleKeyword() != null && !this.content.title().contains(request.titleKeyword())) {
+        
+        if (request.titleKeyword() != null && !this.content.titleContainsKeyword(request.titleKeyword())) {
             return false;
         }
 
-        if (request.contentKeyword() != null && !this.content.body().contains(request.contentKeyword())) {
+        if (request.contentKeyword() != null && !this.content.bodyContainsKeyword(request.contentKeyword())) {
             return false;
         }
 
@@ -156,7 +156,7 @@ public class Post extends AbstractEntity {
 
     private boolean matchesDateRange(PostSearchRequest request) {
         if (request.fromDate() == null && request.toDate() == null) {
-            return true; // 날짜 조건이 없으면 매칭
+            return true;
         }
 
         LocalDateTime createdAt = this.metaData.createdAt();

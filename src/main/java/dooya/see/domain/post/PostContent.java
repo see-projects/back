@@ -41,7 +41,7 @@ public record PostContent(
         return titleContainsKeyword(lowerKeyword) || bodyContainsKeyword(lowerKeyword);
     }
 
-    private boolean titleContainsKeyword(String keyword) {
+    public boolean titleContainsKeyword(String keyword) {
         if (keyword == null || keyword.trim().isEmpty()) {
             return false;
         }
@@ -49,7 +49,7 @@ public record PostContent(
         return title.toLowerCase().contains(keyword.toLowerCase());
     }
 
-    private boolean bodyContainsKeyword(String keyword) {
+    public boolean bodyContainsKeyword(String keyword) {
         if (keyword == null || keyword.trim().isEmpty()) {
             return false;
         }
