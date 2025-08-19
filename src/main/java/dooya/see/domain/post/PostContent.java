@@ -54,6 +54,6 @@ public record PostContent(
             return false;
         }
 
-        return title.toLowerCase().contains(keyword.toLowerCase());
+        return body.toLowerCase().contains(keyword.toLowerCase());
     }
 }

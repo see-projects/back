@@ -277,4 +277,28 @@ class PostTest {
 
         assertThat(matches).isFalse();
     }
+
+    @Test
+    @DisplayName("")
+    void d() {
+        Post post = createPublishedPost("Spring Boot Tutorial", "자바 웹 개발 강의");
+        PostSearchRequest request = new PostSearchRequest(
+                "spring", null, null, null, null, null, null, null);
+
+        boolean matches = post.matchesSearchRequest(request);
+
+        assertThat(matches).isTrue();
+    }
+
+    @Test
+    @DisplayName("")
+    void e() {
+        Post post = createPublishedPost("웹 개발 강의", "Spring Boot를 사용한 REST API 개발");
+        PostSearchRequest request = new PostSearchRequest(
+                "spring", null, null, null, null, null, null, null);
+
+        boolean matches = post.matchesSearchRequest(request);
+
+        assertThat(matches).isTrue();
+    }
 }
