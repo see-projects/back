@@ -175,22 +175,51 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
         entityManager.flush();
         entityManager.clear();
 
-        PostSearchRequest searchRequest = new PostSearchRequest(
-            null,           // keyword
-            "Spring",       // titleKeyword  
-            null,           // contentKeyword
-            null,           // category
-            null,           // memberId
-            null,           // status
-            null,           // fromDate
-            null            // toDate
-        );
+        PostSearchRequest searchRequest = PostSearchRequest.builder()
+                .titleKeyword("Spring")
+                .build();
 
         List<Post> found = postFinder.search(searchRequest);
 
         assertThat(found).hasSize(2);
         assertThat(found).extracting(post -> post.getContent().title())
             .containsExactlyInAnyOrder("Spring Boot 튜토리얼", "Spring Security 가이드");
+    }
+
+    @Test
+    @DisplayName("Builder 패턴으로 간단한 키워드 검색이 가능하다")
+    void searchWithKeywordBuilder() {
+        Post post = postManager.create(createPostRequest("테스트 게시물", "Spring 내용"), 1L);
+        entityManager.flush();
+        entityManager.clear();
+
+        List<Post> found = postFinder.search(PostSearchRequest.builder()
+                .keyword("Spring")
+                .build());
+
+        assertThat(found).hasSize(1);
+        assertThat(found.get(0).getContent().title()).isEqualTo("테스트 게시물");
+    }
+
+    @Test
+    @DisplayName("복합 조건 검색이 Builder로 깔끔하게 표현된다")
+    void searchWithComplexConditions() {
+        Post post1 = postManager.create(createPostRequest("Spring 튜토리얼", "내용"), 1L);
+        Post post2 = postManager.create(createPostRequest("Java 기초", "내용"), 2L);
+        entityManager.flush();
+        entityManager.clear();
+
+        PostSearchRequest searchRequest = PostSearchRequest.builder()
+                .keyword("Spring")
+                .memberId(1L)
+                .category(PostCategory.TECH)
+                .build();
+        
+        List<Post> found = postFinder.search(searchRequest);
+
+        assertThat(found).hasSize(1);
+        assertThat(found.get(0).getContent().title()).isEqualTo("Spring 튜토리얼");
+        assertThat(found.get(0).getMemberId()).isEqualTo(1L);
     }
 
     private Post createPost() {
