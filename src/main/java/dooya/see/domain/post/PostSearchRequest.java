@@ -1,7 +1,10 @@
 package dooya.see.domain.post;
 
+import lombok.Builder;
+
 import java.time.LocalDateTime;
 
+@Builder
 public record PostSearchRequest(
         String keyword,
         String titleKeyword,

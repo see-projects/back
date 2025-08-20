@@ -29,31 +29,4 @@ public record PostContent(
             throw new IllegalArgumentException("게시글 내용은 50,000자를 초과할 수 없습니다");
         }
     }
-
-
-    public boolean containsKeyword(String keyword) {
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return false;
-        }
-
-        String lowerKeyword = keyword.toLowerCase();
-
-        return titleContainsKeyword(lowerKeyword) || bodyContainsKeyword(lowerKeyword);
-    }
-
-    public boolean titleContainsKeyword(String keyword) {
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return false;
-        }
-
-        return title.toLowerCase().contains(keyword.toLowerCase());
-    }
-
-    public boolean bodyContainsKeyword(String keyword) {
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return false;
-        }
-
-        return body.toLowerCase().contains(keyword.toLowerCase());
-    }
 }

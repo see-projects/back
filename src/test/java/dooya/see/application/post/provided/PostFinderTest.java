@@ -166,6 +166,174 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
         assertThat(found).isEmpty();
     }
 
+    @Test
+    @DisplayName("키워드로 제목 검색하면 해당 키워드가 포함된 게시물들이 반환된다")
+    void searchPostsByTitleKeyword() {
+        postManager.create(createPostRequest("Spring Boot 튜토리얼", "내용1"), 1L);
+        postManager.create(createPostRequest("Spring Security 가이드", "내용2"), 1L);
+        postManager.create(createPostRequest("Java 기초", "내용3"), 1L);
+        entityManager.flush();
+        entityManager.clear();
+
+        PostSearchRequest searchRequest = PostSearchRequest.builder()
+                .titleKeyword("Spring")
+                .build();
+
+        List<Post> found = postFinder.search(searchRequest);
+
+        assertThat(found).hasSize(2);
+        assertThat(found).extracting(post -> post.getContent().title())
+            .containsExactlyInAnyOrder("Spring Boot 튜토리얼", "Spring Security 가이드");
+    }
+
+    @Test
+    @DisplayName("전체 키워드로 제목과 내용을 통합 검색할 수 있다")
+    void searchWithKeywordBuilder() {
+        postManager.create(createPostRequest("테스트 게시물", "Spring 내용"), 1L);
+        entityManager.flush();
+        entityManager.clear();
+
+        List<Post> found = postFinder.search(PostSearchRequest.builder()
+                .keyword("Spring")
+                .build());
+
+        assertThat(found).hasSize(1);
+        assertThat(found.get(0).getContent().title()).isEqualTo("테스트 게시물");
+    }
+
+    @Test
+    @DisplayName("키워드와 작성자와 카테고리 조건으로 복합 검색할 수 있다")
+    void searchWithComplexConditions() {
+        postManager.create(createPostRequest("Spring 튜토리얼", "내용"), 1L);
+        postManager.create(createPostRequest("Java 기초", "내용"), 2L);
+        entityManager.flush();
+        entityManager.clear();
+
+        PostSearchRequest searchRequest = PostSearchRequest.builder()
+                .keyword("Spring")
+                .memberId(1L)
+                .category(PostCategory.TECH)
+                .build();
+
+        List<Post> found = postFinder.search(searchRequest);
+
+        assertThat(found).hasSize(1);
+        assertThat(found.getFirst().getContent().title()).isEqualTo("Spring 튜토리얼");
+        assertThat(found.getFirst().getMemberId()).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("내용 키워드로 게시물 본문을 검색할 수 있다")
+    void searchByContentKeyword() {
+        postManager.create(createPostRequest("제목1", "JPA 사용법 설명"), 1L);
+        postManager.create(createPostRequest("제목2", "Hibernate와 JPA 비교"), 1L);
+        postManager.create(createPostRequest("제목3", "Spring 기초"), 1L);
+        entityManager.flush();
+        entityManager.clear();
+
+        PostSearchRequest searchRequest = PostSearchRequest.builder()
+                .contentKeyword("JPA")
+                .build();
+
+        List<Post> found = postFinder.search(searchRequest);
+
+        assertThat(found).hasSize(2);
+        assertThat(found).extracting(post -> post.getContent().body())
+                .allMatch(content -> content.contains("JPA"));
+    }
+
+    @Test
+    @DisplayName("카테고리별로 게시물을 필터링할 수 있다")
+    void searchByCategory() {
+        postManager.create(createPostRequestWithCategory("기술글", "내용", PostCategory.TECH), 1L);
+        postManager.create(createPostRequestWithCategory("질문글", "내용", PostCategory.QNA), 1L);
+        postManager.create(createPostRequestWithCategory("일반글", "내용", PostCategory.GENERAL), 1L);
+        entityManager.flush();
+        entityManager.clear();
+
+        PostSearchRequest searchRequest = PostSearchRequest.builder()
+                .category(PostCategory.TECH)
+                .build();
+
+        List<Post> found = postFinder.search(searchRequest);
+
+        assertThat(found).hasSize(1);
+        assertThat(found.get(0).getCategory()).isEqualTo(PostCategory.TECH);
+        assertThat(found.get(0).getContent().title()).isEqualTo("기술글");
+    }
+
+    @Test
+    @DisplayName("특정 작성자의 게시물을 키워드와 함께 검색할 수 있다")
+    void searchByMemberAndKeyword() {
+        postManager.create(createPostRequest("Spring 튜토리얼", "내용1"), 1L);
+        postManager.create(createPostRequest("Spring 가이드", "내용2"), 2L);
+        postManager.create(createPostRequest("Java Spring", "내용3"), 1L);
+        entityManager.flush();
+        entityManager.clear();
+
+        PostSearchRequest searchRequest = PostSearchRequest.builder()
+                .keyword("Spring")
+                .memberId(1L)
+                .build();
+
+        List<Post> found = postFinder.search(searchRequest);
+
+        assertThat(found).hasSize(2);
+        assertThat(found).allMatch(post -> post.getMemberId().equals(1L));
+        assertThat(found).extracting(post -> post.getContent().title())
+                .containsExactlyInAnyOrder("Spring 튜토리얼", "Java Spring");
+    }
+
+    @Test
+    @DisplayName("발행 상태의 게시물만 검색할 수 있다")
+    void searchByPublishedStatus() {
+        postManager.create(createPostRequest(true), 1L);
+        postManager.create(createPostRequest(false), 1L);
+        entityManager.flush();
+        entityManager.clear();
+
+        PostSearchRequest searchRequest = PostSearchRequest.builder()
+                .status(PostStatus.PUBLISHED)
+                .build();
+
+        List<Post> found = postFinder.search(searchRequest);
+
+        assertThat(found).hasSize(1);
+        assertThat(found.get(0).getStatus()).isEqualTo(PostStatus.PUBLISHED);
+    }
+
+    @Test
+    @DisplayName("검색 조건에 맞는 게시물이 없으면 빈 결과를 반환한다")
+    void searchWithNoResults() {
+        postManager.create(createPostRequest("Java 기초", "내용"), 1L);
+        entityManager.flush();
+        entityManager.clear();
+
+        PostSearchRequest searchRequest = PostSearchRequest.builder()
+                .keyword("Python")  // 존재하지 않는 키워드
+                .build();
+
+        List<Post> found = postFinder.search(searchRequest);
+
+        assertThat(found).isEmpty();
+    }
+
+    @Test
+    @DisplayName("모든 검색 조건이 비어있으면 전체 게시물을 반환한다")
+    void searchWithEmptyConditions() {
+        postManager.create(createPostRequest("제목1", "내용1"), 1L);
+        postManager.create(createPostRequest("제목2", "내용2"), 1L);
+        entityManager.flush();
+        entityManager.clear();
+
+        PostSearchRequest searchRequest = PostSearchRequest.builder()
+                .build();  // 모든 조건이 null
+
+        List<Post> found = postFinder.search(searchRequest);
+
+        assertThat(found).hasSize(2);
+    }
+
     private Post createPost() {
         return postManager.create(createPostRequest(), 1L);
     }

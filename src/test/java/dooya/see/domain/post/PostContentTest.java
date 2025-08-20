@@ -120,32 +120,4 @@ class PostContentTest {
         assertThat(postContent.title()).isEqualTo(validTitle);
         assertThat(postContent.body()).isEqualTo(maxLengthBody);
     }
-
-    @Test
-    @DisplayName("")
-    void a() {
-        String validTitle = "spring title";
-        String validBody = "spring body";
-
-        PostContent postContent = new PostContent(validTitle, validBody);
-        String keyword = "spring";
-
-        boolean valid = postContent.containsKeyword(keyword);
-
-        assertThat(valid).isTrue();
-    }
-
-    @Test
-    @DisplayName("")
-    void b() {
-        String validTitle = "not";
-        String validBody = "not body";
-
-        PostContent postContent = new PostContent(validTitle, validBody);
-        String keyword = "spring";
-
-        boolean valid = postContent.containsKeyword(keyword);
-
-        assertThat(valid).isFalse();
-    }
 }
