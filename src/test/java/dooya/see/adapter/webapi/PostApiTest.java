@@ -9,10 +9,7 @@ import dooya.see.application.member.provided.MemberRegister;
 import dooya.see.domain.member.MemberAuthRequest;
 import dooya.see.domain.member.MemberFixture;
 import dooya.see.domain.member.MemberRegisterRequest;
-import dooya.see.domain.post.PostCategory;
-import dooya.see.domain.post.PostCreateRequest;
-import dooya.see.domain.post.PostStatus;
-import dooya.see.domain.post.PostUpdateRequest;
+import dooya.see.domain.post.*;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,6 +26,7 @@ import java.io.UnsupportedEncodingException;
 import static dooya.see.domain.member.MemberFixture.createMemberAuthRequest;
 import static dooya.see.domain.member.MemberFixture.createMemberRegisterRequest;
 import static dooya.see.domain.post.PostFixture.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
@@ -797,6 +795,218 @@ class PostApiTest {
         PostDetailResponse[] posts = objectMapper.readValue(responseContent, PostDetailResponse[].class);
 
         assertThat(posts).hasSize(1);
+        assertThat(posts[0].status()).isEqualTo(PostStatus.PUBLISHED);
+    }
+
+    @Test
+    @DisplayName("비로그인 사용자가 카테고리로 게시글을 검색하면 공개된 게시글만 반환된다")
+    void searchPostsByCategory() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        createAndPublishPost(token);  // PUBLISHED 상태
+        createAndDraftPost(token);    // DRAFT 상태
+
+        MvcTestResult result = mvcTester.get()
+                .uri("/api/posts/search?category=TECH")
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+        
+        String responseContent = result.getResponse().getContentAsString();
+        PostDetailResponse[] posts = objectMapper.readValue(responseContent, PostDetailResponse[].class);
+        
+        assertThat(posts).hasSize(1); // 공개된 게시글만 1개 반환
+        assertThat(posts).allMatch(post -> post.category() == PostCategory.TECH);
+        assertThat(posts[0].status()).isEqualTo(PostStatus.PUBLISHED);
+    }
+
+    @Test
+    @DisplayName("로그인한 사용자가 본인의 카테고리별 게시글을 검색하면 모든 상태가 반환된다")
+    void searchMyPostsByCategory() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        
+        Long publishedPostId = createAndPublishPost(token);
+        createAndDraftPost(token);
+        
+        // 회원 ID 얻기
+        MvcTestResult postResult = mvcTester.get().uri("/api/posts/{id}", publishedPostId).exchange();
+        PostDetailResponse postDetail = objectMapper.readValue(
+                postResult.getResponse().getContentAsString(), PostDetailResponse.class);
+        Long memberId = postDetail.authorId();
+
+        MvcTestResult result = mvcTester.get()
+                .uri("/api/posts/search?category=TECH&memberId=" + memberId)
+                .header("Authorization", "Bearer " + token)
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+        
+        String responseContent = result.getResponse().getContentAsString();
+        PostDetailResponse[] posts = objectMapper.readValue(responseContent, PostDetailResponse[].class);
+        
+        assertThat(posts).hasSize(2); // 본인 게시글이므로 PUBLISHED + DRAFT 모두 반환
+        assertThat(posts).allMatch(post -> post.category() == PostCategory.TECH);
+        assertThat(posts).allMatch(post -> post.authorId().equals(memberId));
+    }
+
+    @Test
+    @DisplayName("키워드로 게시글을 검색할 수 있다")
+    void searchPostsByKeyword() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        createAndPublishPost(token); // "테스트 게시글 제목입니다" 포함
+
+        MvcTestResult result = mvcTester.get()
+                .uri("/api/posts/search?keyword=테스트")
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+        
+        String responseContent = result.getResponse().getContentAsString();
+        PostDetailResponse[] posts = objectMapper.readValue(responseContent, PostDetailResponse[].class);
+        
+        assertThat(posts).hasSize(1);
+        assertThat(posts[0].title()).contains("테스트");
+    }
+
+    @Test
+    @DisplayName("제목 키워드로 게시글을 검색할 수 있다")
+    void searchPostsByTitleKeyword() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        createAndPublishPost(token);
+
+        MvcTestResult result = mvcTester.get()
+                .uri("/api/posts/search?titleKeyword=게시글")
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+        
+        String responseContent = result.getResponse().getContentAsString();
+        PostDetailResponse[] posts = objectMapper.readValue(responseContent, PostDetailResponse[].class);
+        
+        assertThat(posts).hasSize(1);
+        assertThat(posts[0].title()).contains("게시글");
+    }
+
+    @Test
+    @DisplayName("내용 키워드로 게시글을 검색할 수 있다")
+    void searchPostsByContentKeyword() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        createAndPublishPost(token); // "테스트 게시글 내용입니다" 포함
+
+        MvcTestResult result = mvcTester.get()
+                .uri("/api/posts/search?contentKeyword=내용")
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+        
+        String responseContent = result.getResponse().getContentAsString();
+        PostDetailResponse[] posts = objectMapper.readValue(responseContent, PostDetailResponse[].class);
+        
+        assertThat(posts).hasSize(1);
+        assertThat(posts[0].body()).contains("내용");
+    }
+
+    @Test
+    @DisplayName("특정 회원이 작성한 게시글을 검색할 수 있다")
+    void searchPostsByMemberId() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        Long postId = createAndPublishPost(token);
+        
+        // 회원 ID 얻기
+        MvcTestResult postResult = mvcTester.get().uri("/api/posts/{id}", postId).exchange();
+        PostDetailResponse postDetail = objectMapper.readValue(
+                postResult.getResponse().getContentAsString(), PostDetailResponse.class);
+        Long memberId = postDetail.authorId();
+
+        MvcTestResult result = mvcTester.get()
+                .uri("/api/posts/search?memberId=" + memberId)
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+        
+        String responseContent = result.getResponse().getContentAsString();
+        PostDetailResponse[] posts = objectMapper.readValue(responseContent, PostDetailResponse[].class);
+        
+        assertThat(posts).hasSize(1);
+        assertThat(posts[0].authorId()).isEqualTo(memberId);
+    }
+
+    @Test
+    @DisplayName("게시글 상태로 검색할 수 있다")
+    void searchPostsByStatus() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        createAndPublishPost(token);
+        createAndDraftPost(token);
+
+        MvcTestResult result = mvcTester.get()
+                .uri("/api/posts/search?status=PUBLISHED")
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+        
+        String responseContent = result.getResponse().getContentAsString();
+        PostDetailResponse[] posts = objectMapper.readValue(responseContent, PostDetailResponse[].class);
+        
+        assertThat(posts).hasSize(1);
+        assertThat(posts[0].status()).isEqualTo(PostStatus.PUBLISHED);
+    }
+
+    @Test
+    @DisplayName("여러 조건을 조합하여 게시글을 검색할 수 있다")
+    void searchPostsByMultipleConditions() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        createAndPublishPost(token);
+        createAndDraftPost(token);
+
+        MvcTestResult result = mvcTester.get()
+                .uri("/api/posts/search?category=TECH&status=PUBLISHED&keyword=테스트")
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+        
+        String responseContent = result.getResponse().getContentAsString();
+        PostDetailResponse[] posts = objectMapper.readValue(responseContent, PostDetailResponse[].class);
+        
+        assertThat(posts).hasSize(1);
+        assertThat(posts[0].category()).isEqualTo(PostCategory.TECH);
+        assertThat(posts[0].status()).isEqualTo(PostStatus.PUBLISHED);
+        assertThat(posts[0].title()).contains("테스트");
+    }
+
+    @Test
+    @DisplayName("검색 조건에 맞는 게시글이 없으면 빈 배열을 반환한다")
+    void searchPostsWithNoResults() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        createAndPublishPost(token);
+
+        MvcTestResult result = mvcTester.get()
+                .uri("/api/posts/search?keyword=존재하지않는키워드")
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+        
+        String responseContent = result.getResponse().getContentAsString();
+        PostDetailResponse[] posts = objectMapper.readValue(responseContent, PostDetailResponse[].class);
+        
+        assertThat(posts).isEmpty();
+    }
+
+    @Test
+    @DisplayName("비로그인 사용자가 검색 조건 없이 요청하면 공개된 게시글만 반환된다")
+    void searchPostsWithoutConditions() throws UnsupportedEncodingException, JsonProcessingException {
+        String token = createMemberAndGetToken();
+        createAndPublishPost(token);
+        createAndDraftPost(token);
+
+        MvcTestResult result = mvcTester.get()
+                .uri("/api/posts/search")
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+        
+        String responseContent = result.getResponse().getContentAsString();
+        PostDetailResponse[] posts = objectMapper.readValue(responseContent, PostDetailResponse[].class);
+        
+        assertThat(posts).hasSize(1); // 공개된 게시글만 반환
         assertThat(posts[0].status()).isEqualTo(PostStatus.PUBLISHED);
     }
 
