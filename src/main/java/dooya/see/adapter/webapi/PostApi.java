@@ -148,19 +148,30 @@ public class PostApi {
 
     @GetMapping("/api/posts/search")
     public List<PostDetailResponse> searchPosts(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String titleKeyword,
             @RequestParam(required = false) String contentKeyword,
             @RequestParam(required = false) PostCategory category,
             @RequestParam(required = false) Long memberId,
             @RequestParam(required = false) PostStatus status) {
+        boolean authenticated = AuthTokenExtractor.isValidBearerToken(token);
+        Long currentMemberId = authenticated ? getCurrentMemberId(token) : null;
+
+        PostStatus effectiveStatus = status;
+        if (!authenticated) {
+            effectiveStatus = PostStatus.PUBLISHED;
+        } else if (memberId == null || !memberId.equals(currentMemberId)) {
+            effectiveStatus = PostStatus.PUBLISHED;
+        }
+
         PostSearchRequest searchRequest = PostSearchRequest.builder()
                 .keyword(keyword)
                 .titleKeyword(titleKeyword)
                 .contentKeyword(contentKeyword)
                 .category(category)
                 .memberId(memberId)
-                .status(status)
+                .status(effectiveStatus)
                 .build();
                 
         List<Post> posts = postFinder.search(searchRequest);
