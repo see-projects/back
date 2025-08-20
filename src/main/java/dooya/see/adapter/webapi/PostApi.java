@@ -146,6 +146,30 @@ public class PostApi {
                 .toList();
     }
 
+    @GetMapping("/api/posts/search")
+    public List<PostDetailResponse> searchPosts(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String titleKeyword,
+            @RequestParam(required = false) String contentKeyword,
+            @RequestParam(required = false) PostCategory category,
+            @RequestParam(required = false) Long memberId,
+            @RequestParam(required = false) PostStatus status) {
+        PostSearchRequest searchRequest = PostSearchRequest.builder()
+                .keyword(keyword)
+                .titleKeyword(titleKeyword)
+                .contentKeyword(contentKeyword)
+                .category(category)
+                .memberId(memberId)
+                .status(status)
+                .build();
+                
+        List<Post> posts = postFinder.search(searchRequest);
+        
+        return posts.stream()
+                .map(PostDetailResponse::of)
+                .toList();
+    }
+
     private Long getCurrentMemberId(String token) {
         String extractedToken = AuthTokenExtractor.extractToken(token);
         return tokenManager.extractMemberIdFromToken(extractedToken);
