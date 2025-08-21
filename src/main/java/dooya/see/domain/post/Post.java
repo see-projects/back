@@ -1,5 +1,9 @@
 package dooya.see.domain.post;
 
+import dooya.see.domain.post.event.PostCreated;
+import dooya.see.domain.post.event.PostDeleted;
+import dooya.see.domain.post.event.PostHidden;
+import dooya.see.domain.post.event.PostUpdated;
 import dooya.see.domain.shared.AbstractAggregateRoot;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
@@ -58,18 +62,39 @@ public class Post extends AbstractAggregateRoot {
     public void update(PostUpdateRequest request) {
         state(request.hasAnyUpdate(), "변경사항이 없습니다");
 
+        boolean titleChanged = false;
+        boolean bodyChanged = false;
+        boolean categoryChanged = false;
+
         if (request.title().isPresent() || request.body().isPresent()) {
-            String newTitle = request.title().orElse(this.content.title());
-            String newBody = request.body().orElse(this.content.body());
+            String originalTitle = this.content.title();
+            String originalBody = this.content.body();
+            
+            String newTitle = request.title().orElse(originalTitle);
+            String newBody = request.body().orElse(originalBody);
+
+            titleChanged = !originalTitle.equals(newTitle);
+            bodyChanged = !originalBody.equals(newBody);
 
             this.content = new PostContent(newTitle, newBody);
         }
 
         if (request.category().isPresent()) {
+            PostCategory originalCategory = this.category;
             this.category = request.category().get();
+            categoryChanged = !originalCategory.equals(this.category);
         }
 
         this.metaData = this.metaData.updateModifiedAt();
+
+        // 도메인 이벤트 발행
+        this.addDomainEvent(new PostUpdated(
+            this.getId(),
+            this.memberId,
+            titleChanged,
+            bodyChanged,
+            categoryChanged
+        ));
     }
 
     public void publish() {
@@ -91,7 +116,11 @@ public class Post extends AbstractAggregateRoot {
             throw new InvalidPostStatusTransitionException(this.status, "숨김");
         }
 
+        PostStatus previousStatus = this.status;
         this.status = PostStatus.HIDDEN;
+
+        // 도메인 이벤트 발행
+        this.addDomainEvent(new PostHidden(this.getId(), this.memberId, previousStatus));
     }
 
     public void delete() {
@@ -99,7 +128,11 @@ public class Post extends AbstractAggregateRoot {
             throw new InvalidPostStatusTransitionException(this.status, "삭제");
         }
 
+        PostStatus previousStatus = this.status;
         this.status = PostStatus.DELETED;
+
+        // 도메인 이벤트 발행
+        this.addDomainEvent(new PostDeleted(this.getId(), this.memberId, previousStatus));
     }
 
     public boolean isWrittenBy(Long memberId) {

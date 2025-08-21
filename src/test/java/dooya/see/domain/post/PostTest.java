@@ -1,8 +1,14 @@
 package dooya.see.domain.post;
 
+import dooya.see.domain.post.event.PostCreated;
+import dooya.see.domain.post.event.PostDeleted;
+import dooya.see.domain.post.event.PostHidden;
+import dooya.see.domain.post.event.PostUpdated;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import dooya.see.domain.shared.DomainEvent;
 
 import static dooya.see.domain.post.PostFixture.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -188,5 +194,161 @@ class PostTest {
     void isWrittenByMember() {
         assertThat(post.isWrittenBy(1L)).isTrue();
         assertThat(post.isWrittenBy(2L)).isFalse();
+    }
+
+    @Test
+    @DisplayName("Post 생성 시 PostCreated 도메인 이벤트가 발생한다")
+    void createPostGeneratesDomainEvent() {
+        PostCreateRequest request = createPostRequest();
+        Long memberId = 1L;
+
+        Post post = Post.create(request, memberId);
+
+        assertThat(post.hasDomainEvents()).isTrue();
+        assertThat(post.getDomainEvents()).hasSize(1);
+        
+        DomainEvent event = post.getDomainEvents().getFirst();
+        assertThat(event).isInstanceOf(PostCreated.class);
+        
+        PostCreated postCreated = (PostCreated) event;
+        assertThat(postCreated.postId()).isEqualTo(post.getId());
+        assertThat(postCreated.memberId()).isEqualTo(memberId);
+        assertThat(postCreated.category()).isEqualTo(request.category());
+        assertThat(postCreated.publishImmediately()).isEqualTo(request.publishImmediately());
+    }
+
+    @Test
+    @DisplayName("즉시 발행으로 Post 생성 시 PostCreated 이벤트의 publishedImmediately가 true다")
+    void createPostWithImmediatePublishGeneratesCorrectEvent() {
+        PostCreateRequest request = createPostRequest(true);
+        Long memberId = 1L;
+
+        Post post = Post.create(request, memberId);
+
+        PostCreated event = (PostCreated) post.getDomainEvents().getFirst();
+        assertThat(event.publishImmediately()).isTrue();
+    }
+
+    @Test
+    @DisplayName("게시글 발행 시 PostPublished 도메인 이벤트가 발생한다")
+    void publishPostGeneratesDomainEvent() {
+        Post post = Post.create(createPostRequest(), 1L);
+        post.clearDomainEvents();
+
+        post.publish();
+
+        assertThat(post.hasDomainEvents()).isTrue();
+        assertThat(post.getDomainEvents()).hasSize(1);
+        
+        DomainEvent event = post.getDomainEvents().getFirst();
+        assertThat(event).isInstanceOf(PostPublished.class);
+        
+        PostPublished postPublished = (PostPublished) event;
+        assertThat(postPublished.postId()).isEqualTo(post.getId());
+        assertThat(postPublished.memberId()).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("도메인 이벤트를 클리어하면 이벤트 목록이 비워진다")
+    void clearDomainEvents() {
+        Post post = Post.create(createPostRequest(), 1L);
+        assertThat(post.hasDomainEvents()).isTrue();
+
+        post.clearDomainEvents();
+
+        assertThat(post.hasDomainEvents()).isFalse();
+        assertThat(post.getDomainEvents()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("게시글 수정 시 PostUpdated 도메인 이벤트가 발생한다")
+    void updatePostGeneratesDomainEvent() {
+        Post post = Post.create(createPostRequest(), 1L);
+        post.clearDomainEvents();
+        PostUpdateRequest request = updateAllFieldsRequest();
+
+        post.update(request);
+
+        assertThat(post.hasDomainEvents()).isTrue();
+        assertThat(post.getDomainEvents()).hasSize(1);
+        
+        DomainEvent event = post.getDomainEvents().getFirst();
+        assertThat(event).isInstanceOf(PostUpdated.class);
+        
+        PostUpdated postUpdated = (PostUpdated) event;
+        assertThat(postUpdated.postId()).isEqualTo(post.getId());
+        assertThat(postUpdated.memberId()).isEqualTo(1L);
+        assertThat(postUpdated.titleChanged()).isTrue();
+        assertThat(postUpdated.bodyChanged()).isTrue();
+        assertThat(postUpdated.categoryChanged()).isTrue();
+    }
+
+    @Test
+    @DisplayName("제목만 수정 시 PostUpdated 이벤트에서 titleChanged만 true다")
+    void updateTitleOnlyGeneratesCorrectEvent() {
+        Post post = Post.create(createPostRequest(), 1L);
+        post.clearDomainEvents();
+        PostUpdateRequest request = updateTitleOnlyRequest();
+
+        post.update(request);
+
+        PostUpdated event = (PostUpdated) post.getDomainEvents().getFirst();
+        assertThat(event.titleChanged()).isTrue();
+        assertThat(event.bodyChanged()).isFalse();
+        assertThat(event.categoryChanged()).isFalse();
+    }
+
+    @Test
+    @DisplayName("게시글 숨김 시 PostHidden 도메인 이벤트가 발생한다")
+    void hidePostGeneratesDomainEvent() {
+        Post post = Post.create(createPostRequest(), 1L);
+        post.publish();
+        post.clearDomainEvents();
+
+        post.hide();
+
+        assertThat(post.hasDomainEvents()).isTrue();
+        assertThat(post.getDomainEvents()).hasSize(1);
+        
+        DomainEvent event = post.getDomainEvents().getFirst();
+        assertThat(event).isInstanceOf(PostHidden.class);
+        
+        PostHidden postHidden = (PostHidden) event;
+        assertThat(postHidden.postId()).isEqualTo(post.getId());
+        assertThat(postHidden.memberId()).isEqualTo(1L);
+        assertThat(postHidden.previousStatus()).isEqualTo(PostStatus.PUBLISHED);
+    }
+
+    @Test
+    @DisplayName("게시글 삭제 시 PostDeleted 도메인 이벤트가 발생한다")
+    void deletePostGeneratesDomainEvent() {
+        Post post = Post.create(createPostRequest(), 1L);
+        post.publish();
+        post.clearDomainEvents();
+
+        post.delete();
+
+        assertThat(post.hasDomainEvents()).isTrue();
+        assertThat(post.getDomainEvents()).hasSize(1);
+        
+        DomainEvent event = post.getDomainEvents().getFirst();
+        assertThat(event).isInstanceOf(PostDeleted.class);
+        
+        PostDeleted postDeleted = (PostDeleted) event;
+        assertThat(postDeleted.postId()).isEqualTo(post.getId());
+        assertThat(postDeleted.memberId()).isEqualTo(1L);
+        assertThat(postDeleted.previousStatus()).isEqualTo(PostStatus.PUBLISHED);
+    }
+
+    @Test
+    @DisplayName("DRAFT 상태에서 숨김 처리 시 이전 상태가 DRAFT로 기록된다")
+    void hideDraftPostGeneratesEventWithCorrectPreviousStatus() {
+        Post post = Post.create(createPostRequest(), 1L);
+        post.clearDomainEvents();
+
+        post.hide();
+
+        PostHidden event = (PostHidden) post.getDomainEvents().getFirst();
+        assertThat(event.previousStatus()).isEqualTo(PostStatus.DRAFT);
     }
 }

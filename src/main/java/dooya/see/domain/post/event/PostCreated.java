@@ -1,5 +1,6 @@
-package dooya.see.domain.post;
+package dooya.see.domain.post.event;
 
+import dooya.see.domain.post.PostCategory;
 import dooya.see.domain.shared.DomainEvent;
 
 public record PostCreated(
