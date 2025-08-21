@@ -21,9 +21,6 @@ class PostMetaDataTest {
         assertThat(postMetaData.createdAt()).isBetween(beforeCreate, afterCreate);
         assertThat(postMetaData.modifiedAt()).isNull();
         assertThat(postMetaData.publishedAt()).isNull();
-        assertThat(postMetaData.viewCount()).isZero();
-        assertThat(postMetaData.likeCount()).isZero();
-        assertThat(postMetaData.commentCount()).isZero();
     }
     
     @Test
@@ -39,9 +36,6 @@ class PostMetaDataTest {
         assertThat(updated.createdAt()).isEqualTo(original.createdAt());
         assertThat(updated.modifiedAt()).isBetween(beforeUpdate, afterUpdate);
         assertThat(updated.publishedAt()).isEqualTo(original.publishedAt());
-        assertThat(updated.viewCount()).isEqualTo(original.viewCount());
-        assertThat(updated.likeCount()).isEqualTo(original.likeCount());
-        assertThat(updated.commentCount()).isEqualTo(original.commentCount());
     }
 
     @Test
@@ -57,69 +51,5 @@ class PostMetaDataTest {
         assertThat(published.createdAt()).isEqualTo(original.createdAt());
         assertThat(published.modifiedAt()).isEqualTo(original.modifiedAt());
         assertThat(published.publishedAt()).isBetween(beforePublish, afterPublish);
-        assertThat(published.viewCount()).isEqualTo(original.viewCount());
-        assertThat(published.likeCount()).isEqualTo(original.likeCount());
-        assertThat(published.commentCount()).isEqualTo(original.commentCount());
-    }
-
-    @Test
-    @DisplayName("조회수 증가 시 viewCount만 1 증가하고 나머지는 기존 값을 유지한다")
-    void incrementViewCount() {
-        PostMetaData original = PostMetaData.create();
-        
-        PostMetaData incremented = original.incrementViewCount();
-        
-        assertThat(incremented.createdAt()).isEqualTo(original.createdAt());
-        assertThat(incremented.modifiedAt()).isEqualTo(original.modifiedAt());
-        assertThat(incremented.publishedAt()).isEqualTo(original.publishedAt());
-        assertThat(incremented.viewCount()).isEqualTo(original.viewCount() + 1);
-        assertThat(incremented.likeCount()).isEqualTo(original.likeCount());
-        assertThat(incremented.commentCount()).isEqualTo(original.commentCount());
-    }
-
-    @Test
-    @DisplayName("좋아요 수 증가 시 likeCount만 1 증가하고 나머지는 기존 값을 유지한다")
-    void incrementLikeCount() {
-        PostMetaData original = PostMetaData.create();
-        
-        PostMetaData incremented = original.incrementLikeCount();
-        
-        assertThat(incremented.createdAt()).isEqualTo(original.createdAt());
-        assertThat(incremented.modifiedAt()).isEqualTo(original.modifiedAt());
-        assertThat(incremented.publishedAt()).isEqualTo(original.publishedAt());
-        assertThat(incremented.viewCount()).isEqualTo(original.viewCount());
-        assertThat(incremented.likeCount()).isEqualTo(original.likeCount() + 1);
-        assertThat(incremented.commentCount()).isEqualTo(original.commentCount());
-    }
-
-    @Test
-    @DisplayName("댓글 수 증가 시 commentCount만 1 증가하고 나머지는 기존 값을 유지한다")
-    void incrementCommentCount() {
-        PostMetaData original = PostMetaData.create();
-        
-        PostMetaData incremented = original.incrementCommentCount();
-        
-        assertThat(incremented.createdAt()).isEqualTo(original.createdAt());
-        assertThat(incremented.modifiedAt()).isEqualTo(original.modifiedAt());
-        assertThat(incremented.publishedAt()).isEqualTo(original.publishedAt());
-        assertThat(incremented.viewCount()).isEqualTo(original.viewCount());
-        assertThat(incremented.likeCount()).isEqualTo(original.likeCount());
-        assertThat(incremented.commentCount()).isEqualTo(original.commentCount() + 1);
-    }
-
-    @Test
-    @DisplayName("여러 번 증가 메서드 호출 시 누적적으로 증가한다")
-    void multipleIncrements() {
-        PostMetaData original = PostMetaData.create();
-        
-        PostMetaData result = original
-                .incrementViewCount()
-                .incrementViewCount()
-                .incrementLikeCount()
-                .incrementCommentCount();
-        
-        assertThat(result.viewCount()).isEqualTo(2);
-        assertThat(result.likeCount()).isEqualTo(1);
-        assertThat(result.commentCount()).isEqualTo(1);
     }
 }

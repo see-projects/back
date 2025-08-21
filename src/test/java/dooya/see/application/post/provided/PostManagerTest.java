@@ -195,69 +195,6 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
                 .isInstanceOf(InvalidPostStatusTransitionException.class);
     }
 
-    @Test
-    @DisplayName("발행된 게시글의 조회수를 증가시키면 viewCount가 1 증가한다")
-    void incrementViewCountOnPublishedPost() {
-        Post post = createPost();
-        postManager.publish(post.getId(), 1L);
-
-        postManager.incrementViewCount(post.getId());
-
-        assertThat(post.getMetaData().viewCount()).isEqualTo(1);
-    }
-
-    @Test
-    @DisplayName("DRAFT 상태의 게시글에 조회수 증가를 시도하면 viewCount는 변경되지 않는다")
-    void incrementViewCountOnDraftPost() {
-        Post post = createPost();
-
-        postManager.incrementViewCount(post.getId());
-
-        assertThat(post.getMetaData().viewCount()).isZero();
-    }
-
-    @Test
-    @DisplayName("발행된 게시글의 좋아요 수를 증가시키면 likeCount가 1 증가한다")
-    void incrementLikeCountOnPublishedPost() {
-        Post post = createPost();
-        postManager.publish(post.getId(), 1L);
-
-        postManager.incrementLikeCount(post.getId());
-
-        assertThat(post.getMetaData().likeCount()).isEqualTo(1);
-    }
-
-    @Test
-    @DisplayName("DRAFT 상태의 게시글에 좋아요 수 증가를 시도하면 likeCount는 변경되지 않는다")
-    void incrementLikeCountOnDraftPost() {
-        Post post = createPost();
-
-        postManager.incrementLikeCount(post.getId());
-
-        assertThat(post.getMetaData().likeCount()).isZero();
-    }
-
-    @Test
-    @DisplayName("발행된 게시글의 댓글 수를 증가시키면 commentCount가 1 증가한다")
-    void incrementCommentCountOnPublishedPost() {
-        Post post = createPost();
-        postManager.publish(post.getId(), 1L);
-
-        postManager.incrementCommentCount(post.getId());
-
-        assertThat(post.getMetaData().commentCount()).isEqualTo(1);
-    }
-
-    @Test
-    @DisplayName("DRAFT 상태의 게시글에 댓글 수 증가를 시도하면 commentCount는 변경되지 않는다")
-    void incrementCommentCountOnDraftPost() {
-        Post post = createPost();
-
-        postManager.incrementCommentCount(post.getId());
-
-        assertThat(post.getMetaData().commentCount()).isZero();
-    }
-
     private Post createPost() {
         Post post = postManager.create(createPostRequest(), 1L);
         entityManager.flush();

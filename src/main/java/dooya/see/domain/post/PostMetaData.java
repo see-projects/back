@@ -10,13 +10,7 @@ public record PostMetaData(
 
         LocalDateTime modifiedAt,
 
-        LocalDateTime publishedAt,
-
-        Integer viewCount,
-
-        Integer likeCount,
-
-        Integer commentCount
+        LocalDateTime publishedAt
 ) {
     
     public static PostMetaData create() {
@@ -24,10 +18,7 @@ public record PostMetaData(
         return new PostMetaData(
                 now,      // createdAt
                 null,     // modifiedAt
-                null,     // publishedAt
-                0,        // viewCount
-                0,        // likeCount
-                0         // commentCount
+                null
         );
     }
 
@@ -36,10 +27,7 @@ public record PostMetaData(
         return new PostMetaData(
                 now,      // createdAt
                 null,     // modifiedAt
-                now,      // publishedAt
-                0,        // viewCount
-                0,        // likeCount
-                0         // commentCount
+                now
         );
     }
 
@@ -47,10 +35,7 @@ public record PostMetaData(
         return new PostMetaData(
                 this.createdAt,
                 LocalDateTime.now(),
-                this.publishedAt,
-                this.viewCount,
-                this.likeCount,
-                this.commentCount
+                this.publishedAt
         );
     }
 
@@ -58,43 +43,23 @@ public record PostMetaData(
         return new PostMetaData(
                 this.createdAt,
                 this.modifiedAt,
-                LocalDateTime.now(),
-                this.viewCount,
-                this.likeCount,
-                this.commentCount
+                LocalDateTime.now()
         );
     }
 
-    PostMetaData incrementViewCount() {
-        return new PostMetaData(
-                this.createdAt,
-                this.modifiedAt,
-                this.publishedAt,
-                this.viewCount + 1,
-                this.likeCount,
-                this.commentCount
-        );
+    public boolean isPublished() {
+        return this.publishedAt != null;
     }
 
-    PostMetaData incrementLikeCount() {
-        return new PostMetaData(
-                this.createdAt,
-                this.modifiedAt,
-                this.publishedAt,
-                this.viewCount,
-                this.likeCount + 1,
-                this.commentCount
-        );
+    public boolean isModified() {
+        return this.modifiedAt != null;
     }
 
-    PostMetaData incrementCommentCount() {
-        return new PostMetaData(
-                this.createdAt,
-                this.modifiedAt,
-                this.publishedAt,
-                this.viewCount,
-                this.likeCount,
-                this.commentCount + 1
-        );
+    public boolean isRecentlyCreated() {
+        return this.createdAt.isAfter(LocalDateTime.now().minusDays(1));
+    }
+
+    public boolean isRecentlyModified() {
+        return this.modifiedAt != null && this.modifiedAt.isAfter(LocalDateTime.now().minusDays(1));
     }
 }

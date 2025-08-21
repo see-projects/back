@@ -14,10 +14,4 @@ public interface PostManager {
     Post hide(Long postId, Long memberId);
 
     Post delete(Long postId, Long memberId);
-
-    Post incrementViewCount(Long postId);
-
-    Post incrementLikeCount(Long postId);
-
-    Post incrementCommentCount(Long postId);
 }
