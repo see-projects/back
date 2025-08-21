@@ -45,6 +45,13 @@ public class Post extends AbstractAggregateRoot {
             post.metaData = PostMetaData.create();
         }
 
+        post.addDomainEvent(new PostCreated(
+                post.getId(),
+                memberId,
+                post.category,
+                request.publishImmediately()
+        ));
+
         return post;
     }
 
@@ -72,6 +79,8 @@ public class Post extends AbstractAggregateRoot {
 
         this.status = PostStatus.PUBLISHED;
         this.metaData = this.metaData.updatePublishedAt();
+
+        this.addDomainEvent(new PostPublished(this.getId(), this.memberId));
     }
 
     public void hide() {
