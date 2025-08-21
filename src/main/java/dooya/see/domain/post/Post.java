@@ -1,6 +1,6 @@
 package dooya.see.domain.post;
 
-import dooya.see.domain.AbstractEntity;
+import dooya.see.domain.shared.AbstractAggregateRoot;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -15,7 +15,7 @@ import static org.springframework.util.Assert.state;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Post extends AbstractEntity {
+public class Post extends AbstractAggregateRoot {
     @Embedded
     private PostContent content;
 
