@@ -82,20 +82,6 @@ public class PostApi {
         return PostDetailResponse.of(post);
     }
 
-    @PostMapping("/api/posts/{id}/like")
-    public PostDetailResponse likePost(@PathVariable Long id) {
-        Post post = postManager.incrementLikeCount(id);
-
-        return PostDetailResponse.of(post);
-    }
-
-    @PostMapping("/api/posts/{id}/comment")
-    public PostDetailResponse addComment(@PathVariable Long id) {
-        Post post = postManager.incrementCommentCount(id);
-
-        return PostDetailResponse.of(post);
-    }
-
     @GetMapping("/api/posts")
     public List<PostDetailResponse> getPublicPosts() {
         List<Post> posts = postFinder.findPublicPosts();
@@ -190,11 +176,11 @@ public class PostApi {
         if (AuthTokenExtractor.isValidBearerToken(token)) {
             Long currentMemberId = getCurrentMemberId(token);
             if (!post.isWrittenBy(currentMemberId)) {
-                postManager.incrementViewCount(id);
+//                postManager.incrementViewCount(id);
                 post = postFinder.find(id);
             }
         } else {
-            postManager.incrementViewCount(id);
+//            postManager.incrementViewCount(id);
             post = postFinder.find(id);
         }
         return post;

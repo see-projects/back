@@ -78,31 +78,4 @@ public class PostModifyService implements PostManager {
 
         return postRepository.save(post);
     }
-
-    @Override
-    public Post incrementViewCount(Long postId) {
-        Post post = postFinder.find(postId);
-
-        post.incrementViewCount();
-
-        return postRepository.save(post);
-    }
-
-    @Override
-    public Post incrementLikeCount(Long postId) {
-        Post post = postFinder.find(postId);
-
-        post.incrementLikeCount();
-
-        return postRepository.save(post);
-    }
-
-    @Override
-    public Post incrementCommentCount(Long postId) {
-        Post post = postFinder.find(postId);
-
-        post.incrementCommentCount();
-
-        return postRepository.save(post);
-    }
 }

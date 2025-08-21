@@ -15,10 +15,10 @@ public record PostDetailResponse(
         Long authorId,
         LocalDateTime createdAt,
         LocalDateTime modifiedAt,
-        LocalDateTime publishedAt,
-        Integer viewCount,
-        Integer likeCount,
-        Integer commentCount
+        LocalDateTime publishedAt
+//        Integer viewCount,
+//        Integer likeCount,
+//        Integer commentCount
 ) {
     public static PostDetailResponse of(Post post) {
         return new PostDetailResponse(
@@ -30,10 +30,7 @@ public record PostDetailResponse(
                 post.getMemberId(),
                 post.getMetaData().createdAt(),
                 post.getMetaData().modifiedAt(),
-                post.getMetaData().publishedAt(),
-                post.getMetaData().viewCount(),
-                post.getMetaData().likeCount(),
-                post.getMetaData().commentCount()
+                post.getMetaData().publishedAt()
         );
     }
 }
