@@ -96,22 +96,4 @@ public class Post extends AbstractEntity {
     public boolean isWrittenBy(Long memberId) {
         return this.memberId.equals(memberId);
     }
-
-    public void incrementViewCount() {
-        if (status == PostStatus.PUBLISHED) {
-            this.metaData = this.metaData.incrementViewCount();
-        }
-    }
-
-    public void incrementLikeCount() {
-        if (status == PostStatus.PUBLISHED) {
-            this.metaData = this.metaData.incrementLikeCount();
-        }
-    }
-
-    public void incrementCommentCount() {
-        if (status == PostStatus.PUBLISHED) {
-            this.metaData = this.metaData.incrementCommentCount();
-        }
-    }
 }

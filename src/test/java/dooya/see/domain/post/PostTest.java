@@ -4,8 +4,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDateTime;
-
 import static dooya.see.domain.post.PostFixture.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -26,9 +24,8 @@ class PostTest {
         assertThat(post.getCategory()).isEqualTo(PostCategory.TECH);
         assertThat(post.getStatus()).isEqualTo(PostStatus.DRAFT);
         assertThat(post.getMetaData().createdAt()).isNotNull();
-        assertThat(post.getMetaData().viewCount()).isZero();
-        assertThat(post.getMetaData().likeCount()).isZero();
-        assertThat(post.getMetaData().commentCount()).isZero();
+        assertThat(post.getMetaData().modifiedAt()).isNull();
+        assertThat(post.getMetaData().publishedAt()).isNull();
     }
 
     @Test
@@ -191,59 +188,5 @@ class PostTest {
     void isWrittenByMember() {
         assertThat(post.isWrittenBy(1L)).isTrue();
         assertThat(post.isWrittenBy(2L)).isFalse();
-    }
-
-    @Test
-    @DisplayName("PUBLISHED 상태의 게시글 조회수를 증가시키면 viewCount가 1 증가한다")
-    void incrementViewCountForPublishedPost() {
-        post.publish();
-        post.incrementViewCount();
-
-        assertThat(post.getMetaData().viewCount()).isEqualTo(1);
-    }
-
-    @Test
-    @DisplayName("DELETED 상태의 게시글 조회수를 증가시켜도 viewCount는 변경되지 않는다")
-    void incrementViewCountForDeletedPost() {
-        post.delete();
-        post.incrementViewCount();
-
-        assertThat(post.getMetaData().viewCount()).isZero();
-    }
-
-    @Test
-    @DisplayName("PUBLISHED 상태의 게시글 좋아요 수를 증가시키면 likeCount가 1 증가한다")
-    void incrementLikeCountForPublishedPost() {
-        post.publish();
-        post.incrementLikeCount();
-
-        assertThat(post.getMetaData().likeCount()).isEqualTo(1);
-    }
-
-    @Test
-    @DisplayName("DELETED 상태의 게시글 좋아요 수를 증가시켜도 likeCount는 변경되지 않는다")
-    void incrementLikeCountForDeletedPost() {
-        post.delete();
-        post.incrementLikeCount();
-
-        assertThat(post.getMetaData().likeCount()).isZero();
-    }
-
-    @Test
-    @DisplayName("PUBLISHED 상태의 게시글 댓글 수를 증가시키면 commentCount가 1 증가한다")
-    void incrementCommentCountForPublishedPost() {
-        post.publish();
-        post.incrementCommentCount();
-
-        assertThat(post.getMetaData().commentCount()).isEqualTo(1);
-    }
-
-    @Test
-    @DisplayName("DELETED 상태의 게시글 댓글 수를 증가시켜도 commentCount는 변경되지 않는다")
-    void incrementCommentCountForDeletedPost() {
-        post.delete();
-        post.incrementCommentCount();
-
-        assertThat(post.getMetaData().commentCount()).isZero();
     }
 }
