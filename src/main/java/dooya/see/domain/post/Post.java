@@ -1,9 +1,6 @@
 package dooya.see.domain.post;
 
-import dooya.see.domain.post.event.PostCreated;
-import dooya.see.domain.post.event.PostDeleted;
-import dooya.see.domain.post.event.PostHidden;
-import dooya.see.domain.post.event.PostUpdated;
+import dooya.see.domain.post.event.*;
 import dooya.see.domain.shared.AbstractAggregateRoot;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
