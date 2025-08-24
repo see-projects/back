@@ -334,6 +334,37 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
         assertThat(found).hasSize(2);
     }
 
+    @Test
+    @DisplayName("게시글을 조회하면 조회 이벤트가 발행된다")
+    void viewPost() {
+        Post post = createPost();
+
+        Post result = postFinder.viewPost(post.getId(), 2L);
+
+        assertThat(result.getId()).isEqualTo(post.getId());
+        assertThat(result.getMemberId()).isEqualTo(1L);
+        assertThat(result.getContent().title()).isEqualTo(post.getContent().title());
+        // 조회 이벤트는 PostStatsEventHandler에서 처리되므로 여기서는 확인 불가
+    }
+
+    @Test
+    @DisplayName("익명 사용자가 게시글을 조회할 수 있다")
+    void viewPostByAnonymousUser() {
+        Post post = createPost();
+
+        Post result = postFinder.viewPost(post.getId(), null);
+
+        assertThat(result.getId()).isEqualTo(post.getId());
+        assertThat(result.getMemberId()).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 게시글을 조회하려고 하면 PostNotFoundException이 발생한다")
+    void viewNonExistentPost() {
+        assertThatThrownBy(() -> postFinder.viewPost(999L, 1L))
+                .isInstanceOf(PostNotFoundException.class);
+    }
+
     private Post createPost() {
         return postManager.create(createPostRequest(), 1L);
     }

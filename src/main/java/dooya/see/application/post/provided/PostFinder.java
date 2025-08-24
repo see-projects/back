@@ -21,4 +21,6 @@ public interface PostFinder {
     List<Post> findPublicPostsByCategory(PostCategory category);
 
     List<Post> search(PostSearchRequest searchRequest);
+
+    Post viewPost(Long postId, Long viewerId);
 }
