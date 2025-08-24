@@ -23,12 +23,12 @@ public class PostModifyService implements PostManager {
     @Override
     public Post create(PostCreateRequest request, Long memberId) {
         Post post = Post.create(request, memberId);
+        Post savedPost = postRepository.save(post);
 
-        postRepository.save(post);
+        savedPost.publishCreationEventIfNeeded();
+        publishDomainEvents(savedPost);
 
-        publishDomainEvents(post);
-
-        return post;
+        return savedPost;
     }
 
     private void publishDomainEvents(Post post) {
@@ -45,8 +45,12 @@ public class PostModifyService implements PostManager {
         }
 
         post.update(request);
+        
+        Post updatedPost = postRepository.save(post);
 
-        return postRepository.save(post);
+        publishDomainEvents(updatedPost);
+
+        return updatedPost;
     }
 
     @Override
@@ -58,8 +62,12 @@ public class PostModifyService implements PostManager {
         }
 
         post.publish();
+        
+        Post publishedPost = postRepository.save(post);
 
-        return postRepository.save(post);
+        publishDomainEvents(publishedPost);
+
+        return publishedPost;
     }
 
     @Override
@@ -71,8 +79,12 @@ public class PostModifyService implements PostManager {
         }
 
         post.hide();
+        
+        Post hiddenPost = postRepository.save(post);
 
-        return postRepository.save(post);
+        publishDomainEvents(hiddenPost);
+
+        return hiddenPost;
     }
 
     @Override
@@ -84,7 +96,33 @@ public class PostModifyService implements PostManager {
         }
 
         post.delete();
+        
+        Post deletedPost = postRepository.save(post);
 
-        return postRepository.save(post);
+        publishDomainEvents(deletedPost);
+
+        return deletedPost;
+    }
+
+    @Override
+    public Post likePost(Long postId, Long memberId) {
+        Post post = postFinder.find(postId);
+        
+        post.like(memberId);
+        
+        publishDomainEvents(post);
+        
+        return post;
+    }
+
+    @Override
+    public Post unlikePost(Long postId, Long memberId) {
+        Post post = postFinder.find(postId);
+        
+        post.unlike(memberId);
+        
+        publishDomainEvents(post);
+        
+        return post;
     }
 }
