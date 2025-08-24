@@ -8,6 +8,7 @@ import dooya.see.domain.post.PostCreateRequest;
 import dooya.see.domain.post.PostUpdateRequest;
 import dooya.see.domain.post.UnauthorizedPostAccessException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class PostModifyService implements PostManager {
     private final PostRepository postRepository;
     private final PostFinder postFinder;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public Post create(PostCreateRequest request, Long memberId) {
@@ -24,7 +26,14 @@ public class PostModifyService implements PostManager {
 
         postRepository.save(post);
 
+        publishDomainEvents(post);
+
         return post;
+    }
+
+    private void publishDomainEvents(Post post) {
+        post.getDomainEvents().forEach(eventPublisher::publishEvent);
+        post.clearDomainEvents();
     }
 
     @Override
