@@ -6,6 +6,7 @@ import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @SpringBootTest
 @Transactional
 @Import(SeeTestConfiguration.class)
-record PostManagerTest(PostManager postManager, EntityManager entityManager, PostFinder postFinder) {
+record PostManagerTest(PostManager postManager, EntityManager entityManager, PostFinder postFinder, ApplicationEventPublisher eventPublisher) {
 
     @Test
     @DisplayName("게시글 생성 시 ID가 할당되고 초기 상태는 DRAFT가 된다")
@@ -193,6 +194,42 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
 
         assertThatThrownBy(() -> postManager.delete(post.getId(), 1L))
                 .isInstanceOf(InvalidPostStatusTransitionException.class);
+    }
+
+    @Test
+    @DisplayName("게시글에 좋아요를 누를 수 있다")
+    void likePost() {
+        Post post = createPost();
+        
+        Post result = postManager.likePost(post.getId(), 2L);
+        
+        assertThat(result.getId()).isEqualTo(post.getId());
+        // 좋아요 기능은 도메인 이벤트만 발행하므로 Post 엔티티 자체는 변경되지 않음
+    }
+
+    @Test
+    @DisplayName("게시글 좋아요를 취소할 수 있다")
+    void unlikePost() {
+        Post post = createPost();
+        
+        Post result = postManager.unlikePost(post.getId(), 3L);
+        
+        assertThat(result.getId()).isEqualTo(post.getId());
+        // 좋아요 취소 기능도 도메인 이벤트만 발행하므로 Post 엔티티 자체는 변경되지 않음
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 게시글에 좋아요를 누르려고 하면 PostNotFoundException이 발생한다")
+    void likeNonExistentPost() {
+        assertThatThrownBy(() -> postManager.likePost(999L, 1L))
+                .isInstanceOf(PostNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 게시글의 좋아요를 취소하려고 하면 PostNotFoundException이 발생한다")
+    void unlikeNonExistentPost() {
+        assertThatThrownBy(() -> postManager.unlikePost(999L, 1L))
+                .isInstanceOf(PostNotFoundException.class);
     }
 
     private Post createPost() {
