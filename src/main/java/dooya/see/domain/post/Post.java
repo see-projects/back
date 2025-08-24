@@ -2,10 +2,7 @@ package dooya.see.domain.post;
 
 import dooya.see.domain.post.event.*;
 import dooya.see.domain.shared.AbstractAggregateRoot;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,29 +28,32 @@ public class Post extends AbstractAggregateRoot {
     @Embedded
     private PostMetaData metaData;
 
+    @Transient
+    private PostCreationContext creationContext;
+
+    private record PostCreationContext(boolean publishImmediately) {}
+
     public static Post create(PostCreateRequest request, Long memberId) {
         Post post = new Post();
 
         post.content = new PostContent(request.title(), request.body());
         post.memberId = requireNonNull(memberId);
         post.category = requireNonNull(request.category());
+        post.status = request.publishImmediately() ? PostStatus.PUBLISHED : PostStatus.DRAFT;
+        post.metaData = request.publishImmediately() ? PostMetaData.createPublished() : PostMetaData.create();
 
-        if (request.publishImmediately()) {
-            post.status = PostStatus.PUBLISHED;
-            post.metaData = PostMetaData.createPublished();
-        } else {
-            post.status = PostStatus.DRAFT;
-            post.metaData = PostMetaData.create();
-        }
-
-        post.addDomainEvent(new PostCreated(
-                post.getId(),
-                memberId,
-                post.category,
-                request.publishImmediately()
-        ));
+        post.creationContext = new PostCreationContext(request.publishImmediately());
 
         return post;
+    }
+
+    public void publishCreationEventIfNeeded() {
+        if (creationContext != null && getId() != null) {
+            addDomainEvent(new PostCreated(
+                    getId(), memberId, category, creationContext.publishImmediately()
+            ));
+            creationContext = null;
+        }
     }
 
     public void update(PostUpdateRequest request) {
@@ -130,6 +130,29 @@ public class Post extends AbstractAggregateRoot {
 
         // 도메인 이벤트 발행
         this.addDomainEvent(new PostDeleted(this.getId(), this.memberId, previousStatus));
+    }
+
+    public void view(Long viewerId) {
+        // 조회수 증가는 PostStats에서 처리하고, 여기서는 이벤트만 발행
+        if (this.getId() != null) {
+            this.addDomainEvent(new PostViewed(this.getId(), viewerId));
+        }
+    }
+
+    public void like(Long memberId) {
+        requireNonNull(memberId, "좋아요를 누를 회원 ID는 필수입니다");
+        
+        if (this.getId() != null) {
+            this.addDomainEvent(new PostLiked(this.getId(), memberId));
+        }
+    }
+
+    public void unlike(Long memberId) {
+        requireNonNull(memberId, "좋아요를 취소할 회원 ID는 필수입니다");
+        
+        if (this.getId() != null) {
+            this.addDomainEvent(new PostUnliked(this.getId(), memberId));
+        }
     }
 
     public boolean isWrittenBy(Long memberId) {
