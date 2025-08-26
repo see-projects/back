@@ -45,7 +45,7 @@ class PostStatsTest {
 
     @Test
     @DisplayName("좋아요 수를 증가시키면 likeCount가 1 증가한다")
-    void incrementLikeCount() {
+    void incrementPublishLikeEventCount() {
         postStats.incrementLikeCount();
 
         assertThat(postStats.getLikeCount()).isEqualTo(1);
@@ -53,7 +53,7 @@ class PostStatsTest {
 
     @Test
     @DisplayName("좋아요 수를 감소시키면 likeCount가 1 감소한다")
-    void decrementLikeCount() {
+    void decrementPublishLikeEventCount() {
         postStats.incrementLikeCount();
         postStats.incrementLikeCount();
         
@@ -64,7 +64,7 @@ class PostStatsTest {
 
     @Test
     @DisplayName("좋아요 수가 0일 때 감소시켜도 likeCount는 0 이하로 내려가지 않는다")
-    void decrementLikeCountWhenZero() {
+    void decrementPublishLikeEventCountWhenZero() {
         postStats.decrementLikeCount();
 
         assertThat(postStats.getLikeCount()).isZero();
