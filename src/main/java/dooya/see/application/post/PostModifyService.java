@@ -39,9 +39,7 @@ public class PostModifyService implements PostManager {
     public Post update(PostUpdateRequest request, Long postId, Long memberId) {
         Post post = postFinder.find(postId);
 
-        if (!post.isWrittenBy(memberId)) {
-            throw new UnauthorizedPostAccessException("본인이 작성한 게시글만 수정할 수 있습니다.");
-        }
+        validatePostOwnership(post, memberId, "수정");
 
         post.update(request);
         
@@ -56,9 +54,7 @@ public class PostModifyService implements PostManager {
     public Post publish(Long postId, Long memberId) {
         Post post = postFinder.find(postId);
 
-        if (!post.isWrittenBy(memberId)) {
-            throw new UnauthorizedPostAccessException("본인이 작성한 게시글만 발행할 수 있습니다.");
-        }
+        validatePostOwnership(post, memberId, "발행");
 
         post.publish();
         
@@ -73,9 +69,7 @@ public class PostModifyService implements PostManager {
     public Post hide(Long postId, Long memberId) {
         Post post = postFinder.find(postId);
 
-        if (!post.isWrittenBy(memberId)) {
-            throw new UnauthorizedPostAccessException("본인이 작성한 게시글만 숨김 처리할 수 있습니다.");
-        }
+        validatePostOwnership(post, memberId, "숨김 처리");
 
         post.hide();
         
@@ -90,9 +84,7 @@ public class PostModifyService implements PostManager {
     public Post delete(Long postId, Long memberId) {
         Post post = postFinder.find(postId);
 
-        if (!post.isWrittenBy(memberId)) {
-            throw new UnauthorizedPostAccessException("본인이 작성한 게시글만 삭제할 수 있습니다.");
-        }
+        validatePostOwnership(post, memberId, "삭제");
 
         post.delete();
         
@@ -107,15 +99,12 @@ public class PostModifyService implements PostManager {
     public Post likePost(Long postId, Long memberId) {
         Post post = postFinder.find(postId);
 
-        if (postLikeRepository.existsByPostIdAndMemberId(postId, memberId)) {
+        if (isAlreadyLiked(postId, memberId)) {
             return post;
         }
 
-        PostLike postLike = PostLike.create(postId, memberId);
-        postLikeRepository.save(postLike);
-
-        post.publishLikeEvent(memberId);
-        publishDomainEvents(post);
+        createAndSaveLike(postId, memberId);
+        publishLikeEvent(post, memberId);
         
         return post;
     }
@@ -124,15 +113,46 @@ public class PostModifyService implements PostManager {
     public Post unlikePost(Long postId, Long memberId) {
         Post post = postFinder.find(postId);
 
-        if (!postLikeRepository.existsByPostIdAndMemberId(postId, memberId)) {
+        if (isNotLiked(postId, memberId)) {
             return post;
         }
 
-        postLikeRepository.deleteByPostIdAndMemberId(postId, memberId);
-
-        post.publishUnlikeEvent(memberId);
-        publishDomainEvents(post);
+        deleteLike(postId, memberId);
+        publishUnlikeEvent(post, memberId);
 
         return post;
+    }
+
+    private void validatePostOwnership(Post post, Long memberId, String action) {
+        if (!post.isWrittenBy(memberId)) {
+            throw new UnauthorizedPostAccessException("본인이 작성한 게시글만 " + action + "할 수 있습니다.");
+        }
+    }
+
+    private boolean isAlreadyLiked(Long postId, Long memberId) {
+        return postLikeRepository.existsByPostIdAndMemberId(postId, memberId);
+    }
+
+    private boolean isNotLiked(Long postId, Long memberId) {
+        return !postLikeRepository.existsByPostIdAndMemberId(postId, memberId);
+    }
+
+    private void createAndSaveLike(Long postId, Long memberId) {
+        PostLike postLike = PostLike.create(postId, memberId);
+        postLikeRepository.save(postLike);
+    }
+
+    private void deleteLike(Long postId, Long memberId) {
+        postLikeRepository.deleteByPostIdAndMemberId(postId, memberId);
+    }
+
+    private void publishLikeEvent(Post post, Long memberId) {
+        post.publishLikeEvent(memberId);
+        publishDomainEvents(post);
+    }
+
+    private void publishUnlikeEvent(Post post, Long memberId) {
+        post.publishUnlikeEvent(memberId);
+        publishDomainEvents(post);
     }
 }
