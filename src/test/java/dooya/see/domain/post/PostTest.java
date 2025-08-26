@@ -406,12 +406,12 @@ class PostTest {
 
     @Test
     @DisplayName("게시글 좋아요 시 PostLiked 도메인 이벤트가 발생한다")
-    void likePostGeneratesDomainEvent() {
+    void publishLikeEventPostGeneratesDomainEvent() {
         Post post = Post.create(createPostRequest(), 1L);
         setPostId(post, 200L);
         post.clearDomainEvents();
 
-        post.like(3L);
+        post.publishLikeEvent(3L);
 
         assertThat(post.hasDomainEvents()).isTrue();
         assertThat(post.getDomainEvents()).hasSize(1);
@@ -426,12 +426,12 @@ class PostTest {
 
     @Test
     @DisplayName("게시글 좋아요 취소 시 PostUnliked 도메인 이벤트가 발생한다")
-    void unlikePostGeneratesDomainEvent() {
+    void publishUnlikeEventPostGeneratesDomainEvent() {
         Post post = Post.create(createPostRequest(), 1L);
         setPostId(post, 300L);
         post.clearDomainEvents();
 
-        post.unlike(4L);
+        post.publishUnlikeEvent(4L);
 
         assertThat(post.hasDomainEvents()).isTrue();
         assertThat(post.getDomainEvents()).hasSize(1);
@@ -446,22 +446,22 @@ class PostTest {
 
     @Test
     @DisplayName("좋아요할 회원 ID가 null이면 IllegalArgumentException이 발생한다")
-    void likeWithNullMemberIdThrowsException() {
+    void publishLikeEventWithNullMemberIdThrowsException() {
         Post post = Post.create(createPostRequest(), 1L);
         setPostId(post, 400L);
 
-        assertThatThrownBy(() -> post.like(null))
+        assertThatThrownBy(() -> post.publishLikeEvent(null))
             .isInstanceOf(NullPointerException.class)
             .hasMessageContaining("좋아요를 누를 회원 ID는 필수입니다");
     }
 
     @Test
     @DisplayName("좋아요 취소할 회원 ID가 null이면 IllegalArgumentException이 발생한다")
-    void unlikeWithNullMemberIdThrowsException() {
+    void publishUnlikeEventWithNullMemberIdThrowsException() {
         Post post = Post.create(createPostRequest(), 1L);
         setPostId(post, 500L);
 
-        assertThatThrownBy(() -> post.unlike(null))
+        assertThatThrownBy(() -> post.publishUnlikeEvent(null))
             .isInstanceOf(NullPointerException.class)
             .hasMessageContaining("좋아요를 취소할 회원 ID는 필수입니다");
     }
