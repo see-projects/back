@@ -2,11 +2,9 @@ package dooya.see.application.post;
 
 import dooya.see.application.post.provided.PostFinder;
 import dooya.see.application.post.provided.PostManager;
+import dooya.see.application.post.required.PostLikeRepository;
 import dooya.see.application.post.required.PostRepository;
-import dooya.see.domain.post.Post;
-import dooya.see.domain.post.PostCreateRequest;
-import dooya.see.domain.post.PostUpdateRequest;
-import dooya.see.domain.post.UnauthorizedPostAccessException;
+import dooya.see.domain.post.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -19,6 +17,7 @@ public class PostModifyService implements PostManager {
     private final PostRepository postRepository;
     private final PostFinder postFinder;
     private final ApplicationEventPublisher eventPublisher;
+    private final PostLikeRepository postLikeRepository;
 
     @Override
     public Post create(PostCreateRequest request, Long memberId) {
@@ -107,9 +106,15 @@ public class PostModifyService implements PostManager {
     @Override
     public Post likePost(Long postId, Long memberId) {
         Post post = postFinder.find(postId);
-        
-        post.like(memberId);
-        
+
+        if (postLikeRepository.existsByPostIdAndMemberId(postId, memberId)) {
+            return post;
+        }
+
+        PostLike postLike = PostLike.create(postId, memberId);
+        postLikeRepository.save(postLike);
+
+        post.publishLikeEvent(memberId);
         publishDomainEvents(post);
         
         return post;
@@ -118,11 +123,16 @@ public class PostModifyService implements PostManager {
     @Override
     public Post unlikePost(Long postId, Long memberId) {
         Post post = postFinder.find(postId);
-        
-        post.unlike(memberId);
-        
+
+        if (!postLikeRepository.existsByPostIdAndMemberId(postId, memberId)) {
+            return post;
+        }
+
+        postLikeRepository.deleteByPostIdAndMemberId(postId, memberId);
+
+        post.publishUnlikeEvent(memberId);
         publishDomainEvents(post);
-        
+
         return post;
     }
 }
