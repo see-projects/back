@@ -1,8 +1,12 @@
 package dooya.see.domain.post;
 
+import dooya.see.domain.post.event.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import dooya.see.domain.shared.DomainEvent;
 
 import static dooya.see.domain.post.PostFixture.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -188,5 +192,284 @@ class PostTest {
     void isWrittenByMember() {
         assertThat(post.isWrittenBy(1L)).isTrue();
         assertThat(post.isWrittenBy(2L)).isFalse();
+    }
+
+    @Test
+    @DisplayName("Post 생성 후 ID 할당하고 이벤트 발행하면 PostCreated 도메인 이벤트가 발생한다")
+    void createPostGeneratesDomainEvent() {
+        PostCreateRequest request = createPostRequest();
+        Long memberId = 1L;
+
+        Post post = Post.create(request, memberId);
+        
+        // 생성 직후에는 이벤트가 없어야 함
+        assertThat(post.hasDomainEvents()).isFalse();
+        
+        // ID를 시뮬레이션으로 할당 (실제로는 JPA가 할당)
+        setPostId(post, 123L);
+        
+        // 이벤트 발행
+        post.publishCreationEventIfNeeded();
+
+        assertThat(post.hasDomainEvents()).isTrue();
+        assertThat(post.getDomainEvents()).hasSize(1);
+        
+        DomainEvent event = post.getDomainEvents().getFirst();
+        assertThat(event).isInstanceOf(PostCreated.class);
+        
+        PostCreated postCreated = (PostCreated) event;
+        assertThat(postCreated.postId()).isEqualTo(123L);
+        assertThat(postCreated.memberId()).isEqualTo(memberId);
+        assertThat(postCreated.category()).isEqualTo(request.category());
+        assertThat(postCreated.publishImmediately()).isEqualTo(request.publishImmediately());
+    }
+
+    @Test
+    @DisplayName("즉시 발행으로 Post 생성 후 ID 할당하고 이벤트 발행하면 PostCreated 이벤트의 publishImmediately가 true다")
+    void createPostWithImmediatePublishGeneratesCorrectEvent() {
+        PostCreateRequest request = createPostRequest(true);
+        Long memberId = 1L;
+
+        Post post = Post.create(request, memberId);
+        
+        // ID를 시뮬레이션으로 할당
+        setPostId(post, 456L);
+        
+        // 이벤트 발행
+        post.publishCreationEventIfNeeded();
+
+        PostCreated event = (PostCreated) post.getDomainEvents().getFirst();
+        assertThat(event.publishImmediately()).isTrue();
+    }
+
+    @Test
+    @DisplayName("게시글 발행 시 PostPublished 도메인 이벤트가 발생한다")
+    void publishPostGeneratesDomainEvent() {
+        Post post = Post.create(createPostRequest(), 1L);
+        post.clearDomainEvents();
+
+        post.publish();
+
+        assertThat(post.hasDomainEvents()).isTrue();
+        assertThat(post.getDomainEvents()).hasSize(1);
+        
+        DomainEvent event = post.getDomainEvents().getFirst();
+        assertThat(event).isInstanceOf(PostPublished.class);
+        
+        PostPublished postPublished = (PostPublished) event;
+        assertThat(postPublished.postId()).isEqualTo(post.getId());
+        assertThat(postPublished.memberId()).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("도메인 이벤트를 클리어하면 이벤트 목록이 비워진다")
+    void clearDomainEvents() {
+        Post post = Post.create(createPostRequest(), 1L);
+        
+        // ID 할당 후 이벤트 발행
+        setPostId(post, 789L);
+        post.publishCreationEventIfNeeded();
+        
+        assertThat(post.hasDomainEvents()).isTrue();
+
+        post.clearDomainEvents();
+
+        assertThat(post.hasDomainEvents()).isFalse();
+        assertThat(post.getDomainEvents()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("게시글 수정 시 PostUpdated 도메인 이벤트가 발생한다")
+    void updatePostGeneratesDomainEvent() {
+        Post post = Post.create(createPostRequest(), 1L);
+        post.clearDomainEvents();
+        PostUpdateRequest request = updateAllFieldsRequest();
+
+        post.update(request);
+
+        assertThat(post.hasDomainEvents()).isTrue();
+        assertThat(post.getDomainEvents()).hasSize(1);
+        
+        DomainEvent event = post.getDomainEvents().getFirst();
+        assertThat(event).isInstanceOf(PostUpdated.class);
+        
+        PostUpdated postUpdated = (PostUpdated) event;
+        assertThat(postUpdated.postId()).isEqualTo(post.getId());
+        assertThat(postUpdated.memberId()).isEqualTo(1L);
+        assertThat(postUpdated.titleChanged()).isTrue();
+        assertThat(postUpdated.bodyChanged()).isTrue();
+        assertThat(postUpdated.categoryChanged()).isTrue();
+    }
+
+    @Test
+    @DisplayName("제목만 수정 시 PostUpdated 이벤트에서 titleChanged만 true다")
+    void updateTitleOnlyGeneratesCorrectEvent() {
+        Post post = Post.create(createPostRequest(), 1L);
+        post.clearDomainEvents();
+        PostUpdateRequest request = updateTitleOnlyRequest();
+
+        post.update(request);
+
+        PostUpdated event = (PostUpdated) post.getDomainEvents().getFirst();
+        assertThat(event.titleChanged()).isTrue();
+        assertThat(event.bodyChanged()).isFalse();
+        assertThat(event.categoryChanged()).isFalse();
+    }
+
+    @Test
+    @DisplayName("게시글 숨김 시 PostHidden 도메인 이벤트가 발생한다")
+    void hidePostGeneratesDomainEvent() {
+        Post post = Post.create(createPostRequest(), 1L);
+        post.publish();
+        post.clearDomainEvents();
+
+        post.hide();
+
+        assertThat(post.hasDomainEvents()).isTrue();
+        assertThat(post.getDomainEvents()).hasSize(1);
+        
+        DomainEvent event = post.getDomainEvents().getFirst();
+        assertThat(event).isInstanceOf(PostHidden.class);
+        
+        PostHidden postHidden = (PostHidden) event;
+        assertThat(postHidden.postId()).isEqualTo(post.getId());
+        assertThat(postHidden.memberId()).isEqualTo(1L);
+        assertThat(postHidden.previousStatus()).isEqualTo(PostStatus.PUBLISHED);
+    }
+
+    @Test
+    @DisplayName("게시글 삭제 시 PostDeleted 도메인 이벤트가 발생한다")
+    void deletePostGeneratesDomainEvent() {
+        Post post = Post.create(createPostRequest(), 1L);
+        post.publish();
+        post.clearDomainEvents();
+
+        post.delete();
+
+        assertThat(post.hasDomainEvents()).isTrue();
+        assertThat(post.getDomainEvents()).hasSize(1);
+        
+        DomainEvent event = post.getDomainEvents().getFirst();
+        assertThat(event).isInstanceOf(PostDeleted.class);
+        
+        PostDeleted postDeleted = (PostDeleted) event;
+        assertThat(postDeleted.postId()).isEqualTo(post.getId());
+        assertThat(postDeleted.memberId()).isEqualTo(1L);
+        assertThat(postDeleted.previousStatus()).isEqualTo(PostStatus.PUBLISHED);
+    }
+
+    @Test
+    @DisplayName("DRAFT 상태에서 숨김 처리 시 이전 상태가 DRAFT로 기록된다")
+    void hideDraftPostGeneratesEventWithCorrectPreviousStatus() {
+        Post post = Post.create(createPostRequest(), 1L);
+        post.clearDomainEvents();
+
+        post.hide();
+
+        PostHidden event = (PostHidden) post.getDomainEvents().getFirst();
+        assertThat(event.previousStatus()).isEqualTo(PostStatus.DRAFT);
+    }
+
+    @Test
+    @DisplayName("게시글 조회 시 PostViewed 도메인 이벤트가 발생한다")
+    void viewPostGeneratesDomainEvent() {
+        Post post = Post.create(createPostRequest(), 1L);
+        setPostId(post, 100L);
+        post.clearDomainEvents();
+
+        post.view(2L);  // 다른 사용자가 조회
+
+        assertThat(post.hasDomainEvents()).isTrue();
+        assertThat(post.getDomainEvents()).hasSize(1);
+        
+        DomainEvent event = post.getDomainEvents().getFirst();
+        assertThat(event).isInstanceOf(PostViewed.class);
+        
+        PostViewed postViewed = (PostViewed) event;
+        assertThat(postViewed.postId()).isEqualTo(100L);
+        assertThat(postViewed.memberId()).isEqualTo(2L);
+    }
+
+    @Test
+    @DisplayName("익명 사용자가 게시글 조회 시 PostViewed 이벤트의 memberId가 null이다")
+    void viewPostByAnonymousUserGeneratesCorrectEvent() {
+        Post post = Post.create(createPostRequest(), 1L);
+        setPostId(post, 100L);
+        post.clearDomainEvents();
+
+        post.view(null);  // 익명 사용자 조회
+
+        PostViewed event = (PostViewed) post.getDomainEvents().getFirst();
+        assertThat(event.postId()).isEqualTo(100L);
+        assertThat(event.memberId()).isNull();
+    }
+
+    @Test
+    @DisplayName("게시글 좋아요 시 PostLiked 도메인 이벤트가 발생한다")
+    void publishLikeEventPostGeneratesDomainEvent() {
+        Post post = Post.create(createPostRequest(), 1L);
+        setPostId(post, 200L);
+        post.clearDomainEvents();
+
+        post.publishLikeEvent(3L);
+
+        assertThat(post.hasDomainEvents()).isTrue();
+        assertThat(post.getDomainEvents()).hasSize(1);
+        
+        DomainEvent event = post.getDomainEvents().getFirst();
+        assertThat(event).isInstanceOf(PostLiked.class);
+        
+        PostLiked postLiked = (PostLiked) event;
+        assertThat(postLiked.postId()).isEqualTo(200L);
+        assertThat(postLiked.memberId()).isEqualTo(3L);
+    }
+
+    @Test
+    @DisplayName("게시글 좋아요 취소 시 PostUnliked 도메인 이벤트가 발생한다")
+    void publishUnlikeEventPostGeneratesDomainEvent() {
+        Post post = Post.create(createPostRequest(), 1L);
+        setPostId(post, 300L);
+        post.clearDomainEvents();
+
+        post.publishUnlikeEvent(4L);
+
+        assertThat(post.hasDomainEvents()).isTrue();
+        assertThat(post.getDomainEvents()).hasSize(1);
+        
+        DomainEvent event = post.getDomainEvents().getFirst();
+        assertThat(event).isInstanceOf(PostUnliked.class);
+        
+        PostUnliked postUnliked = (PostUnliked) event;
+        assertThat(postUnliked.postId()).isEqualTo(300L);
+        assertThat(postUnliked.memberId()).isEqualTo(4L);
+    }
+
+    @Test
+    @DisplayName("좋아요할 회원 ID가 null이면 IllegalArgumentException이 발생한다")
+    void publishLikeEventWithNullMemberIdThrowsException() {
+        Post post = Post.create(createPostRequest(), 1L);
+        setPostId(post, 400L);
+
+        assertThatThrownBy(() -> post.publishLikeEvent(null))
+            .isInstanceOf(NullPointerException.class)
+            .hasMessageContaining("좋아요를 누를 회원 ID는 필수입니다");
+    }
+
+    @Test
+    @DisplayName("좋아요 취소할 회원 ID가 null이면 IllegalArgumentException이 발생한다")
+    void publishUnlikeEventWithNullMemberIdThrowsException() {
+        Post post = Post.create(createPostRequest(), 1L);
+        setPostId(post, 500L);
+
+        assertThatThrownBy(() -> post.publishUnlikeEvent(null))
+            .isInstanceOf(NullPointerException.class)
+            .hasMessageContaining("좋아요를 취소할 회원 ID는 필수입니다");
+    }
+    
+    /**
+     * 테스트용 헬퍼 메서드: Post 엔티티에 ID를 설정
+     */
+    private void setPostId(Post post, Long id) {
+        ReflectionTestUtils.setField(post, "id", id);
     }
 }

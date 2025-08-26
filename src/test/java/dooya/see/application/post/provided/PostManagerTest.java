@@ -1,11 +1,13 @@
 package dooya.see.application.post.provided;
 
 import dooya.see.SeeTestConfiguration;
+import dooya.see.application.post.required.PostLikeRepository;
 import dooya.see.domain.post.*;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,7 +18,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @SpringBootTest
 @Transactional
 @Import(SeeTestConfiguration.class)
-record PostManagerTest(PostManager postManager, EntityManager entityManager, PostFinder postFinder) {
+record PostManagerTest(
+    PostManager postManager, 
+    EntityManager entityManager, 
+    PostFinder postFinder, 
+    ApplicationEventPublisher eventPublisher,
+    PostLikeRepository postLikeRepository
+) {
 
     @Test
     @DisplayName("게시글 생성 시 ID가 할당되고 초기 상태는 DRAFT가 된다")
@@ -193,6 +201,134 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
 
         assertThatThrownBy(() -> postManager.delete(post.getId(), 1L))
                 .isInstanceOf(InvalidPostStatusTransitionException.class);
+    }
+
+    @Test
+    @DisplayName("게시글에 좋아요를 누르면 PostLike가 저장된다")
+    void likePost() {
+        Post post = createPost();
+        Long memberId = 2L;
+        
+        Post result = postManager.likePost(post.getId(), memberId);
+        
+        assertThat(result.getId()).isEqualTo(post.getId());
+        assertThat(postLikeRepository.existsByPostIdAndMemberId(post.getId(), memberId)).isTrue();
+        assertThat(postLikeRepository.countByPostId(post.getId())).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("게시글 좋아요를 취소하면 PostLike가 삭제된다")
+    void unlikePost() {
+        Post post = createPost();
+        Long memberId = 3L;
+        
+        postManager.likePost(post.getId(), memberId);
+        assertThat(postLikeRepository.existsByPostIdAndMemberId(post.getId(), memberId)).isTrue();
+        
+        Post result = postManager.unlikePost(post.getId(), memberId);
+        
+        assertThat(result.getId()).isEqualTo(post.getId());
+        assertThat(postLikeRepository.existsByPostIdAndMemberId(post.getId(), memberId)).isFalse();
+        assertThat(postLikeRepository.countByPostId(post.getId())).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("동일 회원이 같은 게시글에 중복 좋아요를 누르면 멱등성이 보장된다")
+    void likeDuplicatePost() {
+        Post post = createPost();
+        Long memberId = 4L;
+        
+        postManager.likePost(post.getId(), memberId);
+        
+        assertThat(postLikeRepository.existsByPostIdAndMemberId(post.getId(), memberId)).isTrue();
+        long firstLikeCount = postLikeRepository.countByPostId(post.getId());
+        assertThat(firstLikeCount).isEqualTo(1);
+        
+        postManager.likePost(post.getId(), memberId);
+        
+        long secondLikeCount = postLikeRepository.countByPostId(post.getId());
+        assertThat(secondLikeCount).isEqualTo(1);
+        assertThat(postLikeRepository.existsByPostIdAndMemberId(post.getId(), memberId)).isTrue();
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 좋아요를 취소하면 멱등성이 보장된다")
+    void unlikeNonExistentLike() {
+        Post post = createPost();
+        Long memberId = 5L;
+        
+        postManager.unlikePost(post.getId(), memberId);
+        
+        assertThat(postLikeRepository.existsByPostIdAndMemberId(post.getId(), memberId)).isFalse();
+        assertThat(postLikeRepository.countByPostId(post.getId())).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("여러 회원이 동일 게시글에 좋아요를 누를 수 있다")
+    void likePostByMultipleMembers() {
+        Post post = createPost();
+        Long member1 = 10L;
+        Long member2 = 20L;
+        Long member3 = 30L;
+        
+        postManager.likePost(post.getId(), member1);
+        postManager.likePost(post.getId(), member2);
+        postManager.likePost(post.getId(), member3);
+        
+        assertThat(postLikeRepository.countByPostId(post.getId())).isEqualTo(3);
+        assertThat(postLikeRepository.existsByPostIdAndMemberId(post.getId(), member1)).isTrue();
+        assertThat(postLikeRepository.existsByPostIdAndMemberId(post.getId(), member2)).isTrue();
+        assertThat(postLikeRepository.existsByPostIdAndMemberId(post.getId(), member3)).isTrue();
+    }
+
+    @Test
+    @DisplayName("좋아요 후 중복 좋아요를 시도해도 1개만 유지된다")
+    void maintainSingleLikeAfterDuplicateAttempts() {
+        Post post = createPost();
+        Long memberId = 6L;
+        
+        postManager.likePost(post.getId(), memberId);
+        long initialCount = postLikeRepository.countByPostId(post.getId());
+        
+        postManager.likePost(post.getId(), memberId);
+        postManager.likePost(post.getId(), memberId);
+        postManager.likePost(post.getId(), memberId);
+        
+        long finalCount = postLikeRepository.countByPostId(post.getId());
+        assertThat(initialCount).isEqualTo(1);
+        assertThat(finalCount).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("좋아요 취소 후 다시 좋아요를 누를 수 있다")
+    void likeAfterUnlike() {
+        Post post = createPost();
+        Long memberId = 7L;
+        
+        postManager.likePost(post.getId(), memberId);
+        assertThat(postLikeRepository.existsByPostIdAndMemberId(post.getId(), memberId)).isTrue();
+        
+        postManager.unlikePost(post.getId(), memberId);
+        assertThat(postLikeRepository.existsByPostIdAndMemberId(post.getId(), memberId)).isFalse();
+        
+        postManager.likePost(post.getId(), memberId);
+        
+        assertThat(postLikeRepository.existsByPostIdAndMemberId(post.getId(), memberId)).isTrue();
+        assertThat(postLikeRepository.countByPostId(post.getId())).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 게시글에 좋아요를 누르려고 하면 PostNotFoundException이 발생한다")
+    void likeNonExistentPost() {
+        assertThatThrownBy(() -> postManager.likePost(999L, 1L))
+                .isInstanceOf(PostNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 게시글의 좋아요를 취소하려고 하면 PostNotFoundException이 발생한다")
+    void unlikeNonExistentPost() {
+        assertThatThrownBy(() -> postManager.unlikePost(999L, 1L))
+                .isInstanceOf(PostNotFoundException.class);
     }
 
     private Post createPost() {

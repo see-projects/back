@@ -14,4 +14,8 @@ public interface PostManager {
     Post hide(Long postId, Long memberId);
 
     Post delete(Long postId, Long memberId);
+
+    Post likePost(Long postId, Long memberId);
+
+    Post unlikePost(Long postId, Long memberId);
 }

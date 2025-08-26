@@ -4,6 +4,7 @@ import dooya.see.application.post.provided.PostFinder;
 import dooya.see.application.post.required.PostRepository;
 import dooya.see.domain.post.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +15,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PostQueryService implements PostFinder {
     private final PostRepository postRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public Post find(Long postId) {
@@ -48,5 +50,23 @@ public class PostQueryService implements PostFinder {
     @Override
     public List<Post> search(PostSearchRequest searchRequest) {
         return postRepository.search(searchRequest);
+    }
+
+    @Override
+    public Post viewPost(Long postId, Long viewerId) {
+        Post post = find(postId);
+        
+        // 조회 이벤트 발행 (조회수 증가)
+        post.view(viewerId);
+        
+        // 도메인 이벤트 발행
+        publishDomainEvents(post);
+        
+        return post;
+    }
+
+    private void publishDomainEvents(Post post) {
+        post.getDomainEvents().forEach(eventPublisher::publishEvent);
+        post.clearDomainEvents();
     }
 }
