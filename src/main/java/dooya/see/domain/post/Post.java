@@ -139,7 +139,7 @@ public class Post extends AbstractAggregateRoot {
         }
     }
 
-    public void like(Long memberId) {
+    public void publishLikeEvent(Long memberId) {
         requireNonNull(memberId, "좋아요를 누를 회원 ID는 필수입니다");
         
         if (this.getId() != null) {
@@ -147,7 +147,7 @@ public class Post extends AbstractAggregateRoot {
         }
     }
 
-    public void unlike(Long memberId) {
+    public void publishUnlikeEvent(Long memberId) {
         requireNonNull(memberId, "좋아요를 취소할 회원 ID는 필수입니다");
         
         if (this.getId() != null) {
