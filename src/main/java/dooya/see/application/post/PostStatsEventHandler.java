@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 @Slf4j
 @Component
@@ -16,14 +18,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class PostStatsEventHandler {
     private final PostStatsRepository postStatsRepository;
 
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePostCreated(PostCreated event) {
         log.info("PostCreated 이벤트 처리: postId={}, memberId={}", event.postId(), event.memberId());
         PostStats stats = PostStats.create(event.postId());
         postStatsRepository.save(stats);
     }
 
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePostViewed(PostViewed event) {
         if (event.postId() != null) {
             log.info("PostViewed 이벤트 처리: postId={}, viewerId={}", event.postId(), event.memberId());
@@ -32,7 +34,7 @@ public class PostStatsEventHandler {
         }
     }
 
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePostLiked(PostLiked event) {
         if (event.postId() != null) {
             log.info("PostLiked 이벤트 처리: postId={}, memberId={}", event.postId(), event.memberId());
@@ -41,7 +43,7 @@ public class PostStatsEventHandler {
         }
     }
 
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePostUnliked(PostUnliked event) {
         if (event.postId() != null) {
             log.info("PostUnliked 이벤트 처리: postId={}, memberId={}", event.postId(), event.memberId());
@@ -50,27 +52,27 @@ public class PostStatsEventHandler {
         }
     }
 
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePostUpdated(PostUpdated event) {
         log.info("PostUpdated 이벤트 처리: postId={}, memberId={}, titleChanged={}, bodyChanged={}, categoryChanged={}", 
             event.postId(), event.memberId(), event.titleChanged(), event.bodyChanged(), event.categoryChanged());
         // 게시글 수정 시 특별한 통계 처리는 없지만 로그는 남김
     }
 
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePostPublished(PostPublished event) {
         log.info("PostPublished 이벤트 처리: postId={}, memberId={}", event.postId(), event.memberId());
         // 게시글 발행 시 특별한 통계 처리는 없지만 로그는 남김
     }
 
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePostHidden(PostHidden event) {
         log.info("PostHidden 이벤트 처리: postId={}, memberId={}, previousStatus={}", 
             event.postId(), event.memberId(), event.previousStatus());
         // 게시글 숨김 시 특별한 통계 처리는 없지만 로그는 남김
     }
 
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePostDeleted(PostDeleted event) {
         log.info("PostDeleted 이벤트 처리: postId={}, memberId={}, previousStatus={}", 
             event.postId(), event.memberId(), event.previousStatus());
