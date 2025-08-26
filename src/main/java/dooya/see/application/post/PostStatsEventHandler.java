@@ -18,14 +18,14 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public class PostStatsEventHandler {
     private final PostStatsRepository postStatsRepository;
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @EventListener
     public void handlePostCreated(PostCreated event) {
         log.info("PostCreated 이벤트 처리: postId={}, memberId={}", event.postId(), event.memberId());
         PostStats stats = PostStats.create(event.postId());
         postStatsRepository.save(stats);
     }
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @EventListener
     public void handlePostViewed(PostViewed event) {
         if (event.postId() != null) {
             log.info("PostViewed 이벤트 처리: postId={}, viewerId={}", event.postId(), event.memberId());
@@ -34,7 +34,7 @@ public class PostStatsEventHandler {
         }
     }
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @EventListener
     public void handlePostLiked(PostLiked event) {
         if (event.postId() != null) {
             log.info("PostLiked 이벤트 처리: postId={}, memberId={}", event.postId(), event.memberId());
@@ -43,7 +43,7 @@ public class PostStatsEventHandler {
         }
     }
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @EventListener
     public void handlePostUnliked(PostUnliked event) {
         if (event.postId() != null) {
             log.info("PostUnliked 이벤트 처리: postId={}, memberId={}", event.postId(), event.memberId());
@@ -52,29 +52,29 @@ public class PostStatsEventHandler {
         }
     }
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @EventListener
     public void handlePostUpdated(PostUpdated event) {
-        log.info("PostUpdated 이벤트 처리: postId={}, memberId={}, titleChanged={}, bodyChanged={}, categoryChanged={}", 
+        log.info("PostUpdated 이벤트 처리: postId={}, memberId={}, titleChanged={}, bodyChanged={}, categoryChanged={}",
             event.postId(), event.memberId(), event.titleChanged(), event.bodyChanged(), event.categoryChanged());
         // 게시글 수정 시 특별한 통계 처리는 없지만 로그는 남김
     }
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @EventListener
     public void handlePostPublished(PostPublished event) {
         log.info("PostPublished 이벤트 처리: postId={}, memberId={}", event.postId(), event.memberId());
         // 게시글 발행 시 특별한 통계 처리는 없지만 로그는 남김
     }
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @EventListener
     public void handlePostHidden(PostHidden event) {
-        log.info("PostHidden 이벤트 처리: postId={}, memberId={}, previousStatus={}", 
+        log.info("PostHidden 이벤트 처리: postId={}, memberId={}, previousStatus={}",
             event.postId(), event.memberId(), event.previousStatus());
         // 게시글 숨김 시 특별한 통계 처리는 없지만 로그는 남김
     }
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @EventListener
     public void handlePostDeleted(PostDeleted event) {
-        log.info("PostDeleted 이벤트 처리: postId={}, memberId={}, previousStatus={}", 
+        log.info("PostDeleted 이벤트 처리: postId={}, memberId={}, previousStatus={}",
             event.postId(), event.memberId(), event.previousStatus());
         // 게시글 삭제 시 통계 데이터도 삭제할 수 있지만, 지금은 로그만 남김
         // 실제로는 비즈니스 요구사항에 따라 통계 데이터 보존/삭제 결정
