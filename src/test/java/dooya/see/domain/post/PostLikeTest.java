@@ -8,8 +8,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class PostLikeTest {
     @Test
-    @DisplayName("")
-    void a() {
+    @DisplayName("PostLike.create는 postId/memberId/likedAt을 설정한다")
+    void create_setsFields() {
         PostLike postLike = PostLike.create(1L, 1L);
 
         assertNotNull(postLike);
