@@ -83,8 +83,14 @@ tasks.jacocoTestCoverageVerification {
     violationRules {
         rule {
             limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
                 minimum = "0.80".toBigDecimal()
             }
         }
     }
+}
+
+tasks.check {
+    dependsOn(tasks.jacocoTestCoverageVerification, tasks.jacocoTestReport)
 }
