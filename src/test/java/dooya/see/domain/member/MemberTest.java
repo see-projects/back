@@ -19,30 +19,30 @@ class MemberTest {
         member = Member.register(createMemberRegisterRequest(), passwordEncoder);
     }
 
-    @Test
     @DisplayName("등록된 회원은 ACTIVE 상태이고 등록일시가 설정되어 있다")
+    @Test
     void memberRegister() {
         assertThat(member.getStatus()).isEqualTo(MemberStatus.ACTIVE);
         assertThat(member.getDetail().getRegisteredAt()).isNotNull();
     }
 
-    @Test
     @DisplayName("올바른 비밀번호와 틀린 비밀번호를 구분하여 검증한다")
+    @Test
     void verifyPassword() {
         assertThat(member.verifyPassword("longsecret", passwordEncoder)).isTrue();
         assertThat(member.verifyPassword("longsecret1", passwordEncoder)).isFalse();
     }
 
-    @Test
     @DisplayName("비밀번호 변경 후 새 비밀번호로만 인증에 성공한다")
+    @Test
     void changePassword() {
         member.changePassword("verysecret", passwordEncoder);
 
         assertThat(member.verifyPassword("verysecret", passwordEncoder)).isTrue();
     }
 
-    @Test
     @DisplayName("회원 비활성화 시 DEACTIVATED 상태와 비활성화일시가 설정된다")
+    @Test
     void deactivate() {
         member.deactivate();
 
@@ -50,8 +50,8 @@ class MemberTest {
         assertThat(member.getDetail().getDeactivatedAt()).isNotNull();
     }
 
-    @Test
     @DisplayName("이미 비활성화된 회원을 다시 비활성화하면 예외가 발생한다")
+    @Test
     void deactivateAlreadyDeactivatedMember() {
         member.deactivate();
 
@@ -59,8 +59,8 @@ class MemberTest {
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test
     @DisplayName("회원 정보 수정 시 닉네임, 프로필 주소, 자기소개가 변경된다")
+    @Test
     void updateInfo() {
         var request = new MemberInfoUpdateRequest("dooya", "korea", "자기소개");
         member.updateInfo(request);

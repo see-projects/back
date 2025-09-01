@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class PostStatsTest {
-    
     PostStats postStats;
     
     @BeforeEach
@@ -15,8 +14,8 @@ class PostStatsTest {
         postStats = PostStats.create(1L);
     }
 
-    @Test
     @DisplayName("PostStats 생성 시 postId가 설정되고 모든 통계 수치는 0으로 초기화된다")
+    @Test
     void createPostStats() {
         assertThat(postStats.getPostId()).isEqualTo(1L);
         assertThat(postStats.getViewCount()).isZero();
@@ -25,16 +24,16 @@ class PostStatsTest {
         assertThat(postStats.hasValidStats()).isTrue();
     }
 
-    @Test
     @DisplayName("조회수를 증가시키면 viewCount가 1 증가한다")
+    @Test
     void incrementViewCount() {
         postStats.incrementViewCount();
 
         assertThat(postStats.getViewCount()).isEqualTo(1);
     }
 
-    @Test
     @DisplayName("조회수를 여러 번 증가시키면 증가한 횟수만큼 viewCount가 증가한다")
+    @Test
     void incrementViewCountMultipleTimes() {
         postStats.incrementViewCount();
         postStats.incrementViewCount();
@@ -43,16 +42,16 @@ class PostStatsTest {
         assertThat(postStats.getViewCount()).isEqualTo(3);
     }
 
-    @Test
     @DisplayName("좋아요 수를 증가시키면 likeCount가 1 증가한다")
+    @Test
     void incrementPublishLikeEventCount() {
         postStats.incrementLikeCount();
 
         assertThat(postStats.getLikeCount()).isEqualTo(1);
     }
 
-    @Test
     @DisplayName("좋아요 수를 감소시키면 likeCount가 1 감소한다")
+    @Test
     void decrementPublishLikeEventCount() {
         postStats.incrementLikeCount();
         postStats.incrementLikeCount();
@@ -62,24 +61,24 @@ class PostStatsTest {
         assertThat(postStats.getLikeCount()).isEqualTo(1);
     }
 
-    @Test
     @DisplayName("좋아요 수가 0일 때 감소시켜도 likeCount는 0 이하로 내려가지 않는다")
+    @Test
     void decrementPublishLikeEventCountWhenZero() {
         postStats.decrementLikeCount();
 
         assertThat(postStats.getLikeCount()).isZero();
     }
 
-    @Test
     @DisplayName("댓글 수를 증가시키면 commentCount가 1 증가한다")
+    @Test
     void incrementCommentCount() {
         postStats.incrementCommentCount();
 
         assertThat(postStats.getCommentCount()).isEqualTo(1);
     }
 
-    @Test
     @DisplayName("댓글 수를 감소시키면 commentCount가 1 감소한다")
+    @Test
     void decrementCommentCount() {
         postStats.incrementCommentCount();
         postStats.incrementCommentCount();
@@ -89,16 +88,16 @@ class PostStatsTest {
         assertThat(postStats.getCommentCount()).isEqualTo(1);
     }
 
-    @Test
     @DisplayName("댓글 수가 0일 때 감소시켜도 commentCount는 0 이하로 내려가지 않는다")
+    @Test
     void decrementCommentCountWhenZero() {
         postStats.decrementCommentCount();
 
         assertThat(postStats.getCommentCount()).isZero();
     }
 
-    @Test
     @DisplayName("조회수 1000 이상이거나 좋아요 100 이상이면 인기 게시물로 판단한다")
+    @Test
     void isPopular() {
         // 조회수 1000 이상
         for (int i = 0; i < 1000; i++) {
@@ -118,8 +117,8 @@ class PostStatsTest {
         assertThat(unpopularStats.isPopular()).isFalse();
     }
 
-    @Test
     @DisplayName("조회수 10000 이상이거나 좋아요 1000 이상이면 바이럴 게시물로 판단한다")
+    @Test
     void isViral() {
         // 조회수 10000 이상
         for (int i = 0; i < 10000; i++) {
@@ -139,8 +138,8 @@ class PostStatsTest {
         assertThat(nonViralStats.isViral()).isFalse();
     }
 
-    @Test
     @DisplayName("좋아요나 댓글이 하나라도 있으면 참여도가 있다고 판단한다")
+    @Test
     void hasEngagement() {
         assertThat(postStats.hasEngagement()).isFalse();
 
@@ -152,8 +151,8 @@ class PostStatsTest {
         assertThat(newStats.hasEngagement()).isTrue();
     }
 
-    @Test
     @DisplayName("참여율은 (좋아요 + 댓글) / 조회수 * 100으로 계산된다")
+    @Test
     void getEngagementRate() {
         // 조회수가 0이면 참여율 0
         assertThat(postStats.getEngagementRate()).isZero();
@@ -172,8 +171,8 @@ class PostStatsTest {
         assertThat(postStats.getEngagementRate()).isEqualTo(15.0);
     }
 
-    @Test
     @DisplayName("모든 통계 수치가 0 이상이면 유효한 통계로 판단한다")
+    @Test
     void hasValidStats() {
         assertThat(postStats.hasValidStats()).isTrue();
 

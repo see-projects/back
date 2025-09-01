@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class SecurePasswordEncoderTest {
-    @Test
     @DisplayName("비밀번호 암호화 후 올바른 비밀번호는 검증 성공하고 잘못된 비밀번호는 검증 실패한다")
+    @Test
     void securePasswordEncoder() {
         SecurePasswordEncoder securePasswordEncoder = new SecurePasswordEncoder();
 

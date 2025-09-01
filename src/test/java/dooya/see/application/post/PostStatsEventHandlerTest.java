@@ -18,9 +18,8 @@ import static org.assertj.core.api.Assertions.*;
 @Transactional
 @Import(SeeTestConfiguration.class)
 record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, PostStatsRepository postStatsRepository) {
-
-    @Test
     @DisplayName("PostCreated 이벤트 처리 시 PostStats가 생성된다")
+    @Test
     void handlePostCreated() {
         PostCreated event = new PostCreated(100L, 1L, TECH, false);
 
@@ -33,8 +32,8 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
         assertThat(stats.getCommentCount()).isEqualTo(0);
     }
 
-    @Test
     @DisplayName("PostViewed 이벤트 처리 시 조회수가 증가한다")
+    @Test
     void handlePostViewed() {
         Long postId = 200L;
         createPostStats(postId);
@@ -48,8 +47,8 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
         assertThat(stats.getCommentCount()).isEqualTo(0);
     }
 
-    @Test
     @DisplayName("익명 사용자의 PostViewed 이벤트도 정상 처리된다")
+    @Test
     void handlePostViewedByAnonymousUser() {
         Long postId = 300L;
         createPostStats(postId);
@@ -61,8 +60,8 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
         assertThat(stats.getViewCount()).isEqualTo(1);
     }
 
-    @Test
     @DisplayName("PostLiked 이벤트 처리 시 좋아요 수가 증가한다")
+    @Test
     void handlePostLiked() {
         Long postId = 400L;
         createPostStats(postId);
@@ -76,8 +75,8 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
         assertThat(stats.getCommentCount()).isEqualTo(0);
     }
 
-    @Test
     @DisplayName("PostUnliked 이벤트 처리 시 좋아요 수가 감소한다")
+    @Test
     void handlePostUnliked() {
         Long postId = 500L;
         PostStats stats = createPostStats(postId);
@@ -90,8 +89,8 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
         assertThat(updatedStats.getLikeCount()).isEqualTo(0);
     }
 
-    @Test
     @DisplayName("좋아요 수가 0일 때 PostUnliked 이벤트 처리해도 음수가 되지 않는다")
+    @Test
     void handlePostUnlikedWhenPublishLikeEventCountIsZero() {
         Long postId = 600L;
         createPostStats(postId);
@@ -103,8 +102,8 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
         assertThat(stats.getLikeCount()).isEqualTo(0);
     }
 
-    @Test
     @DisplayName("여러 이벤트를 순차적으로 처리할 수 있다")
+    @Test
     void handleMultipleEvents() {
         Long postId = 700L;
         createPostStats(postId);
@@ -127,8 +126,8 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
         assertThat(stats.getCommentCount()).isEqualTo(0);
     }
 
-    @Test
     @DisplayName("존재하지 않는 게시글의 PostViewed 이벤트는 조용히 무시된다")
+    @Test
     void handlePostViewedForNonExistentPost() {
         PostViewed event = new PostViewed(999L, 1L);
 
@@ -138,8 +137,8 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
         assertThat(postStatsRepository.findByPostId(999L)).isEmpty();
     }
 
-    @Test
     @DisplayName("존재하지 않는 게시글의 PostLiked 이벤트는 조용히 무시된다")
+    @Test
     void handlePostLikedForNonExistentPost() {
         PostLiked event = new PostLiked(888L, 1L);
 
@@ -149,8 +148,8 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
         assertThat(postStatsRepository.findByPostId(888L)).isEmpty();
     }
 
-    @Test
     @DisplayName("PostUpdated 이벤트는 로그만 남기고 특별한 처리를 하지 않는다")
+    @Test
     void handlePostUpdated() {
         PostUpdated event = new PostUpdated(100L, 1L, true, false, true);
 
@@ -158,8 +157,8 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
                 .doesNotThrowAnyException();
     }
 
-    @Test
     @DisplayName("PostPublished 이벤트는 로그만 남기고 특별한 처리를 하지 않는다")
+    @Test
     void handlePostPublished() {
         PostPublished event = new PostPublished(100L, 1L);
 
@@ -167,8 +166,8 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
                 .doesNotThrowAnyException();
     }
 
-    @Test
     @DisplayName("PostHidden 이벤트는 로그만 남기고 특별한 처리를 하지 않는다")
+    @Test
     void handlePostHidden() {
         PostHidden event = new PostHidden(100L, 1L, PostStatus.PUBLISHED);
 
@@ -176,8 +175,8 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
                 .doesNotThrowAnyException();
     }
 
-    @Test
     @DisplayName("PostDeleted 이벤트는 로그만 남기고 특별한 처리를 하지 않는다")
+    @Test
     void handlePostDeleted() {
         PostDeleted event = new PostDeleted(100L, 1L, PostStatus.PUBLISHED);
 
@@ -185,8 +184,8 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
                 .doesNotThrowAnyException();
     }
 
-    @Test
     @DisplayName("postId가 null인 이벤트들은 조용히 무시된다")
+    @Test
     void handleEventsWithNullPostId() {
         PostViewed viewEvent = new PostViewed(null, 1L);
         PostLiked likeEvent = new PostLiked(null, 1L);

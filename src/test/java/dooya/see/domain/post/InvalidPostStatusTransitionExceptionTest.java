@@ -9,9 +9,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class InvalidPostStatusTransitionExceptionTest {
-
-    @DisplayName("현재 상태와 시도한 작업으로 예외가 생성된다")
     @Test
+    @DisplayName("현재 상태와 시도한 작업으로 예외가 생성된다")
     void createExceptionWithCurrentStatusAndAction() {
         PostStatus currentStatus = PostStatus.PUBLISHED;
         String attemptedAction = "delete";
@@ -26,9 +25,9 @@ class InvalidPostStatusTransitionExceptionTest {
         assertThat(exception).isInstanceOf(RuntimeException.class);
     }
 
-    @DisplayName("모든 PostStatus에 대해 예외가 생성된다")
     @ParameterizedTest
     @EnumSource(PostStatus.class)
+    @DisplayName("모든 PostStatus에 대해 예외가 생성된다")
     void createExceptionWithAllPostStatuses(PostStatus status) {
         String attemptedAction = "invalidAction";
 
@@ -42,9 +41,9 @@ class InvalidPostStatusTransitionExceptionTest {
             .contains(attemptedAction);
     }
 
-    @DisplayName("다양한 작업 이름으로 예외가 생성된다")
     @ParameterizedTest
     @ValueSource(strings = {"publish", "hide", "delete", "edit", "archive"})
+    @DisplayName("다양한 작업 이름으로 예외가 생성된다")
     void createExceptionWithVariousActions(String action) {
         PostStatus currentStatus = PostStatus.DRAFT;
 
@@ -58,8 +57,8 @@ class InvalidPostStatusTransitionExceptionTest {
             .contains(action);
     }
 
-    @DisplayName("null 값들로 예외가 생성된다")
     @Test
+    @DisplayName("null 값들로 예외가 생성된다")
     void createExceptionWithNullValues() {
         PostStatus currentStatus = null;
         String attemptedAction = null;
@@ -73,8 +72,8 @@ class InvalidPostStatusTransitionExceptionTest {
             .isEqualTo("현재 상태 'null'에서 'null' 작업을 수행할 수 없습니다");
     }
 
-    @DisplayName("메시지 포맷이 올바르게 생성된다")
     @Test
+    @DisplayName("메시지 포맷이 올바르게 생성된다")
     void messageFormatIsCorrect() {
         PostStatus currentStatus = PostStatus.HIDDEN;
         String attemptedAction = "publish";

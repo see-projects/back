@@ -20,8 +20,8 @@ class PostTest {
         post = Post.create(createPostRequest(), 1L);
     }
 
-    @Test
     @DisplayName("Post 생성 시 요청 정보와 작성자 ID가 올바르게 설정되고 초기 상태는 DRAFT가 된다")
+    @Test
     void createPost() {
         assertThat(post.getContent().title()).isNotNull();
         assertThat(post.getMemberId()).isEqualTo(1L);

@@ -14,8 +14,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 record JwtTokenManagerTest(MemberRegister memberRegister, TokenManager tokenManager) {
-    @Test
     @DisplayName("회원 정보로 JWT 토큰 생성 후 파싱하면 동일한 회원 정보를 얻을 수 있다")
+    @Test
     void generateAndParseToken() {
         Member member = memberRegister.register(createMemberRegisterRequest());
 
@@ -25,8 +25,8 @@ record JwtTokenManagerTest(MemberRegister memberRegister, TokenManager tokenMana
         assertThat(email).isEqualTo(member.getEmail().address());
     }
 
-    @Test
     @DisplayName("유효하지 않은 JWT 토큰 파싱 시 인증 예외가 발생한다")
+    @Test
     void parseInvalidToken() {
         String invalidToken = "invalid.jwt.token";
 
