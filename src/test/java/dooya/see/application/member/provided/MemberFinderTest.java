@@ -18,8 +18,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @Transactional
 @Import(SeeTestConfiguration.class)
 record MemberFinderTest(MemberFinder memberFinder, MemberRegister memberRegister, EntityManager entityManager) {
-    @Test
     @DisplayName("ID로 회원을 조회할 수 있다")
+    @Test
     void find() {
         Member member = memberRegister.register(createMemberRegisterRequest());
         entityManager.flush();
@@ -30,8 +30,8 @@ record MemberFinderTest(MemberFinder memberFinder, MemberRegister memberRegister
         assertThat(member.getId()).isEqualTo(found.getId());
     }
 
-    @Test
     @DisplayName("존재하지 않는 ID로 조회 시 예외가 발생한다")
+    @Test
     void findFail() {
         assertThatThrownBy(() -> memberFinder.find(999L))
             .isInstanceOf(MemberNotFoundException.class);

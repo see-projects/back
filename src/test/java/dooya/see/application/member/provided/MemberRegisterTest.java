@@ -18,8 +18,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @Transactional
 @Import(SeeTestConfiguration.class)
 record MemberRegisterTest(MemberRegister memberRegister, EntityManager entityManager) {
-    @Test
     @DisplayName("회원 등록 시 ID가 부여되고 ACTIVE 상태로 설정된다")
+    @Test
     void register() {
         Member member = memberRegister.register(createMemberRegisterRequest());
 
@@ -27,8 +27,8 @@ record MemberRegisterTest(MemberRegister memberRegister, EntityManager entityMan
         assertThat(member.getStatus()).isEqualTo(MemberStatus.ACTIVE);
     }
 
-    @Test
     @DisplayName("동일한 이메일로 회원 등록 시 중복 예외가 발생한다")
+    @Test
     void duplicateEmailFail() {
         Member member = memberRegister.register(createMemberRegisterRequest());
 
@@ -36,8 +36,8 @@ record MemberRegisterTest(MemberRegister memberRegister, EntityManager entityMan
                 .isInstanceOf(DuplicateEmailException.class);
     }
 
-    @Test
     @DisplayName("회원 비활성화 시 DEACTIVATED 상태와 비활성화일시가 설정된다")
+    @Test
     void deactivate() {
         Member member = registerMember();
 
@@ -47,8 +47,8 @@ record MemberRegisterTest(MemberRegister memberRegister, EntityManager entityMan
         assertThat(member.getDetail().getDeactivatedAt()).isNotNull();
     }
 
-    @Test
     @DisplayName("회원 정보 수정 시 닉네임과 프로필 정보가 변경된다")
+    @Test
     void updateInfo() {
         Member member = registerMember();
 
@@ -61,8 +61,8 @@ record MemberRegisterTest(MemberRegister memberRegister, EntityManager entityMan
         assertThat(updatedMember.getDetail().getIntroduction()).isEqualTo("자기소개");
     }
 
-    @Test
     @DisplayName("프로필 주소 중복 검증과 변경 시나리오를 테스트한다")
+    @Test
     void updateInfoFail () {
         Member member = registerMember();
         memberRegister.updateInfo(member.getId(), new MemberInfoUpdateRequest("dooya2", "korea", "자기소개"));

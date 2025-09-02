@@ -24,11 +24,11 @@ public class HexagonalArchitectureTest {
                 .importPackages("dooya.see");
     }
 
-    @Nested
     @DisplayName("계층형 아키텍처 검증")
+    @Nested
     class LayeredArchitectureTest {
-        @Test
         @DisplayName("헥사고날 아키텍처 계층 의존성 규칙을 준수한다")
+        @Test
         void a() {
             Architectures.layeredArchitecture()
                     .consideringOnlyDependenciesInLayers()
@@ -43,8 +43,8 @@ public class HexagonalArchitectureTest {
                     .check(classes);
         }
 
-        @Test
         @DisplayName("도메인 계층은 외부 의존성이 없어야 한다")
+        @Test
         void b() {
             noClasses()
                     .that().resideInAPackage("..domain..")
@@ -53,8 +53,8 @@ public class HexagonalArchitectureTest {
                     .check(classes);
         }
 
-        @Test
         @DisplayName("애플리케이션 계층은 어댑터에 의존하면 안된다")
+        @Test
         void c() {
             noClasses()
                     .that().resideInAPackage("..application..")
@@ -64,11 +64,11 @@ public class HexagonalArchitectureTest {
         }
     }
 
-    @Nested
     @DisplayName("도메인 비즈니스 로직")
+    @Nested
     class DomainBusinessLogicTest {
-        @Test
         @DisplayName("도메인은 Spring 컨테이너 애노테이션을 사용하면 안된다")
+        @Test
         void d() {
             noClasses()
                     .that().resideInAPackage("..domain..")
@@ -80,8 +80,8 @@ public class HexagonalArchitectureTest {
                     .check(classes);
         }
 
-        @Test
         @DisplayName("도메인은 웹 관련 애노테이션을 사용하면 안된다")
+        @Test
         void e() {
             noClasses()
                     .that().resideInAPackage("..domain..")
@@ -91,8 +91,8 @@ public class HexagonalArchitectureTest {
                     .check(classes);
         }
 
-        @Test
         @DisplayName("도메인은 JPA/Hibernate를 사용할 수 있다")
+        @Test
         void f() {
             // JPA 애노테이션이 도메인 로직에 미치는 영향을 최소화하면서, 매핑을 위한 애노테이션 사용은 허용
             // 이 테스트는 문서화 목적으로 JPA 사용이 허용됨을 명시
@@ -102,8 +102,8 @@ public class HexagonalArchitectureTest {
     @Nested
     @DisplayName("포트와 어댑터 패턴")
     class PortAndAdapterTest {
-        @Test
         @DisplayName("Primary Port는 application.provided 패키지에 위치한다")
+        @Test
         void a() {
             classes()
                     .that().areInterfaces()
@@ -113,8 +113,8 @@ public class HexagonalArchitectureTest {
                     .check(classes);
         }
 
-        @Test
         @DisplayName("Secondary Port는 application.required 패키지에 위치한다")
+        @Test
         void b() {
             classes()
                     .that().areInterfaces()
@@ -124,8 +124,8 @@ public class HexagonalArchitectureTest {
                     .check(classes);
         }
 
-        @Test
         @DisplayName("어댑터는 포트 인터페이스를 구현해야 한다")
+        @Test
         void c() {
             // 이 테스트는 실제로는 복잡한 검증이 필요하므로
             // 문서화 목적으로 어댑터가 포트 인터페이스를 구현해야 함을 명시
@@ -138,11 +138,11 @@ public class HexagonalArchitectureTest {
         }
     }
 
-    @Nested
     @DisplayName("애그리거트와 경계")
+    @Nested
     class AggregateAndBoundaryTest {
-        @Test
         @DisplayName("애그리거트 내부 패키지는 순환 의존성이 없어야 한다")
+        @Test
         void a() {
             slices()
                     .matching("..domain.(*)..")
@@ -152,11 +152,11 @@ public class HexagonalArchitectureTest {
         }
     }
 
-    @Nested
     @DisplayName("명명 규칙")
+    @Nested
     class NamingConventionTest {
-        @Test
         @DisplayName("리포지토리 인터페이스는 Repository로 끝나야 한다")
+        @Test
         void a() {
             classes()
                     .that().areInterfaces()
@@ -167,8 +167,8 @@ public class HexagonalArchitectureTest {
                     .check(classes);
         }
 
-        @Test
         @DisplayName("애플리케이션 서비스는 Service로 끝나야 한다")
+        @Test
         void b() {
             classes()
                     .that().resideInAPackage("..application..")
@@ -179,11 +179,11 @@ public class HexagonalArchitectureTest {
         }
     }
 
-    @Nested
     @DisplayName("Spring 애노테이션 사용 규칙")
+    @Nested
     class SpringAnnotationTest {
-        @Test
         @DisplayName("@Component 계열 애노테이션은 어댑터와 애플리케이션 서비스에서 사용된다")
+        @Test
         void a() {
             noClasses()
                     .that().resideInAPackage("..domain..")
@@ -195,8 +195,8 @@ public class HexagonalArchitectureTest {
                     .check(classes);
         }
         
-        @Test
         @DisplayName("@Transactional은 애플리케이션 서비스에서만 사용한다")
+        @Test
         void b() {
             classes()
                     .that().areAnnotatedWith("org.springframework.transaction.annotation.Transactional")

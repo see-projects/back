@@ -39,8 +39,8 @@ class PostApiTest {
     final MockMvcTester mvcTester;
     final MemberRegister memberRegister;
     
-    @Test
     @DisplayName("로그인한 사용자가 게시글을 생성할 수 있다")
+    @Test
     void createPost() throws JsonProcessingException, UnsupportedEncodingException {
         String token = createMemberAndGetToken();
 
@@ -64,8 +64,8 @@ class PostApiTest {
         assertThat(response.createdAt()).isNotNull();
     }
 
-    @Test
     @DisplayName("토큰 없이 게시글 생성 요청 시 401 Unauthorized가 발생한다")
+    @Test
     void createPostWithoutToken() throws JsonProcessingException {
         PostCreateRequest request = createPostRequest(true);
         String requestJson = objectMapper.writeValueAsString(request);
@@ -79,8 +79,8 @@ class PostApiTest {
                 .hasStatus(HttpStatus.UNAUTHORIZED);
     }
 
-    @Test
     @DisplayName("게시글 조회 시 조회수가 1 증가한다")
+    @Test
     void getPostIncreasesViewCount() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndPublishPost(token);
@@ -97,8 +97,8 @@ class PostApiTest {
 //        assertThat(response.viewCount()).isEqualTo(1);
     }
 
-    @Test
     @DisplayName("비로그인 사용자가 공개되지 않은 게시글 조회 시 403 Forbidden이 발생한다")
+    @Test
     void getUnpublishedPostWithoutToken() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long draftPostId = createAndDraftPost(token);
@@ -111,8 +111,8 @@ class PostApiTest {
                 .hasStatus(HttpStatus.FORBIDDEN);
     }
 
-    @Test
     @DisplayName("로그인한 사용자가 다른 사용자의 비공개 게시글 조회 시 403 Forbidden이 발생한다")
+    @Test
     void getOtherUserUnpublishedPost() throws UnsupportedEncodingException, JsonProcessingException {
         String authorToken = createMemberAndGetToken();
         Long draftPostId = createAndDraftPost(authorToken);
@@ -128,8 +128,8 @@ class PostApiTest {
                 .hasStatus(HttpStatus.FORBIDDEN);
     }
 
-    @Test
     @DisplayName("작성자는 본인의 비공개 게시글을 조회할 수 있다")
+    @Test
     void getMyUnpublishedPost() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long draftPostId = createAndDraftPost(token);
@@ -147,8 +147,8 @@ class PostApiTest {
         assertThat(response.status()).isEqualTo(PostStatus.DRAFT);
     }
 
-    @Test
     @DisplayName("비로그인 사용자가 숨김 처리된 게시글 조회 시 403 Forbidden이 발생한다")
+    @Test
     void getHiddenPostWithoutToken() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndPublishPost(token);
@@ -166,8 +166,8 @@ class PostApiTest {
                 .hasStatus(HttpStatus.FORBIDDEN);
     }
 
-    @Test
     @DisplayName("작성자는 본인의 숨김 처리된 게시글을 조회할 수 있다")
+    @Test
     void getMyHiddenPost() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndPublishPost(token);
@@ -190,8 +190,8 @@ class PostApiTest {
         assertThat(response.status()).isEqualTo(PostStatus.HIDDEN);
     }
 
-    @Test
     @DisplayName("다른 사용자가 숨김 처리된 게시글 조회 시 403 Forbidden이 발생한다")
+    @Test
     void getOtherUserHiddenPost() throws UnsupportedEncodingException, JsonProcessingException {
         String authorToken = createMemberAndGetToken();
         Long postId = createAndPublishPost(authorToken);
@@ -212,8 +212,8 @@ class PostApiTest {
                 .hasStatus(HttpStatus.FORBIDDEN);
     }
 
-    @Test
     @DisplayName("로그인한 다른 사용자가 게시글을 조회할 수 있다")
+    @Test
     void getPostWithDifferentUser() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndPublishPost(token);
@@ -233,8 +233,8 @@ class PostApiTest {
 //        assertThat(response.viewCount()).isEqualTo(1);
     }
 
-    @Test
     @DisplayName("작성자가 게시글을 수정할 수 있다")
+    @Test
     void updatePostByAuthor() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndPublishPost(token);
@@ -257,8 +257,8 @@ class PostApiTest {
         assertThat(response.body()).isEqualTo("수정된 내용");
     }
 
-    @Test
     @DisplayName("토큰 없이 게시글 수정 요청 시 401 Unauthorized가 발생한다")
+    @Test
     void updatePostWithoutToken() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndPublishPost(token);
@@ -276,8 +276,8 @@ class PostApiTest {
                 .hasStatus(HttpStatus.UNAUTHORIZED);
     }
 
-    @Test
     @DisplayName("작성자가 아닌 사용자가 게시글 수정 시 403 Forbidden이 발생한다")
+    @Test
     void updatePostWithoutAuthorization() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndPublishPost(token);
@@ -298,8 +298,8 @@ class PostApiTest {
                 .hasStatus(HttpStatus.FORBIDDEN);
     }
 
-    @Test
     @DisplayName("작성자가 임시저장된 게시글을 발행할 수 있다")
+    @Test
     void publishPostByAuthor() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndDraftPost(token);
@@ -317,8 +317,8 @@ class PostApiTest {
         assertThat(response.publishedAt()).isNotNull();
     }
 
-    @Test
     @DisplayName("토큰 없이 게시글 발행 요청 시 401 Unauthorized가 발생한다")
+    @Test
     void publishPostWithoutToken() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndDraftPost(token);
@@ -331,8 +331,8 @@ class PostApiTest {
                 .hasStatus(HttpStatus.UNAUTHORIZED);
     }
 
-    @Test
     @DisplayName("작성자가 아닌 사용자가 게시글 발행 시 403 Forbidden이 발생한다")
+    @Test
     void publishPostWithoutAuthorization() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndDraftPost(token);
@@ -348,8 +348,8 @@ class PostApiTest {
                 .hasStatus(HttpStatus.FORBIDDEN);
     }
 
-    @Test
     @DisplayName("이미 발행된 게시글을 다시 발행하려고 하면 409 Conflict가 발생한다")
+    @Test
     void publishPostAlreadyPublished() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndPublishPost(token);
@@ -363,8 +363,8 @@ class PostApiTest {
                 .hasStatus(HttpStatus.CONFLICT);
     }
 
-    @Test
     @DisplayName("작성자가 발행된 게시글을 숨김 처리할 수 있다")
+    @Test
     void hidePostByAuthor() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndPublishPost(token);
@@ -381,8 +381,8 @@ class PostApiTest {
         assertThat(response.status()).isEqualTo(PostStatus.HIDDEN);
     }
 
-    @Test
     @DisplayName("토큰 없이 게시글 숨김 요청 시 401 Unauthorized가 발생한다")
+    @Test
     void hidePostWithoutToken() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndPublishPost(token);
@@ -395,8 +395,8 @@ class PostApiTest {
                 .hasStatus(HttpStatus.UNAUTHORIZED);
     }
 
-    @Test
     @DisplayName("작성자가 아닌 사용자가 게시글 숨김 시 403 Forbidden이 발생한다")
+    @Test
     void hidePostWithoutAuthorization() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndPublishPost(token);
@@ -412,8 +412,8 @@ class PostApiTest {
                 .hasStatus(HttpStatus.FORBIDDEN);
     }
 
-    @Test
     @DisplayName("이미 숨김 처리된 게시글을 다시 숨기려고 하면 409 Conflict가 발생한다")
+    @Test
     void hidePostAlreadyHidden() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndPublishPost(token);
@@ -431,8 +431,8 @@ class PostApiTest {
                 .hasStatus(HttpStatus.CONFLICT);
     }
 
-    @Test
     @DisplayName("작성자가 아닌 사용자가 임시저장 게시글 숨김 시 403 Forbidden이 발생한다")
+    @Test
     void hideDraftPostWithoutAuthorization() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndDraftPost(token);
@@ -448,8 +448,8 @@ class PostApiTest {
                 .hasStatus(HttpStatus.FORBIDDEN);
     }
 
-    @Test
     @DisplayName("작성자가 임시저장 게시글을 숨김 처리할 수 있다")
+    @Test
     void hideDraftPostByAuthor() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndDraftPost(token);
@@ -466,8 +466,8 @@ class PostApiTest {
         assertThat(response.status()).isEqualTo(PostStatus.HIDDEN);
     }
 
-    @Test
     @DisplayName("숨김 상태의 게시글을 다시 발행할 수 있다")
+    @Test
     void publishPostFromHiddenStatus() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndPublishPost(token);
@@ -489,8 +489,8 @@ class PostApiTest {
         assertThat(response.publishedAt()).isNotNull();
     }
 
-    @Test
     @DisplayName("작성자가 게시글을 삭제할 수 있다")
+    @Test
     void deletePostByAuthor() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndPublishPost(token);
@@ -507,8 +507,8 @@ class PostApiTest {
         assertThat(response.status()).isEqualTo(PostStatus.DELETED);
     }
 
-    @Test
     @DisplayName("토큰 없이 게시글 삭제 요청 시 401 Unauthorized가 발생한다")
+    @Test
     void deletePostWithoutToken() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndPublishPost(token);
@@ -521,8 +521,8 @@ class PostApiTest {
                 .hasStatus(HttpStatus.UNAUTHORIZED);
     }
 
-    @Test
     @DisplayName("작성자가 아닌 사용자가 게시글 삭제 시 403 Forbidden이 발생한다")
+    @Test
     void deletePostWithoutAuthorization() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndPublishPost(token);
@@ -538,8 +538,8 @@ class PostApiTest {
                 .hasStatus(HttpStatus.FORBIDDEN);
     }
 
-    @Test
     @DisplayName("이미 삭제된 게시글을 다시 삭제하려고 하면 409 Conflict가 발생한다")
+    @Test
     void deletePostAlreadyDeleted() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndPublishPost(token);
@@ -557,8 +557,8 @@ class PostApiTest {
                 .hasStatus(HttpStatus.CONFLICT);
     }
 
-    @Test
     @DisplayName("존재하지 않는 게시글을 삭제하려고 하면 404 Not Found가 발생한다")
+    @Test
     void deleteNonExistentPost() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
 
@@ -571,8 +571,8 @@ class PostApiTest {
                 .hasStatus(HttpStatus.NOT_FOUND);
     }
 
-    @Test
     @DisplayName("임시저장 상태의 게시글을 삭제할 수 있다")
+    @Test
     void deleteDraftPost() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndDraftPost(token);
@@ -589,8 +589,8 @@ class PostApiTest {
         assertThat(response.status()).isEqualTo(PostStatus.DELETED);
     }
 
-    @Test
     @DisplayName("숨김 상태의 게시글을 삭제할 수 있다")
+    @Test
     void deleteHiddenPost() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndPublishPost(token);
@@ -611,8 +611,8 @@ class PostApiTest {
         assertThat(response.status()).isEqualTo(PostStatus.DELETED);
     }
 
-    @Test
     @DisplayName("공개된 게시글 목록을 조회할 수 있다")
+    @Test
     void getPublicPosts() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         createAndPublishPost(token);
@@ -632,8 +632,8 @@ class PostApiTest {
         assertThat(posts[1].status()).isEqualTo(PostStatus.PUBLISHED);
     }
 
-    @Test
     @DisplayName("특정 카테고리의 공개 게시글 목록을 조회할 수 있다")
+    @Test
     void getPostsByCategory() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         createAndPublishPost(token); // TECH 카테고리
@@ -651,8 +651,8 @@ class PostApiTest {
         assertThat(posts[0].status()).isEqualTo(PostStatus.PUBLISHED);
     }
 
-    @Test
     @DisplayName("본인의 게시글 목록을 조회하면 모든 상태의 게시글이 반환된다")
+    @Test
     void getMyPosts() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
 
@@ -677,8 +677,8 @@ class PostApiTest {
         assertThat(posts).hasSize(2);
     }
 
-    @Test
     @DisplayName("다른 사용자의 게시글 목록을 조회하면 공개된 게시글만 반환된다")
+    @Test
     void getOtherUserPosts() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long publishedPostId = createAndPublishPost(token);
@@ -705,8 +705,8 @@ class PostApiTest {
         assertThat(posts[0].status()).isEqualTo(PostStatus.PUBLISHED);
     }
 
-    @Test
     @DisplayName("비로그인 상태로 다른 사용자 게시글을 조회하면 공개된 게시글만 반환된다")
+    @Test
     void getOtherUserPostsWithoutToken() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long publishedPostId = createAndPublishPost(token);
@@ -730,8 +730,8 @@ class PostApiTest {
         assertThat(posts[0].status()).isEqualTo(PostStatus.PUBLISHED);
     }
 
-    @Test
     @DisplayName("비로그인 사용자가 카테고리로 게시글을 검색하면 공개된 게시글만 반환된다")
+    @Test
     void searchPostsByCategory() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         createAndPublishPost(token);  // PUBLISHED 상태
@@ -751,8 +751,8 @@ class PostApiTest {
         assertThat(posts[0].status()).isEqualTo(PostStatus.PUBLISHED);
     }
 
-    @Test
     @DisplayName("로그인한 사용자가 본인의 카테고리별 게시글을 검색하면 모든 상태가 반환된다")
+    @Test
     void searchMyPostsByCategory() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         
@@ -780,8 +780,8 @@ class PostApiTest {
         assertThat(posts).allMatch(post -> post.authorId().equals(memberId));
     }
 
-    @Test
     @DisplayName("키워드로 게시글을 검색할 수 있다")
+    @Test
     void searchPostsByKeyword() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         createAndPublishPost(token); // "테스트 게시글 제목입니다" 포함
@@ -799,8 +799,8 @@ class PostApiTest {
         assertThat(posts[0].title()).contains("테스트");
     }
 
-    @Test
     @DisplayName("제목 키워드로 게시글을 검색할 수 있다")
+    @Test
     void searchPostsByTitleKeyword() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         createAndPublishPost(token);
@@ -818,8 +818,8 @@ class PostApiTest {
         assertThat(posts[0].title()).contains("게시글");
     }
 
-    @Test
     @DisplayName("내용 키워드로 게시글을 검색할 수 있다")
+    @Test
     void searchPostsByContentKeyword() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         createAndPublishPost(token); // "테스트 게시글 내용입니다" 포함
@@ -837,8 +837,8 @@ class PostApiTest {
         assertThat(posts[0].body()).contains("내용");
     }
 
-    @Test
     @DisplayName("특정 회원이 작성한 게시글을 검색할 수 있다")
+    @Test
     void searchPostsByMemberId() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         Long postId = createAndPublishPost(token);
@@ -862,8 +862,8 @@ class PostApiTest {
         assertThat(posts[0].authorId()).isEqualTo(memberId);
     }
 
-    @Test
     @DisplayName("게시글 상태로 검색할 수 있다")
+    @Test
     void searchPostsByStatus() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         createAndPublishPost(token);
@@ -882,8 +882,8 @@ class PostApiTest {
         assertThat(posts[0].status()).isEqualTo(PostStatus.PUBLISHED);
     }
 
-    @Test
     @DisplayName("여러 조건을 조합하여 게시글을 검색할 수 있다")
+    @Test
     void searchPostsByMultipleConditions() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         createAndPublishPost(token);
@@ -904,8 +904,8 @@ class PostApiTest {
         assertThat(posts[0].title()).contains("테스트");
     }
 
-    @Test
     @DisplayName("검색 조건에 맞는 게시글이 없으면 빈 배열을 반환한다")
+    @Test
     void searchPostsWithNoResults() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         createAndPublishPost(token);
@@ -922,8 +922,8 @@ class PostApiTest {
         assertThat(posts).isEmpty();
     }
 
-    @Test
     @DisplayName("비로그인 사용자가 검색 조건 없이 요청하면 공개된 게시글만 반환된다")
+    @Test
     void searchPostsWithoutConditions() throws UnsupportedEncodingException, JsonProcessingException {
         String token = createMemberAndGetToken();
         createAndPublishPost(token);

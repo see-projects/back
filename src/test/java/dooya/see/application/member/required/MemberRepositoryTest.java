@@ -15,8 +15,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 public record MemberRepositoryTest(MemberRepository memberRepository, EntityManager entityManager) {
-    @Test
     @DisplayName("회원 생성 시 ID가 자동 생성되고 영속화 후 조회가 가능하다")
+    @Test
     void createMember() {
         Member member = Member.register(createMemberRegisterRequest(), createPasswordEncoder());
 
@@ -34,8 +34,8 @@ public record MemberRepositoryTest(MemberRepository memberRepository, EntityMana
         assertThat(found.getDetail().getRegisteredAt()).isNotNull();
     }
 
-    @Test
     @DisplayName("동일한 이메일로 회원 저장 시 데이터 무결성 예외가 발생한다")
+    @Test
     void duplicateEmailFail() {
         Member member = Member.register(createMemberRegisterRequest(), createPasswordEncoder());
         memberRepository.save(member);

@@ -18,9 +18,8 @@ import static org.assertj.core.api.Assertions.*;
 @Transactional
 @Import(SeeTestConfiguration.class)
 record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityManager entityManager) {
-    
-    @Test
     @DisplayName("게시글 ID로 조회하면 해당 게시글이 반환된다")
+    @Test
     void findPostById() {
         Post post = createPost();
         entityManager.flush();
@@ -33,15 +32,15 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
         assertThat(found.getContent().title()).isEqualTo(post.getContent().title());
     }
 
-    @Test
     @DisplayName("존재하지 않는 게시글 ID로 조회하면 PostNotFoundException이 발생한다")
+    @Test
     void findPostByNonExistentId() {
         assertThatThrownBy(() -> postFinder.find(999L))
             .isInstanceOf(PostNotFoundException.class);
     }
 
-    @Test
     @DisplayName("특정 회원이 작성한 여러 게시글을 모두 조회할 수 있다")
+    @Test
     void findMultiplePostsByMemberId() {
         Post post1 = createPost();
         Post post2 = createPost();
@@ -56,16 +55,16 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
         assertThat(found).allMatch(post -> post.getMemberId().equals(1L));
     }
 
-    @Test
     @DisplayName("게시글을 작성하지 않은 회원 ID로 조회하면 빈 리스트가 반환된다")
+    @Test
     void findPostsByNonExistentMemberId() {
         List<Post> found = postFinder.findByMemberId(999L);
 
         assertThat(found).isEmpty();
     }
 
-    @Test
     @DisplayName("특정 카테고리의 게시글들을 모두 조회할 수 있다")
+    @Test
     void findPostsByCategory() {
         Post post1 = createPost();
         Post post2 = createPost();
@@ -81,16 +80,16 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
             .containsExactlyInAnyOrder(post1.getId(), post2.getId());
     }
 
-    @Test
     @DisplayName("게시글이 없는 카테고리로 조회하면 빈 리스트가 반환된다")
+    @Test
     void findPostsByNonExistentCategory() {
         List<Post> found = postFinder.findByCategory(PostCategory.QNA);
 
         assertThat(found).isEmpty();
     }
 
-    @Test
     @DisplayName("특정 상태의 게시글들을 모두 조회할 수 있다")
+    @Test
     void findPostsByStatus() {
         Post post1 = createPost();
         Post post2 = createPost();
@@ -106,16 +105,16 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
             .containsExactlyInAnyOrder(post1.getId(), post2.getId());
     }
 
-    @Test
     @DisplayName("해당 상태의 게시글이 없으면 빈 리스트가 반환된다")
+    @Test
     void findPostsByNonExistentStatus() {
         List<Post> found = postFinder.findByStatus(PostStatus.PUBLISHED);
 
         assertThat(found).isEmpty();
     }
 
-    @Test
     @DisplayName("발행된 게시글들만 공개 조회할 수 있다")
+    @Test
     void findPublicPosts() {
         Post post1 = createPublicPost();
         Post post2 = createPublicPost();
@@ -131,16 +130,16 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
                 .containsExactlyInAnyOrder(post1.getId(), post2.getId());
     }
 
-    @Test
     @DisplayName("발행된 게시글이 없으면 공개 조회 시 빈 리스트가 반환된다")
+    @Test
     void findPublicPostsWhenNonePublished() {
         List<Post> found = postFinder.findPublicPosts();
 
         assertThat(found).isEmpty();
     }
 
-    @Test
     @DisplayName("특정 카테고리의 발행된 게시글들만 공개 조회할 수 있다")
+    @Test
     void findPublicPostsByCategory() {
         Post post1 = createPublicPost();
         Post post2 = createPublicPost();
@@ -158,16 +157,16 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
                 .containsExactlyInAnyOrder(post1.getId(), post2.getId());
     }
 
-    @Test
     @DisplayName("해당 카테고리에 발행된 게시글이 없으면 빈 리스트가 반환된다")
+    @Test
     void findPublicPostsByNonExistentCategory() {
         List<Post> found = postFinder.findPublicPostsByCategory(PostCategory.TECH);
         
         assertThat(found).isEmpty();
     }
 
-    @Test
     @DisplayName("키워드로 제목 검색하면 해당 키워드가 포함된 게시물들이 반환된다")
+    @Test
     void searchPostsByTitleKeyword() {
         postManager.create(createPostRequest("Spring Boot 튜토리얼", "내용1"), 1L);
         postManager.create(createPostRequest("Spring Security 가이드", "내용2"), 1L);
@@ -186,8 +185,8 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
             .containsExactlyInAnyOrder("Spring Boot 튜토리얼", "Spring Security 가이드");
     }
 
-    @Test
     @DisplayName("전체 키워드로 제목과 내용을 통합 검색할 수 있다")
+    @Test
     void searchWithKeywordBuilder() {
         postManager.create(createPostRequest("테스트 게시물", "Spring 내용"), 1L);
         entityManager.flush();
@@ -201,8 +200,8 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
         assertThat(found.get(0).getContent().title()).isEqualTo("테스트 게시물");
     }
 
-    @Test
     @DisplayName("키워드와 작성자와 카테고리 조건으로 복합 검색할 수 있다")
+    @Test
     void searchWithComplexConditions() {
         postManager.create(createPostRequest("Spring 튜토리얼", "내용"), 1L);
         postManager.create(createPostRequest("Java 기초", "내용"), 2L);
@@ -222,8 +221,8 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
         assertThat(found.getFirst().getMemberId()).isEqualTo(1L);
     }
 
-    @Test
     @DisplayName("내용 키워드로 게시물 본문을 검색할 수 있다")
+    @Test
     void searchByContentKeyword() {
         postManager.create(createPostRequest("제목1", "JPA 사용법 설명"), 1L);
         postManager.create(createPostRequest("제목2", "Hibernate와 JPA 비교"), 1L);
@@ -242,8 +241,8 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
                 .allMatch(content -> content.contains("JPA"));
     }
 
-    @Test
     @DisplayName("카테고리별로 게시물을 필터링할 수 있다")
+    @Test
     void searchByCategory() {
         postManager.create(createPostRequestWithCategory("기술글", "내용", PostCategory.TECH), 1L);
         postManager.create(createPostRequestWithCategory("질문글", "내용", PostCategory.QNA), 1L);
@@ -262,8 +261,8 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
         assertThat(found.get(0).getContent().title()).isEqualTo("기술글");
     }
 
-    @Test
     @DisplayName("특정 작성자의 게시물을 키워드와 함께 검색할 수 있다")
+    @Test
     void searchByMemberAndKeyword() {
         postManager.create(createPostRequest("Spring 튜토리얼", "내용1"), 1L);
         postManager.create(createPostRequest("Spring 가이드", "내용2"), 2L);
@@ -284,8 +283,8 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
                 .containsExactlyInAnyOrder("Spring 튜토리얼", "Java Spring");
     }
 
-    @Test
     @DisplayName("발행 상태의 게시물만 검색할 수 있다")
+    @Test
     void searchByPublishedStatus() {
         postManager.create(createPostRequest(true), 1L);
         postManager.create(createPostRequest(false), 1L);
@@ -302,8 +301,8 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
         assertThat(found.get(0).getStatus()).isEqualTo(PostStatus.PUBLISHED);
     }
 
-    @Test
     @DisplayName("검색 조건에 맞는 게시물이 없으면 빈 결과를 반환한다")
+    @Test
     void searchWithNoResults() {
         postManager.create(createPostRequest("Java 기초", "내용"), 1L);
         entityManager.flush();
@@ -318,8 +317,8 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
         assertThat(found).isEmpty();
     }
 
-    @Test
     @DisplayName("모든 검색 조건이 비어있으면 전체 게시물을 반환한다")
+    @Test
     void searchWithEmptyConditions() {
         postManager.create(createPostRequest("제목1", "내용1"), 1L);
         postManager.create(createPostRequest("제목2", "내용2"), 1L);
@@ -334,8 +333,8 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
         assertThat(found).hasSize(2);
     }
 
-    @Test
     @DisplayName("게시글을 조회하면 조회 이벤트가 발행된다")
+    @Test
     void viewPost() {
         Post post = createPost();
 
@@ -347,8 +346,8 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
         // 조회 이벤트는 PostStatsEventHandler에서 처리되므로 여기서는 확인 불가
     }
 
-    @Test
     @DisplayName("익명 사용자가 게시글을 조회할 수 있다")
+    @Test
     void viewPostByAnonymousUser() {
         Post post = createPost();
 
@@ -358,8 +357,8 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
         assertThat(result.getMemberId()).isEqualTo(1L);
     }
 
-    @Test
     @DisplayName("존재하지 않는 게시글을 조회하려고 하면 PostNotFoundException이 발생한다")
+    @Test
     void viewNonExistentPost() {
         assertThatThrownBy(() -> postFinder.viewPost(999L, 1L))
                 .isInstanceOf(PostNotFoundException.class);
