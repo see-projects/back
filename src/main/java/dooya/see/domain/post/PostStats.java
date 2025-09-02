@@ -1,6 +1,7 @@
 package dooya.see.domain.post;
 
 import dooya.see.domain.AbstractEntity;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -12,6 +13,7 @@ import java.util.Objects;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PostStats extends AbstractEntity {
+    @Column(unique = true, nullable = false)
     private Long postId;
 
     private Integer viewCount;
