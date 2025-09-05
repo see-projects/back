@@ -3,7 +3,11 @@ package dooya.see.domain.post;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class CommentTest {
     private static final Long POST_ID = 1L;
@@ -26,5 +30,51 @@ class CommentTest {
         assertThat(comment.getMetaData().modifiedAt()).isNull();
         assertThat(comment.isReply()).isFalse();
         assertThat(comment.isTopLevel()).isTrue();
+    }
+
+    @DisplayName("")
+    @Test
+    void createReplyComment() {
+        Long parentCommentId = 1L;
+        CommentCreateRequest request = new CommentCreateRequest("답글입니다!", parentCommentId);
+
+        Comment reply = Comment.create(request, POST_ID, MEMBER_ID);
+
+        assertThat(reply.getContent().text()).isEqualTo("답글입니다!");
+        assertThat(reply.getPostId()).isEqualTo(POST_ID);
+        assertThat(reply.getMemberId()).isEqualTo(MEMBER_ID);
+        assertThat(reply.getParentCommentId()).isEqualTo(parentCommentId);
+        assertThat(reply.getStatus()).isEqualTo(CommentStatus.ACTIVE);
+        assertThat(reply.isReply()).isTrue();
+        assertThat(reply.isTopLevel()).isFalse();
+    }
+
+    @DisplayName("")
+    @Test
+    void createCommentWithNullContent() {
+        CommentCreateRequest request = new CommentCreateRequest(null);
+
+        assertThatThrownBy(() -> Comment.create(request, POST_ID, MEMBER_ID))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+    
+    @DisplayName("")
+    @Test
+    void createCommentWithEmptyContent() {
+        CommentCreateRequest request = new CommentCreateRequest("  ");
+
+        assertThatThrownBy(() -> Comment.create(request, POST_ID, MEMBER_ID))
+            .isInstanceOf(IllegalArgumentException.class);
+        
+    }
+    
+    @DisplayName("")
+    @Test
+    void createCommentWithWhiteTooLongContent() {
+        String longContent = "a".repeat(1001);
+        CommentCreateRequest request = new CommentCreateRequest(longContent);
+
+        assertThatThrownBy(() -> Comment.create(request, POST_ID, MEMBER_ID))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 }
