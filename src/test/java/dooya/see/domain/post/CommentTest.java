@@ -220,4 +220,29 @@ class CommentTest {
             assertThat(comment.canBeModified()).isFalse();
         }
     }
+
+    @Nested
+    @DisplayName("대댓글 관련")
+    class ReplyComments {
+        @DisplayName("")
+        @Test
+        void isReplyForTopLevelComment() {
+            CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
+            Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
+
+            assertThat(comment.isReply()).isFalse();
+            assertThat(comment.isTopLevel()).isTrue();
+        }
+
+        @DisplayName("")
+        @Test
+        void isReplyForReplyComment() {
+            Long parentCommentId = 10L;
+            CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!", parentCommentId);
+            Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
+
+            assertThat(comment.isReply()).isTrue();
+            assertThat(comment.isTopLevel()).isFalse();
+        }
+    }
 }
