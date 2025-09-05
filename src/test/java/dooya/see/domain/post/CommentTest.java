@@ -97,7 +97,7 @@ class CommentTest {
 
             assertThat(comment.hasDomainEvents()).isTrue();
             assertThat(comment.getDomainEvents()).hasSize(1);
-            assertThat(comment.getDomainEvents().getFirst()).isInstanceOf(CommentUpdated.class);
+            assertThat(comment.getDomainEvents().get(0)).isInstanceOf(CommentUpdated.class);
         }
 
         @DisplayName("삭제된 댓글은 수정할 수 없다")
@@ -141,7 +141,7 @@ class CommentTest {
 
             assertThat(comment.hasDomainEvents()).isTrue();
             assertThat(comment.getDomainEvents()).hasSize(1);
-            assertThat(comment.getDomainEvents().getFirst()).isInstanceOf(CommentDeleted.class);
+            assertThat(comment.getDomainEvents().get(0)).isInstanceOf(CommentDeleted.class);
         }
 
         @DisplayName("이미 삭제된 댓글을 다시 삭제할 수 없다")
@@ -173,7 +173,7 @@ class CommentTest {
 
             assertThat(comment.hasDomainEvents()).isTrue();
             assertThat(comment.getDomainEvents()).hasSize(1);
-            assertThat(comment.getDomainEvents().getFirst()).isInstanceOf(CommentHidden.class);
+            assertThat(comment.getDomainEvents().get(0)).isInstanceOf(CommentHidden.class);
         }
 
         @DisplayName("이미 숨김 처리된 댓글을 다시 숨길 수 없다")
