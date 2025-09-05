@@ -47,4 +47,33 @@ public class Comment extends AbstractEntity {
     public boolean isTopLevel() {
         return parentCommentId == null;
     }
+
+    public void update(CommentUpdateRequest request) {
+        validateCanBeModified();
+
+        if (!request.hasUpdate()) {
+            throw new IllegalArgumentException("수정할 내용이 없습니다");
+        }
+
+        this.content = new CommentContent(request.body());
+        this.metaData = this.metaData.updateModifiedAt();
+    }
+
+    public void delete() {
+        validateCanBeModified();
+
+        CommentStatus previousStatus = this.status;
+        this.status = CommentStatus.DELETED;
+        this.metaData = this.metaData.updateModifiedAt();
+    }
+
+    public boolean canBeModified() {
+        return status == CommentStatus.ACTIVE;
+    }
+
+    private void validateCanBeModified() {
+        if (!canBeModified()) {
+            throw new IllegalStateException("수정할수 없는 댓글입니다");
+        }
+    }
 }

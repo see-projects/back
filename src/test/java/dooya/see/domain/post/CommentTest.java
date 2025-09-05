@@ -79,4 +79,44 @@ class CommentTest {
                     .isInstanceOf(IllegalArgumentException.class);
         }
     }
+
+    @Nested
+    @DisplayName("댓글 수정")
+    class UpdateComment {
+        @DisplayName("")
+        @Test
+        void updateComment() {
+            CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
+            Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
+            CommentUpdateRequest request = new CommentUpdateRequest("수정된 댓글입니다!");
+
+            comment.update(request);
+
+            assertThat(comment.getContent().text()).isEqualTo("수정된 댓글입니다!");
+            assertThat(comment.getMetaData().modifiedAt()).isNotNull();
+        }
+
+        @DisplayName("")
+        @Test
+        void cannotUpdateDeleteComment() {
+            CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
+            Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
+            comment.delete();
+            CommentUpdateRequest request = new CommentUpdateRequest("수정된 댓글입니다!");
+
+            assertThatThrownBy(() -> comment.update(request))
+                .isInstanceOf(IllegalStateException.class);
+        }
+
+        @DisplayName("")
+        @Test
+        void updateCommentWithNoContent() {
+            CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
+            Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
+            CommentUpdateRequest request = new CommentUpdateRequest(null);
+
+            assertThatThrownBy(() -> comment.update(request))
+                .isInstanceOf(IllegalArgumentException.class);
+        }
+    }
 }
