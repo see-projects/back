@@ -54,7 +54,6 @@ public class Comment extends AbstractEntity {
     public void delete() {
         validateCanBeModified();
 
-        CommentStatus previousStatus = this.status;
         this.status = CommentStatus.DELETED;
         this.metaData = this.metaData.updateModifiedAt();
     }
