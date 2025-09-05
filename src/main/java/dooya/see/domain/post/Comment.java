@@ -40,14 +40,6 @@ public class Comment extends AbstractEntity {
         return comment;
     }
 
-    public boolean isReply() {
-        return parentCommentId != null;
-    }
-
-    public boolean isTopLevel() {
-        return parentCommentId == null;
-    }
-
     public void update(CommentUpdateRequest request) {
         validateCanBeModified();
 
@@ -67,17 +59,46 @@ public class Comment extends AbstractEntity {
         this.metaData = this.metaData.updateModifiedAt();
     }
 
+    public void hide() {
+        if (this.status == CommentStatus.HIDDEN) {
+            throw new IllegalStateException("이미 숨김 처리된 댓글입니다");
+        }
+
+        if (this.status == CommentStatus.DELETED) {
+            throw new IllegalStateException("삭제된 댓글을 숨김 처리할 수 없습니다");
+        }
+
+        this.status = CommentStatus.HIDDEN;
+        this.metaData = this.metaData.updateModifiedAt();
+    }
+
+    public boolean isReply() {
+        return parentCommentId != null;
+    }
+
+    public boolean isTopLevel() {
+        return parentCommentId == null;
+    }
+
     public boolean canBeModified() {
         return status == CommentStatus.ACTIVE;
+    }
+
+    public boolean isDelete() {
+        return status == CommentStatus.DELETED;
+    }
+
+    public boolean isHidden() {
+        return status == CommentStatus.HIDDEN;
+    }
+
+    public boolean isWrittenBy(Long memberId) {
+        return this.memberId.equals(memberId);
     }
 
     private void validateCanBeModified() {
         if (!canBeModified()) {
             throw new IllegalStateException("수정할수 없는 댓글입니다");
         }
-    }
-
-    public boolean isDelete() {
-        return status == CommentStatus.DELETED;
     }
 }

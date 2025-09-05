@@ -4,7 +4,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class CommentTest {
@@ -145,6 +147,77 @@ class CommentTest {
 
             assertThatThrownBy(comment::delete)
                 .isInstanceOf(IllegalStateException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("댓글 숨김")
+    class HideComment {
+        @DisplayName("")
+        @Test
+        void hideComment() {
+            CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
+            Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
+
+            comment.hide();
+
+            assertThat(comment.getStatus()).isEqualTo(CommentStatus.HIDDEN);
+            assertThat(comment.getMetaData().modifiedAt()).isNotNull();
+            assertThat(comment.isHidden()).isTrue();
+        }
+
+        @DisplayName("")
+        @Test
+        void cannotHideDeletedComment() {
+            CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
+            Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
+            comment.hide();
+
+            assertThatThrownBy(comment::hide)
+                .isInstanceOf(IllegalStateException.class);
+        }
+
+        @DisplayName("")
+        @Test
+        void cannotHideDeleteComment() {
+            CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
+            Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
+            comment.delete();
+
+            assertThatThrownBy(comment::hide)
+                    .isInstanceOf(IllegalStateException.class);
+        }
+    }
+    
+    @Nested
+    @DisplayName("권한 검증")
+    class Authorization {
+        @DisplayName("")
+        @Test
+        void isWrittenByOwner() {
+            CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
+            Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
+            
+            assertThat(comment.isWrittenBy(MEMBER_ID)).isTrue();
+        }
+        
+        @DisplayName("")
+        @Test
+        void canBeModifiedWhenActive() {
+            CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
+            Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
+
+            assertThat(comment.canBeModified()).isTrue();
+        }
+
+        @DisplayName("")
+        @Test
+        void cannotBeModifiedWhenDelete() {
+            CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
+            Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
+            comment.delete();
+
+            assertThat(comment.canBeModified()).isFalse();
         }
     }
 }
