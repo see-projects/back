@@ -119,4 +119,32 @@ class CommentTest {
                 .isInstanceOf(IllegalArgumentException.class);
         }
     }
+
+    @Nested
+    @DisplayName("댓글 삭제")
+    class DeleteComment {
+        @DisplayName("")
+        @Test
+        void deleteComment() {
+            CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
+            Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
+
+            comment.delete();
+
+            assertThat(comment.getStatus()).isEqualTo(CommentStatus.DELETED);
+            assertThat(comment.getMetaData().modifiedAt()).isNotNull();
+            assertThat(comment.isDelete()).isTrue();
+        }
+
+        @DisplayName("")
+        @Test
+        void cannotDeleteAlreadyDeleteComment() {
+            CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
+            Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
+            comment.delete();
+
+            assertThatThrownBy(comment::delete)
+                .isInstanceOf(IllegalStateException.class);
+        }
+    }
 }

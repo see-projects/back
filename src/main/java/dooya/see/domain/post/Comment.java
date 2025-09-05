@@ -76,4 +76,8 @@ public class Comment extends AbstractEntity {
             throw new IllegalStateException("수정할수 없는 댓글입니다");
         }
     }
+
+    public boolean isDelete() {
+        return status == CommentStatus.DELETED;
+    }
 }
