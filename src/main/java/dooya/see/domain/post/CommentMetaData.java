@@ -17,4 +17,11 @@ public record CommentMetaData(
                 null
         );
     }
+
+    public CommentMetaData updateModifiedAt() {
+        return new CommentMetaData(
+                this.createdAt,
+                LocalDateTime.now()
+        );
+    }
 }

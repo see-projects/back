@@ -39,4 +39,12 @@ public class Comment extends AbstractEntity {
 
         return comment;
     }
+
+    public boolean isReply() {
+        return parentCommentId != null;
+    }
+
+    public boolean isTopLevel() {
+        return parentCommentId == null;
+    }
 }
