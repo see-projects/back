@@ -1,17 +1,20 @@
 package dooya.see.domain.post;
 
-import dooya.see.domain.AbstractEntity;
+import dooya.see.domain.shared.AbstractAggregateRoot;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.Objects;
 
 @Entity
 @Getter
-public class Comment extends AbstractEntity {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Comment extends AbstractAggregateRoot {
     @Embedded
     private CommentContent content;
 
