@@ -1,15 +1,13 @@
 package dooya.see.domain.post;
 
+import dooya.see.domain.post.event.*;
 import dooya.see.domain.shared.AbstractAggregateRoot;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.Objects;
+import static java.util.Objects.*;
 
 @Entity
 @Getter
@@ -30,17 +28,43 @@ public class Comment extends AbstractAggregateRoot {
     @Embedded
     private CommentMetaData metaData;
 
+    @Transient
+    private CommentCreationContext creationContext;
+
+    private record CommentCreationContext(
+            Long postId, 
+            Long memberId, 
+            Long parentCommentId,
+            String content
+    ) {}
+
     public static Comment create(CommentCreateRequest request, Long postId, Long memberId) {
         Comment comment = new Comment();
 
         comment.content = new CommentContent(request.body());
-        comment.postId = Objects.requireNonNull(postId);
-        comment.memberId = Objects.requireNonNull(memberId);
+        comment.postId = requireNonNull(postId, "게시글 ID는 필수입니다");
+        comment.memberId = requireNonNull(memberId, "회원 ID는 필수입니다");
         comment.parentCommentId = request.parentCommentId();
         comment.status = CommentStatus.ACTIVE;
         comment.metaData = CommentMetaData.create();
 
+        comment.creationContext = new CommentCreationContext(
+                postId, memberId, request.parentCommentId(), request.body()
+        );
+
         return comment;
+    }
+
+    public void publishCreationEventIfNeeded() {
+        if (creationContext != null && getId() != null) {
+            addDomainEvent(CommentCreated.of(
+                    getId(),
+                    creationContext.postId(),
+                    creationContext.memberId(),
+                    creationContext.parentCommentId()
+            ));
+            creationContext = null;
+        }
     }
 
     public void update(CommentUpdateRequest request) {
@@ -50,8 +74,17 @@ public class Comment extends AbstractAggregateRoot {
             throw new IllegalArgumentException("수정할 내용이 없습니다");
         }
 
+        String previousContent = this.content.text();
         this.content = new CommentContent(request.body());
         this.metaData = this.metaData.updateModifiedAt();
+
+        addDomainEvent(new CommentUpdated(
+                getId(),
+                this.postId,
+                this.memberId,
+                previousContent,
+                request.body()
+        ));
     }
 
     public void delete() {
@@ -59,6 +92,13 @@ public class Comment extends AbstractAggregateRoot {
 
         this.status = CommentStatus.DELETED;
         this.metaData = this.metaData.updateModifiedAt();
+
+        addDomainEvent(new CommentDeleted(
+                getId(),
+                this.postId,
+                this.memberId,
+                isReply()
+        ));
     }
 
     public void hide() {
@@ -70,8 +110,16 @@ public class Comment extends AbstractAggregateRoot {
             throw new IllegalStateException("삭제된 댓글을 숨김 처리할 수 없습니다");
         }
 
+        CommentStatus previousStatus = this.status;
         this.status = CommentStatus.HIDDEN;
         this.metaData = this.metaData.updateModifiedAt();
+
+        addDomainEvent(new CommentHidden(
+                getId(),
+                this.postId,
+                this.memberId,
+                previousStatus
+        ));
     }
 
     public boolean isReply() {
@@ -100,7 +148,7 @@ public class Comment extends AbstractAggregateRoot {
 
     private void validateCanBeModified() {
         if (!canBeModified()) {
-            throw new IllegalStateException("수정할수 없는 댓글입니다");
+            throw new IllegalStateException("수정할 수 없는 댓글입니다");
         }
     }
 }
