@@ -1,5 +1,6 @@
 package dooya.see.domain.post;
 
+import dooya.see.domain.post.event.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -93,6 +94,10 @@ class CommentTest {
 
             assertThat(comment.getContent().text()).isEqualTo("수정된 댓글입니다!");
             assertThat(comment.getMetaData().modifiedAt()).isNotNull();
+
+            assertThat(comment.hasDomainEvents()).isTrue();
+            assertThat(comment.getDomainEvents()).hasSize(1);
+            assertThat(comment.getDomainEvents().getFirst()).isInstanceOf(CommentUpdated.class);
         }
 
         @DisplayName("삭제된 댓글은 수정할 수 없다")
@@ -133,6 +138,10 @@ class CommentTest {
             assertThat(comment.getStatus()).isEqualTo(CommentStatus.DELETED);
             assertThat(comment.getMetaData().modifiedAt()).isNotNull();
             assertThat(comment.isDelete()).isTrue();
+
+            assertThat(comment.hasDomainEvents()).isTrue();
+            assertThat(comment.getDomainEvents()).hasSize(1);
+            assertThat(comment.getDomainEvents().getFirst()).isInstanceOf(CommentDeleted.class);
         }
 
         @DisplayName("이미 삭제된 댓글을 다시 삭제할 수 없다")
@@ -161,6 +170,10 @@ class CommentTest {
             assertThat(comment.getStatus()).isEqualTo(CommentStatus.HIDDEN);
             assertThat(comment.getMetaData().modifiedAt()).isNotNull();
             assertThat(comment.isHidden()).isTrue();
+
+            assertThat(comment.hasDomainEvents()).isTrue();
+            assertThat(comment.getDomainEvents()).hasSize(1);
+            assertThat(comment.getDomainEvents().getFirst()).isInstanceOf(CommentHidden.class);
         }
 
         @DisplayName("이미 숨김 처리된 댓글을 다시 숨길 수 없다")
