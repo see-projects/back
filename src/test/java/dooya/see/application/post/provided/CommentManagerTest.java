@@ -64,6 +64,27 @@ record CommentManagerTest(
         void a() {
             Post post = createPost();
             createComment(post.getId());
+            CommentUpdateRequest request = new CommentUpdateRequest("업데이트 댓글");
+
+            Comment comment = commentManager.update(request, 1L, 1L);
+
+            assertThat(comment.getId()).isNotNull();
+            assertThat(comment.getContent().text()).isEqualTo("업데이트 댓글");
+            assertThat(comment.getPostId()).isNotNull();
+            assertThat(comment.getMemberId()).isNotNull();
+            assertThat(comment.getParentCommentId()).isNull();
+            assertThat(comment.getStatus()).isEqualTo(CommentStatus.ACTIVE);
+            assertThat(comment.getMetaData().createdAt()).isNotNull();
+            assertThat(comment.getMetaData().modifiedAt()).isNotNull();
+        }
+
+        @DisplayName("")
+        @Test
+        void b() {
+            CommentUpdateRequest request = new CommentUpdateRequest("업데이트 댓글");
+
+            assertThatThrownBy(() -> commentManager.update(request, 1L, 1L))
+                .isInstanceOf(IllegalArgumentException.class);
         }
     }
 
