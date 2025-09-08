@@ -37,6 +37,7 @@ public class CommentApi {
         List<Comment> comments = commentFinder.findByPostId(postId);
 
         return comments.stream()
+                .filter(Comment::canBeModified)
                 .map(CommentDetailResponse::of)
                 .toList();
     }
@@ -53,6 +54,7 @@ public class CommentApi {
         List<Comment> replies = commentFinder.findRepliesByParentId(parentCommentId);
 
         return replies.stream()
+                .filter(Comment::canBeModified)
                 .map(CommentDetailResponse::of)
                 .toList();
     }
