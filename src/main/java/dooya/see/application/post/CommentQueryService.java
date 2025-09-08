@@ -7,14 +7,33 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
-@Transactional
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class CommentQueryService implements CommentFinder {
+    
     private final CommentRepository commentRepository;
 
     @Override
     public Comment find(Long commentId) {
-        return commentRepository.findById(commentId).orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다"));
+        return commentRepository.findById(commentId)
+                .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다: " + commentId));
+    }
+
+    @Override
+    public List<Comment> findByPostId(Long postId) {
+        return commentRepository.findByPostId(postId);
+    }
+
+    @Override
+    public List<Comment> findRepliesByParentId(Long parentCommentId) {
+        return commentRepository.findByParentCommentId(parentCommentId);
+    }
+
+    @Override
+    public List<Comment> findByMemberId(Long memberId) {
+        return commentRepository.findByMemberId(memberId);
     }
 }
