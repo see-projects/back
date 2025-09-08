@@ -10,4 +10,6 @@ public interface CommentManager {
     Comment update(CommentUpdateRequest request, Long commentId, Long memberId);
 
     Comment delete(Long commentId, Long memberId);
+
+    Comment hide(Long commentId, Long memberId);
 }

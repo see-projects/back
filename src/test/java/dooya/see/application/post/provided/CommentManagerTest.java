@@ -122,6 +122,50 @@ record CommentManagerTest(
         }
     }
 
+    @Nested
+    @DisplayName("댓글 숨김")
+    class HideComment {
+        @DisplayName("")
+        @Test
+        void a() {
+            Post post = createPost();
+            createComment(post.getId());
+
+            Comment comment = commentManager.hide(1L, 1L);
+
+            assertThat(comment.getId());
+            assertThat(comment.getStatus()).isEqualTo(CommentStatus.HIDDEN);
+        }
+
+        @DisplayName("")
+        @Test
+        void b() {
+            assertThatThrownBy(() -> commentManager.hide(1L, 1L))
+                .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @DisplayName("")
+        @Test
+        void c() {
+            Post post = createPost();
+            createComment(post.getId());
+            commentManager.hide(1L, 1L);
+
+            assertThatThrownBy(() -> commentManager.hide(1L, 1L))
+                .isInstanceOf(IllegalStateException.class);
+        }
+
+        @DisplayName("")
+        @Test
+        void d() {
+            Post post = createPost();
+            createComment(post.getId());
+
+            assertThatThrownBy(() -> commentManager.hide(1L, 2L))
+                .isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
     private Post createPost() {
         Post post = postManager.create(createPostRequest(), 1L);
         entityManager.flush();

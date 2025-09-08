@@ -54,6 +54,18 @@ public class CommentModifyService implements CommentManager {
         return deletedComment;
     }
 
+    @Override
+    public Comment hide(Long commentId, Long memberId) {
+        Comment comment = findCommentByIdAndValidateOwnership(commentId, memberId);
+
+        comment.hide();
+        Comment hiddenComment = commentRepository.save(comment);
+
+        publishDomainEvents(hiddenComment);
+
+        return hiddenComment;
+    }
+
     private void publishDomainEvents(Comment comment) {
         comment.getDomainEvents().forEach(eventPublisher::publishEvent);
         comment.clearDomainEvents();
