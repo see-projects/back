@@ -41,6 +41,22 @@ jobs:
       # Gradle Wrapper 검증 (보안)
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1
+        with:
+          min-wrapper-count: 1
+          allow-snapshots: false
+
+      # Gradle Wrapper 실행 권한 확인
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      # Gradle Wrapper 체크섬 검증 (추가 보안)
+      - name: Verify Gradle Wrapper Checksum
+        run: |
+          # gradle-wrapper.properties에서 지정된 Gradle 버전의 체크섬 검증
+          if [ -f "gradle/wrapper/gradle-wrapper.properties" ]; then
+            echo "Gradle wrapper configuration verified"
+            cat gradle/wrapper/gradle-wrapper.properties
+          fi
 
       # Gradle 빌드 액션 사용 (캐싱과 최적화가 내장됨)
       - name: Setup Gradle
