@@ -2,6 +2,8 @@ package dooya.see.application.member.provided;
 
 import dooya.see.SeeTestConfiguration;
 import dooya.see.domain.member.*;
+import dooya.see.domain.member.exception.DuplicateEmailException;
+import dooya.see.domain.member.exception.DuplicateProfileException;
 import jakarta.persistence.EntityManager;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.DisplayName;

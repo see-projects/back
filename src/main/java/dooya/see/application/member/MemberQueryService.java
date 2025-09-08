@@ -3,7 +3,7 @@ package dooya.see.application.member;
 import dooya.see.application.member.provided.MemberFinder;
 import dooya.see.application.member.required.MemberRepository;
 import dooya.see.domain.member.Member;
-import dooya.see.domain.member.MemberNotFoundException;
+import dooya.see.domain.member.exception.MemberNotFoundException;
 import dooya.see.domain.shared.Email;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

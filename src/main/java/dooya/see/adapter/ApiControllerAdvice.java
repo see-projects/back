@@ -1,9 +1,9 @@
 package dooya.see.adapter;
 
-import dooya.see.domain.member.AuthenticateException;
-import dooya.see.domain.member.DuplicateEmailException;
-import dooya.see.domain.member.DuplicateProfileException;
-import dooya.see.domain.member.MemberNotFoundException;
+import dooya.see.domain.member.exception.AuthenticateException;
+import dooya.see.domain.member.exception.DuplicateEmailException;
+import dooya.see.domain.member.exception.DuplicateProfileException;
+import dooya.see.domain.member.exception.MemberNotFoundException;
 import dooya.see.domain.post.exception.InvalidPostStatusTransitionException;
 import dooya.see.domain.post.exception.PostNotFoundException;
 import dooya.see.domain.post.exception.UnauthorizedPostAccessException;

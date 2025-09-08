@@ -1,4 +1,4 @@
-package dooya.see.domain.member;
+package dooya.see.domain.member.exception;
 
 public class MemberNotFoundException extends RuntimeException {
     public MemberNotFoundException(String message) {

@@ -2,7 +2,7 @@ package dooya.see.application.member.provided;
 
 import dooya.see.SeeTestConfiguration;
 import dooya.see.domain.member.Member;
-import dooya.see.domain.member.MemberNotFoundException;
+import dooya.see.domain.member.exception.MemberNotFoundException;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
