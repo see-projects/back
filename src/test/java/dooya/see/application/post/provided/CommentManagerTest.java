@@ -2,7 +2,6 @@ package dooya.see.application.post.provided;
 
 import dooya.see.SeeTestConfiguration;
 import dooya.see.application.post.required.CommentRepository;
-import dooya.see.application.post.required.PostRepository;
 import dooya.see.domain.post.*;
 import dooya.see.domain.post.exception.CommentNotFoundException;
 import dooya.see.domain.post.exception.InvalidCommentStatusException;
@@ -27,7 +26,6 @@ record CommentManagerTest(
         CommentManager commentManager,
         CommentFinder commentFinder,
         CommentRepository commentRepository,
-        PostRepository postRepository,
         PostManager postManager,
         PostFinder postFinder,
         EntityManager entityManager) {

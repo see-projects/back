@@ -1,11 +1,10 @@
 package dooya.see.application.post;
 
+import dooya.see.application.post.provided.CommentFinder;
 import dooya.see.application.post.provided.CommentManager;
+import dooya.see.application.post.provided.PostFinder;
 import dooya.see.application.post.required.CommentRepository;
-import dooya.see.application.post.required.PostRepository;
 import dooya.see.domain.post.*;
-import dooya.see.domain.post.exception.CommentNotFoundException;
-import dooya.see.domain.post.exception.PostNotFoundException;
 import dooya.see.domain.post.exception.UnauthorizedCommentAccessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -17,12 +16,13 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class CommentModifyService implements CommentManager {
     private final CommentRepository commentRepository;
-    private final PostRepository postRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final PostFinder postFinder;
+    private final CommentFinder commentFinder;
 
     @Override
     public Comment create(CommentCreateRequest request, Long postId, Long memberId) {
-        postRepository.findById(postId).orElseThrow(() -> new PostNotFoundException("게시글을 찾을 수 없습니다"));
+        postFinder.find(postId);
 
         Comment comment = Comment.create(request, postId, memberId);
         Comment savedComment = commentRepository.save(comment);
@@ -75,8 +75,7 @@ public class CommentModifyService implements CommentManager {
     }
 
     private Comment findCommentByIdAndValidateOwnership(Long commentId, Long memberId) {
-        Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new CommentNotFoundException(commentId));
+        Comment comment = commentFinder.find(commentId);
 
         if (!comment.isWrittenBy(memberId)) {
             throw UnauthorizedCommentAccessException.forAction("수정");
