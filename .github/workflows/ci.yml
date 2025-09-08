@@ -40,7 +40,7 @@ jobs:
 
       # Gradle Wrapper 검증 (보안)
       - name: Validate Gradle wrapper
-        uses: gradle/wrapper-validation-action@v1
+        uses: gradle/wrapper-validation-action@v2
         with:
           min-wrapper-count: 1
           allow-snapshots: false
