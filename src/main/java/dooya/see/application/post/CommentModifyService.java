@@ -35,7 +35,7 @@ public class CommentModifyService implements CommentManager {
 
     @Override
     public Comment update(CommentUpdateRequest request, Long commentId, Long memberId) {
-        Comment comment = findCommentByIdAndValidateOwnership(commentId, memberId);
+        Comment comment = findCommentByIdAndValidateOwnership(commentId, memberId, "수정");
 
         comment.update(request);
         Comment updatedComment = commentRepository.save(comment);
@@ -47,7 +47,7 @@ public class CommentModifyService implements CommentManager {
 
     @Override
     public Comment delete(Long commentId, Long memberId) {
-        Comment comment = findCommentByIdAndValidateOwnership(commentId, memberId);
+        Comment comment = findCommentByIdAndValidateOwnership(commentId, memberId, "삭제");
 
         comment.delete();
         Comment deletedComment = commentRepository.save(comment);
@@ -59,7 +59,7 @@ public class CommentModifyService implements CommentManager {
 
     @Override
     public Comment hide(Long commentId, Long memberId) {
-        Comment comment = findCommentByIdAndValidateOwnership(commentId, memberId);
+        Comment comment = findCommentByIdAndValidateOwnership(commentId, memberId, "숨김");
 
         comment.hide();
         Comment hiddenComment = commentRepository.save(comment);
@@ -74,11 +74,11 @@ public class CommentModifyService implements CommentManager {
         comment.clearDomainEvents();
     }
 
-    private Comment findCommentByIdAndValidateOwnership(Long commentId, Long memberId) {
+    private Comment findCommentByIdAndValidateOwnership(Long commentId, Long memberId, String action) {
         Comment comment = commentFinder.find(commentId);
 
         if (!comment.isWrittenBy(memberId)) {
-            throw UnauthorizedCommentAccessException.forAction("수정");
+            throw UnauthorizedCommentAccessException.forAction(action);
         }
 
         return comment;
