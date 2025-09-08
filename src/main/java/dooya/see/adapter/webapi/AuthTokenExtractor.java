@@ -1,6 +1,6 @@
 package dooya.see.adapter.webapi;
 
-import dooya.see.domain.member.AuthenticateException;
+import dooya.see.domain.member.exception.AuthenticateException;
 
 /**
  * Authorization 헤더에서 JWT 토큰을 추출하는 유틸리티 클래스

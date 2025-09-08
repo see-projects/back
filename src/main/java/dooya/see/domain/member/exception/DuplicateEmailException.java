@@ -1,4 +1,4 @@
-package dooya.see.domain.member;
+package dooya.see.domain.member.exception;
 
 public class DuplicateEmailException extends RuntimeException {
     public DuplicateEmailException(String message) {

@@ -1,6 +1,6 @@
 package dooya.see.adapter.webapi;
 
-import dooya.see.domain.member.AuthenticateException;
+import dooya.see.domain.member.exception.AuthenticateException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

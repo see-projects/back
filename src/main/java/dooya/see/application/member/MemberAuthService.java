@@ -4,6 +4,7 @@ import dooya.see.application.member.provided.MemberAuth;
 import dooya.see.application.member.provided.MemberFinder;
 import dooya.see.application.member.required.TokenManager;
 import dooya.see.domain.member.*;
+import dooya.see.domain.member.exception.AuthenticateException;
 import dooya.see.domain.shared.Email;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

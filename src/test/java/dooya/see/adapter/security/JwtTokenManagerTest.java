@@ -2,7 +2,7 @@ package dooya.see.adapter.security;
 
 import dooya.see.application.member.provided.MemberRegister;
 import dooya.see.application.member.required.TokenManager;
-import dooya.see.domain.member.AuthenticateException;
+import dooya.see.domain.member.exception.AuthenticateException;
 import dooya.see.domain.member.Member;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

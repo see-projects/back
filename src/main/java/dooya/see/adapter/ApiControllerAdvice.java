@@ -1,12 +1,12 @@
 package dooya.see.adapter;
 
-import dooya.see.domain.member.AuthenticateException;
-import dooya.see.domain.member.DuplicateEmailException;
-import dooya.see.domain.member.DuplicateProfileException;
-import dooya.see.domain.member.MemberNotFoundException;
-import dooya.see.domain.post.InvalidPostStatusTransitionException;
-import dooya.see.domain.post.PostNotFoundException;
-import dooya.see.domain.post.UnauthorizedPostAccessException;
+import dooya.see.domain.member.exception.AuthenticateException;
+import dooya.see.domain.member.exception.DuplicateEmailException;
+import dooya.see.domain.member.exception.DuplicateProfileException;
+import dooya.see.domain.member.exception.MemberNotFoundException;
+import dooya.see.domain.post.exception.InvalidPostStatusTransitionException;
+import dooya.see.domain.post.exception.PostNotFoundException;
+import dooya.see.domain.post.exception.UnauthorizedPostAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ControllerAdvice;

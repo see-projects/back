@@ -1,6 +1,7 @@
 package dooya.see.domain.post;
 
 import dooya.see.domain.post.event.*;
+import dooya.see.domain.post.exception.InvalidPostStatusTransitionException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

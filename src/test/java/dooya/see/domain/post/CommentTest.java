@@ -1,6 +1,8 @@
 package dooya.see.domain.post;
 
 import dooya.see.domain.post.event.*;
+import dooya.see.domain.post.exception.EmptyCommentUpdateException;
+import dooya.see.domain.post.exception.InvalidCommentStatusException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -109,7 +111,7 @@ class CommentTest {
             CommentUpdateRequest request = new CommentUpdateRequest("수정된 댓글입니다!");
 
             assertThatThrownBy(() -> comment.update(request))
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(InvalidCommentStatusException.class);
         }
 
         @DisplayName("null 내용으로 댓글 수정 시 예외가 발생한다")
@@ -120,7 +122,7 @@ class CommentTest {
             CommentUpdateRequest request = new CommentUpdateRequest(null);
 
             assertThatThrownBy(() -> comment.update(request))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(EmptyCommentUpdateException.class);
         }
     }
 
@@ -137,7 +139,7 @@ class CommentTest {
 
             assertThat(comment.getStatus()).isEqualTo(CommentStatus.DELETED);
             assertThat(comment.getMetaData().modifiedAt()).isNotNull();
-            assertThat(comment.isDelete()).isTrue();
+            assertThat(comment.isDeleted()).isTrue();
 
             assertThat(comment.hasDomainEvents()).isTrue();
             assertThat(comment.getDomainEvents()).hasSize(1);
@@ -152,7 +154,7 @@ class CommentTest {
             comment.delete();
 
             assertThatThrownBy(comment::delete)
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(InvalidCommentStatusException.class);
         }
     }
 
@@ -184,7 +186,7 @@ class CommentTest {
             comment.hide();
 
             assertThatThrownBy(comment::hide)
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(InvalidCommentStatusException.class);
         }
 
         @DisplayName("삭제된 댓글은 숨김 처리할 수 없다")
@@ -195,7 +197,7 @@ class CommentTest {
             comment.delete();
 
             assertThatThrownBy(comment::hide)
-                    .isInstanceOf(IllegalStateException.class);
+                    .isInstanceOf(InvalidCommentStatusException.class);
         }
     }
     

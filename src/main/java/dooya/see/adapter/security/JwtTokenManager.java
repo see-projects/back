@@ -1,7 +1,7 @@
 package dooya.see.adapter.security;
 
 import dooya.see.application.member.required.TokenManager;
-import dooya.see.domain.member.AuthenticateException;
+import dooya.see.domain.member.exception.AuthenticateException;
 import dooya.see.domain.member.Member;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;

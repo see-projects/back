@@ -1,7 +1,7 @@
 package dooya.see.application.member.provided;
 
 import dooya.see.SeeTestConfiguration;
-import dooya.see.domain.member.AuthenticateException;
+import dooya.see.domain.member.exception.AuthenticateException;
 import dooya.see.domain.member.LoginResult;
 import dooya.see.domain.member.Member;
 import dooya.see.domain.member.MemberFixture;

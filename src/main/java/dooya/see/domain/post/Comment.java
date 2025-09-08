@@ -1,11 +1,15 @@
 package dooya.see.domain.post;
 
 import dooya.see.domain.post.event.*;
+import dooya.see.domain.post.exception.EmptyCommentUpdateException;
+import dooya.see.domain.post.exception.InvalidCommentStatusException;
 import dooya.see.domain.shared.AbstractAggregateRoot;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.Objects;
 
 import static java.util.Objects.*;
 
@@ -41,85 +45,47 @@ public class Comment extends AbstractAggregateRoot {
     public static Comment create(CommentCreateRequest request, Long postId, Long memberId) {
         Comment comment = new Comment();
 
-        comment.content = new CommentContent(request.body());
-        comment.postId = requireNonNull(postId, "게시글 ID는 필수입니다");
-        comment.memberId = requireNonNull(memberId, "회원 ID는 필수입니다");
-        comment.parentCommentId = request.parentCommentId();
-        comment.status = CommentStatus.ACTIVE;
-        comment.metaData = CommentMetaData.create();
-
-        comment.creationContext = new CommentCreationContext(
-                postId, memberId, request.parentCommentId(), request.body()
-        );
+        comment.initializeComment(request, postId, memberId);
+        comment.prepareCreationEvent(request);
 
         return comment;
     }
 
     public void publishCreationEventIfNeeded() {
-        if (creationContext != null && getId() != null) {
-            addDomainEvent(CommentCreated.of(
-                    getId(),
-                    creationContext.postId(),
-                    creationContext.memberId(),
-                    creationContext.parentCommentId()
-            ));
-            creationContext = null;
+        if (hasCreationContext() && getId() != null) {
+            publishCreationEvent();
+            clearCreationContext();
         }
+    }
+
+    @PostPersist
+    private void onPostPersist() {
+        publishCreationEvent();
     }
 
     public void update(CommentUpdateRequest request) {
         validateCanBeModified();
+        validateUpdateRequest(request);
 
-        if (!request.hasUpdate()) {
-            throw new IllegalArgumentException("수정할 내용이 없습니다");
-        }
-
-        String previousContent = this.content.text();
-        this.content = new CommentContent(request.body());
-        this.metaData = this.metaData.updateModifiedAt();
-
-        addDomainEvent(new CommentUpdated(
-                getId(),
-                this.postId,
-                this.memberId,
-                previousContent,
-                request.body()
-        ));
+        String previousContent = updateContent(request);
+        updateModificationMetadata();
+        publishUpdateEvent(previousContent, request.body());
     }
 
     public void delete() {
         validateCanBeModified();
-
-        this.status = CommentStatus.DELETED;
-        this.metaData = this.metaData.updateModifiedAt();
-
-        addDomainEvent(new CommentDeleted(
-                getId(),
-                this.postId,
-                this.memberId,
-                isReply()
-        ));
+        
+        changeStatusToDeleted();
+        updateModificationMetadata();
+        publishDeleteEvent();
     }
 
     public void hide() {
-        if (this.status == CommentStatus.HIDDEN) {
-            throw new IllegalStateException("이미 숨김 처리된 댓글입니다");
-        }
-
-        if (this.status == CommentStatus.DELETED) {
-            throw new IllegalStateException("삭제된 댓글을 숨김 처리할 수 없습니다");
-        }
-
-        CommentStatus previousStatus = this.status;
-        this.status = CommentStatus.HIDDEN;
-        this.metaData = this.metaData.updateModifiedAt();
-
-        addDomainEvent(new CommentHidden(
-                getId(),
-                this.postId,
-                this.memberId,
-                previousStatus
-        ));
+        validateCanHide();
+        
+        CommentStatus previousStatus = changeStatusToHidden();
+        updateModificationMetadata();
+        publishHideEvent(previousStatus);
     }
 
     public boolean isReply() {
@@ -134,7 +100,7 @@ public class Comment extends AbstractAggregateRoot {
         return status == CommentStatus.ACTIVE;
     }
 
-    public boolean isDelete() {
+    public boolean isDeleted() {
         return status == CommentStatus.DELETED;
     }
 
@@ -143,12 +109,115 @@ public class Comment extends AbstractAggregateRoot {
     }
 
     public boolean isWrittenBy(Long memberId) {
-        return this.memberId.equals(memberId);
+        return Objects.equals(this.memberId, memberId);
+    }
+
+    private void initializeComment(CommentCreateRequest request, Long postId, Long memberId) {
+        this.content = new CommentContent(request.body());
+        this.postId = requireNonNull(postId, "게시글 ID는 필수입니다");
+        this.memberId = requireNonNull(memberId, "회원 ID는 필수입니다");
+        this.parentCommentId = request.parentCommentId();
+        this.status = CommentStatus.ACTIVE;
+        this.metaData = CommentMetaData.create();
+    }
+
+    private void prepareCreationEvent(CommentCreateRequest request) {
+        this.creationContext = new CommentCreationContext(
+                this.postId, this.memberId, request.parentCommentId(), request.body()
+        );
+    }
+
+    private boolean hasCreationContext() {
+        return creationContext != null;
+    }
+
+    private void publishCreationEvent() {
+        addDomainEvent(CommentCreated.of(
+                getId(),
+                creationContext.postId(),
+                creationContext.memberId(),
+                creationContext.parentCommentId()
+        ));
+    }
+
+    private void clearCreationContext() {
+        creationContext = null;
+    }
+
+    private void validateUpdateRequest(CommentUpdateRequest request) {
+        if (!request.hasUpdate()) {
+            throw new EmptyCommentUpdateException();
+        }
+    }
+
+    private String updateContent(CommentUpdateRequest request) {
+        String previousContent = this.content.text();
+        this.content = new CommentContent(request.body());
+        return previousContent;
+    }
+
+    private void updateModificationMetadata() {
+        this.metaData = this.metaData.updateModifiedAt();
+    }
+
+    private void publishUpdateEvent(String previousContent, String newContent) {
+        addDomainEvent(new CommentUpdated(
+                getId(),
+                this.postId,
+                this.memberId,
+                previousContent,
+                newContent
+        ));
+    }
+
+    private void changeStatusToDeleted() {
+        this.status = CommentStatus.DELETED;
+    }
+
+    private void publishDeleteEvent() {
+        addDomainEvent(new CommentDeleted(
+                getId(),
+                this.postId,
+                this.memberId,
+                isReply()
+        ));
+    }
+
+    private void validateCanHide() {
+        validateNotAlreadyHidden();
+        validateNotDeleted();
+    }
+
+    private void validateNotAlreadyHidden() {
+        if (this.status == CommentStatus.HIDDEN) {
+            throw InvalidCommentStatusException.alreadyHidden();
+        }
+    }
+
+    private void validateNotDeleted() {
+        if (this.status == CommentStatus.DELETED) {
+            throw InvalidCommentStatusException.cannotHideDeleted();
+        }
+    }
+
+    private CommentStatus changeStatusToHidden() {
+        CommentStatus previousStatus = this.status;
+        this.status = CommentStatus.HIDDEN;
+        return previousStatus;
+    }
+
+    private void publishHideEvent(CommentStatus previousStatus) {
+        addDomainEvent(new CommentHidden(
+                getId(),
+                this.postId,
+                this.memberId,
+                previousStatus
+        ));
     }
 
     private void validateCanBeModified() {
         if (!canBeModified()) {
-            throw new IllegalStateException("수정할 수 없는 댓글입니다");
+            throw InvalidCommentStatusException.cannotModify();
         }
     }
 }
