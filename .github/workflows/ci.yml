@@ -40,7 +40,7 @@ jobs:
 
       # Gradle Wrapper 검증 (보안)
       - name: Validate Gradle wrapper
-        uses: gradle/wrapper-validation-action@v2
+        uses: gradle/wrapper-validation-action@v1
 
       # Gradle 빌드 액션 사용 (캐싱과 최적화가 내장됨)
       - name: Setup Gradle
