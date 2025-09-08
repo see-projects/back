@@ -1,4 +1,4 @@
-package dooya.see.domain.post;
+package dooya.see.domain.post.exception;
 
 public class UnauthorizedCommentAccessException extends RuntimeException {
     public UnauthorizedCommentAccessException(String message) {

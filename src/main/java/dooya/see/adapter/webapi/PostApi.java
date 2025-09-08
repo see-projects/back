@@ -6,6 +6,7 @@ import dooya.see.application.member.required.TokenManager;
 import dooya.see.application.post.provided.PostFinder;
 import dooya.see.application.post.provided.PostManager;
 import dooya.see.domain.post.*;
+import dooya.see.domain.post.exception.UnauthorizedPostAccessException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;

@@ -5,6 +5,7 @@ import dooya.see.application.post.provided.PostManager;
 import dooya.see.application.post.required.PostLikeRepository;
 import dooya.see.application.post.required.PostRepository;
 import dooya.see.domain.post.*;
+import dooya.see.domain.post.exception.UnauthorizedPostAccessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;

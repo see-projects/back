@@ -1,4 +1,4 @@
-package dooya.see.domain.post;
+package dooya.see.domain.post.exception;
 
 public class EmptyCommentUpdateException extends RuntimeException {
     public EmptyCommentUpdateException(String message) {

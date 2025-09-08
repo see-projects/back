@@ -3,6 +3,7 @@ package dooya.see.application.post.provided;
 import dooya.see.SeeTestConfiguration;
 import dooya.see.application.post.required.CommentRepository;
 import dooya.see.domain.post.*;
+import dooya.see.domain.post.exception.CommentNotFoundException;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

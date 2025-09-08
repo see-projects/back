@@ -1,5 +1,6 @@
 package dooya.see.domain.post;
 
+import dooya.see.domain.post.exception.InvalidPostStatusTransitionException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -15,7 +16,7 @@ class InvalidPostStatusTransitionExceptionTest {
         PostStatus currentStatus = PostStatus.PUBLISHED;
         String attemptedAction = "delete";
 
-        InvalidPostStatusTransitionException exception = 
+        InvalidPostStatusTransitionException exception =
             new InvalidPostStatusTransitionException(currentStatus, attemptedAction);
 
         assertThat(exception.getCurrentStatus()).isEqualTo(currentStatus);

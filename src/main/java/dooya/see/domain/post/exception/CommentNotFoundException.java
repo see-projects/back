@@ -1,4 +1,4 @@
-package dooya.see.domain.post;
+package dooya.see.domain.post.exception;
 
 public class CommentNotFoundException extends RuntimeException {
     public CommentNotFoundException(String message) {

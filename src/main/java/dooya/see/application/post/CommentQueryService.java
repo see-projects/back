@@ -3,7 +3,7 @@ package dooya.see.application.post;
 import dooya.see.application.post.provided.CommentFinder;
 import dooya.see.application.post.required.CommentRepository;
 import dooya.see.domain.post.Comment;
-import dooya.see.domain.post.CommentNotFoundException;
+import dooya.see.domain.post.exception.CommentNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

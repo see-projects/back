@@ -1,4 +1,4 @@
-package dooya.see.domain.post;
+package dooya.see.domain.post.exception;
 
 public class InvalidCommentStatusException extends RuntimeException {
     public InvalidCommentStatusException(String message) {

@@ -2,6 +2,7 @@ package dooya.see.application.post.provided;
 
 import dooya.see.SeeTestConfiguration;
 import dooya.see.domain.post.*;
+import dooya.see.domain.post.exception.PostNotFoundException;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

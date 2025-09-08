@@ -1,6 +1,8 @@
 package dooya.see.domain.post;
 
 import dooya.see.domain.post.event.*;
+import dooya.see.domain.post.exception.EmptyCommentUpdateException;
+import dooya.see.domain.post.exception.InvalidCommentStatusException;
 import dooya.see.domain.shared.AbstractAggregateRoot;
 import jakarta.persistence.*;
 import lombok.AccessLevel;

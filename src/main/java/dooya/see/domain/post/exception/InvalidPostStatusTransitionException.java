@@ -1,4 +1,6 @@
-package dooya.see.domain.post;
+package dooya.see.domain.post.exception;
+
+import dooya.see.domain.post.PostStatus;
 
 public class InvalidPostStatusTransitionException extends RuntimeException {
     private final PostStatus currentStatus;
