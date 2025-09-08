@@ -88,6 +88,40 @@ record CommentManagerTest(
         }
     }
 
+    @Nested
+    @DisplayName("댓글 삭제")
+    class DeleteComment {
+        @DisplayName("")
+        @Test
+        void a() {
+            Post post = createPost();
+            createComment(post.getId());
+
+            Comment comment = commentManager.delete(1L, 1L);
+
+            assertThat(comment.getId()).isNotNull();
+            assertThat(comment.getStatus()).isEqualTo(CommentStatus.DELETED);
+        }
+
+        @DisplayName("")
+        @Test
+        void b() {
+            assertThatThrownBy(() -> commentManager.delete(1L, 1L))
+                .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @DisplayName("")
+        @Test
+        void c() {
+            Post post = createPost();
+            createComment(post.getId());
+            commentManager.delete(1L, 1L);
+
+            assertThatThrownBy(() -> commentManager.delete(1L, 1L))
+                .isInstanceOf(IllegalStateException.class);
+        }
+    }
+
     private Post createPost() {
         Post post = postManager.create(createPostRequest(), 1L);
         entityManager.flush();

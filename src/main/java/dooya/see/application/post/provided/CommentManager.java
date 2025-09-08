@@ -8,4 +8,6 @@ public interface CommentManager {
     Comment create(CommentCreateRequest request, Long postId, Long memberId);
 
     Comment update(CommentUpdateRequest request, Long commentId, Long memberId);
+
+    Comment delete(Long commentId, Long memberId);
 }
