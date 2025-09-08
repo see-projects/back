@@ -139,7 +139,7 @@ class CommentTest {
 
             assertThat(comment.getStatus()).isEqualTo(CommentStatus.DELETED);
             assertThat(comment.getMetaData().modifiedAt()).isNotNull();
-            assertThat(comment.isDelete()).isTrue();
+            assertThat(comment.isDeleted()).isTrue();
 
             assertThat(comment.hasDomainEvents()).isTrue();
             assertThat(comment.getDomainEvents()).hasSize(1);

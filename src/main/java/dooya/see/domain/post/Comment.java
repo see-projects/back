@@ -56,6 +56,11 @@ public class Comment extends AbstractAggregateRoot {
         }
     }
 
+    @PostPersist
+    private void onPostPersist() {
+        publishCreationEvent();
+    }
+
     public void update(CommentUpdateRequest request) {
         validateCanBeModified();
         validateUpdateRequest(request);
@@ -93,7 +98,7 @@ public class Comment extends AbstractAggregateRoot {
         return status == CommentStatus.ACTIVE;
     }
 
-    public boolean isDelete() {
+    public boolean isDeleted() {
         return status == CommentStatus.DELETED;
     }
 
