@@ -30,28 +30,29 @@ record CommentManagerTest(
     @Nested
     @DisplayName("댓글 생성")
     class CreateComment {
-        @DisplayName("")
+        @DisplayName("댓글 생성이 성공한다")
         @Test
-        void a() {
+        void createCommentSuccess() {
             Post post = createPost();
+            
             Comment comment = createComment(post.getId());
 
             assertThat(comment.getId()).isNotNull();
-            assertThat(comment.getContent().text()).isEqualTo("테스트 게시물");
-            assertThat(comment.getPostId()).isNotNull();
-            assertThat(comment.getMemberId()).isNotNull();
+            assertThat(comment.getContent().text()).isEqualTo("테스트 댓글");
+            assertThat(comment.getPostId()).isEqualTo(post.getId());
+            assertThat(comment.getMemberId()).isEqualTo(1L);
             assertThat(comment.getParentCommentId()).isNull();
             assertThat(comment.getStatus()).isEqualTo(CommentStatus.ACTIVE);
             assertThat(comment.getMetaData().createdAt()).isNotNull();
             assertThat(comment.getMetaData().modifiedAt()).isNull();
         }
 
-        @DisplayName("")
+        @DisplayName("존재하지 않는 게시글에 댓글 생성 시 예외가 발생한다")
         @Test
-        void b() {
-            CommentCreateRequest request = new CommentCreateRequest("테스트 게시물");
+        void createCommentWithNonexistentPostThrowsException() {
+            CommentCreateRequest request = new CommentCreateRequest("테스트 댓글");
 
-            assertThatThrownBy(() -> commentManager.create(request, 1L, 1L))
+            assertThatThrownBy(() -> commentManager.create(request, 999L, 1L))
                 .isInstanceOf(PostNotFoundException.class);
         }
     }
@@ -59,131 +60,131 @@ record CommentManagerTest(
     @Nested
     @DisplayName("댓글 업데이트")
     class UpdateComment {
-        @DisplayName("")
+        @DisplayName("댓글 업데이트가 성공한다")
         @Test
-        void a() {
+        void updateCommentSuccess() {
             Post post = createPost();
-            createComment(post.getId());
+            Comment comment = createComment(post.getId());
             CommentUpdateRequest request = new CommentUpdateRequest("업데이트 댓글");
 
-            Comment comment = commentManager.update(request, 1L, 1L);
+            Comment updatedComment = commentManager.update(request, comment.getId(), 1L);
 
-            assertThat(comment.getId()).isNotNull();
-            assertThat(comment.getContent().text()).isEqualTo("업데이트 댓글");
-            assertThat(comment.getPostId()).isNotNull();
-            assertThat(comment.getMemberId()).isNotNull();
-            assertThat(comment.getParentCommentId()).isNull();
-            assertThat(comment.getStatus()).isEqualTo(CommentStatus.ACTIVE);
-            assertThat(comment.getMetaData().createdAt()).isNotNull();
-            assertThat(comment.getMetaData().modifiedAt()).isNotNull();
+            assertThat(updatedComment.getId()).isEqualTo(comment.getId());
+            assertThat(updatedComment.getContent().text()).isEqualTo("업데이트 댓글");
+            assertThat(updatedComment.getPostId()).isEqualTo(post.getId());
+            assertThat(updatedComment.getMemberId()).isEqualTo(1L);
+            assertThat(updatedComment.getParentCommentId()).isNull();
+            assertThat(updatedComment.getStatus()).isEqualTo(CommentStatus.ACTIVE);
+            assertThat(updatedComment.getMetaData().createdAt()).isNotNull();
+            assertThat(updatedComment.getMetaData().modifiedAt()).isNotNull();
         }
 
-        @DisplayName("")
+        @DisplayName("존재하지 않는 댓글 업데이트 시 예외가 발생한다")
         @Test
-        void b() {
+        void updateNonexistentCommentThrowsException() {
             CommentUpdateRequest request = new CommentUpdateRequest("업데이트 댓글");
 
-            assertThatThrownBy(() -> commentManager.update(request, 1L, 1L))
-                .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> commentManager.update(request, 999L, 1L))
+                .isInstanceOf(CommentNotFoundException.class);
         }
 
-        @DisplayName("")
+        @DisplayName("다른 사용자의 댓글 업데이트 시 예외가 발생한다")
         @Test
-        void c() {
+        void updateOthersCommentThrowsException() {
             Post post = createPost();
-            createComment(post.getId());
+            Comment comment = createComment(post.getId());
             CommentUpdateRequest request = new CommentUpdateRequest("업데이트 댓글");
 
-            assertThatThrownBy(() -> commentManager.update(request, 1L, 2L))
-                .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> commentManager.update(request, comment.getId(), 2L))
+                .isInstanceOf(UnauthorizedCommentAccessException.class);
         }
     }
 
     @Nested
     @DisplayName("댓글 삭제")
     class DeleteComment {
-        @DisplayName("")
+        @DisplayName("댓글 삭제가 성공한다")
         @Test
-        void a() {
+        void deleteCommentSuccess() {
             Post post = createPost();
-            createComment(post.getId());
+            Comment comment = createComment(post.getId());
 
-            Comment comment = commentManager.delete(1L, 1L);
+            Comment deletedComment = commentManager.delete(comment.getId(), 1L);
 
-            assertThat(comment.getId()).isNotNull();
-            assertThat(comment.getStatus()).isEqualTo(CommentStatus.DELETED);
+            assertThat(deletedComment.getId()).isEqualTo(comment.getId());
+            assertThat(deletedComment.getStatus()).isEqualTo(CommentStatus.DELETED);
         }
 
-        @DisplayName("")
+        @DisplayName("존재하지 않는 댓글 삭제 시 예외가 발생한다")
         @Test
-        void b() {
-            assertThatThrownBy(() -> commentManager.delete(1L, 1L))
-                .isInstanceOf(IllegalArgumentException.class);
+        void deleteNonexistentCommentThrowsException() {
+            assertThatThrownBy(() -> commentManager.delete(999L, 1L))
+                .isInstanceOf(CommentNotFoundException.class);
         }
 
-        @DisplayName("")
+        @DisplayName("이미 삭제된 댓글을 다시 삭제 시 예외가 발생한다")
         @Test
-        void c() {
+        void deleteAlreadyDeletedCommentThrowsException() {
             Post post = createPost();
-            createComment(post.getId());
-            commentManager.delete(1L, 1L);
+            Comment comment = createComment(post.getId());
+            commentManager.delete(comment.getId(), 1L);
 
-            assertThatThrownBy(() -> commentManager.delete(1L, 1L))
-                .isInstanceOf(IllegalStateException.class);
+            assertThatThrownBy(() -> commentManager.delete(comment.getId(), 1L))
+                .isInstanceOf(InvalidCommentStatusException.class);
         }
 
-        @DisplayName("")
+        @DisplayName("다른 사용자의 댓글 삭제 시 예외가 발생한다")
         @Test
-        void d() {
+        void deleteOthersCommentThrowsException() {
             Post post = createPost();
-            createComment(post.getId());
+            Comment comment = createComment(post.getId());
 
-            assertThatThrownBy(() -> commentManager.delete(1L, 2L))
-                .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> commentManager.delete(comment.getId(), 2L))
+                .isInstanceOf(UnauthorizedCommentAccessException.class);
         }
     }
 
     @Nested
     @DisplayName("댓글 숨김")
     class HideComment {
-        @DisplayName("")
+        @DisplayName("댓글 숨김이 성공한다")
         @Test
-        void a() {
+        void hideCommentSuccess() {
             Post post = createPost();
-            createComment(post.getId());
+            Comment comment = createComment(post.getId());
 
-            Comment comment = commentManager.hide(1L, 1L);
+            Comment hiddenComment = commentManager.hide(comment.getId(), 1L);
 
-            assertThat(comment.getId());
-            assertThat(comment.getStatus()).isEqualTo(CommentStatus.HIDDEN);
+            assertThat(hiddenComment.getId()).isEqualTo(comment.getId());
+            assertThat(hiddenComment.getStatus()).isEqualTo(CommentStatus.HIDDEN);
         }
 
-        @DisplayName("")
+        @DisplayName("존재하지 않는 댓글 숨김 시 예외가 발생한다")
         @Test
-        void b() {
-            assertThatThrownBy(() -> commentManager.hide(1L, 1L))
-                .isInstanceOf(IllegalArgumentException.class);
+        void hideNonexistentCommentThrowsException() {
+            assertThatThrownBy(() -> commentManager.hide(999L, 1L))
+                .isInstanceOf(CommentNotFoundException.class);
         }
 
-        @DisplayName("")
+        @DisplayName("이미 숨김 처리된 댓글을 다시 숨김 시 예외가 발생한다")
         @Test
-        void c() {
+        void hideAlreadyHiddenCommentThrowsException() {
             Post post = createPost();
-            createComment(post.getId());
-            commentManager.hide(1L, 1L);
+            Comment comment = createComment(post.getId());
+            commentManager.hide(comment.getId(), 1L);
 
-            assertThatThrownBy(() -> commentManager.hide(1L, 1L))
-                .isInstanceOf(IllegalStateException.class);
+            assertThatThrownBy(() -> commentManager.hide(comment.getId(), 1L))
+                .isInstanceOf(InvalidCommentStatusException.class);
         }
 
-        @DisplayName("")
+        @DisplayName("다른 사용자의 댓글 숨김 시 예외가 발생한다")
         @Test
-        void d() {
+        void hideOthersCommentThrowsException() {
             Post post = createPost();
-            createComment(post.getId());
+            Comment comment = createComment(post.getId());
 
-            assertThatThrownBy(() -> commentManager.hide(1L, 2L))
-                .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> commentManager.hide(comment.getId(), 2L))
+                .isInstanceOf(UnauthorizedCommentAccessException.class);
         }
     }
 
@@ -191,7 +192,6 @@ record CommentManagerTest(
         Post post = postManager.create(createPostRequest(), 1L);
         entityManager.flush();
         entityManager.clear();
-
         return postFinder.find(post.getId());
     }
 
@@ -199,7 +199,6 @@ record CommentManagerTest(
         Comment comment = commentManager.create(CommentFixture.createCommentRequest(), postId, 1L);
         entityManager.flush();
         entityManager.clear();
-
         return commentFinder.find(comment.getId());
     }
 }

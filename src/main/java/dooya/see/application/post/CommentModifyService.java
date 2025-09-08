@@ -73,10 +73,10 @@ public class CommentModifyService implements CommentManager {
 
     private Comment findCommentByIdAndValidateOwnership(Long commentId, Long memberId) {
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다: " + commentId));
+                .orElseThrow(() -> new CommentNotFoundException(commentId));
 
         if (!comment.isWrittenBy(memberId)) {
-            throw new IllegalArgumentException("댓글 작성자만 수정할 수 있습니다");
+            throw UnauthorizedCommentAccessException.forAction("수정");
         }
 
         return comment;
