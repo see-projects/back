@@ -2,10 +2,7 @@ package dooya.see.application.post.provided;
 
 import dooya.see.SeeTestConfiguration;
 import dooya.see.application.post.required.CommentRepository;
-import dooya.see.domain.post.Comment;
-import dooya.see.domain.post.CommentFixture;
-import dooya.see.domain.post.CommentStatus;
-import dooya.see.domain.post.Post;
+import dooya.see.domain.post.*;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,10 +26,9 @@ public record CommentFinderTest(
         PostManager postManager,
         PostFinder postFinder,
         EntityManager entityManager) {
-
     @DisplayName("댓글 ID로 댓글을 조회한다")
     @Test
-    void find_comment_by_id() {
+    void findCommentById() {
         Post post = createPost();
         Comment comment = createComment(post.getId(), 1L, "테스트 댓글");
 
@@ -50,17 +46,17 @@ public record CommentFinderTest(
 
     @DisplayName("존재하지 않는 댓글 ID로 조회하면 예외가 발생한다")
     @Test
-    void find_comment_by_nonexistent_id_throws_exception() {
+    void findCommentByNonexistentIdThrowsException() {
         Long nonexistentCommentId = 999L;
 
         assertThatThrownBy(() -> commentFinder.find(nonexistentCommentId))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(CommentNotFoundException.class)
                 .hasMessage("댓글을 찾을 수 없습니다: " + nonexistentCommentId);
     }
 
     @DisplayName("게시글 ID로 댓글 목록을 조회한다")
     @Test
-    void find_comments_by_post_id() {
+    void findCommentsByPostId() {
         Post post = createPost();
         Comment comment1 = createComment(post.getId(), 1L, "첫 번째 댓글");
         Comment comment2 = createComment(post.getId(), 2L, "두 번째 댓글");
@@ -76,7 +72,7 @@ public record CommentFinderTest(
 
     @DisplayName("댓글이 없는 게시글의 댓글 목록 조회 시 빈 목록을 반환한다")
     @Test
-    void find_comments_by_post_id_with_no_comments_returns_empty_list() {
+    void findCommentsByPostIdWithNoCommentsReturnsEmptyList() {
         Post post = createPost();
 
         List<Comment> comments = commentFinder.findByPostId(post.getId());
@@ -86,7 +82,7 @@ public record CommentFinderTest(
 
     @DisplayName("부모 댓글 ID로 답글 목록을 조회한다")
     @Test
-    void find_replies_by_parent_comment_id() {
+    void findRepliesByParentCommentId() {
         Post post = createPost();
         Comment parentComment = createComment(post.getId(), 1L, "부모 댓글");
         Comment reply1 = createReply(post.getId(), 2L, "첫 번째 답글", parentComment.getId());
@@ -105,7 +101,7 @@ public record CommentFinderTest(
 
     @DisplayName("답글이 없는 댓글의 답글 목록 조회 시 빈 목록을 반환한다")
     @Test
-    void find_replies_by_parent_comment_id_with_no_replies_returns_empty_list() {
+    void findRepliesByParentCommentIdWithNoRepliesReturnsEmptyList() {
         Post post = createPost();
         Comment parentComment = createComment(post.getId(), 1L, "부모 댓글");
 
@@ -116,7 +112,7 @@ public record CommentFinderTest(
 
     @DisplayName("회원 ID로 해당 회원이 작성한 댓글 목록을 조회한다")
     @Test
-    void find_comments_by_member_id() {
+    void findCommentsByMemberId() {
         Post post1 = createPost();
         Post post2 = createPost();
         
@@ -137,7 +133,7 @@ public record CommentFinderTest(
 
     @DisplayName("댓글을 작성하지 않은 회원의 댓글 목록 조회 시 빈 목록을 반환한다")
     @Test
-    void find_comments_by_member_id_with_no_comments_returns_empty_list() {
+    void findCommentsByMemberIdWithNoCommentsReturnsEmptyList() {
         Long memberWithNoComments = 999L;
 
         List<Comment> memberComments = commentFinder.findByMemberId(memberWithNoComments);
@@ -149,7 +145,6 @@ public record CommentFinderTest(
         Post post = postManager.create(createPostRequest(), 1L);
         entityManager.flush();
         entityManager.clear();
-
         return postFinder.find(post.getId());
     }
 
@@ -161,7 +156,6 @@ public record CommentFinderTest(
         );
         entityManager.flush();
         entityManager.clear();
-
         return commentFinder.find(comment.getId());
     }
 
@@ -173,7 +167,6 @@ public record CommentFinderTest(
         );
         entityManager.flush();
         entityManager.clear();
-
         return commentFinder.find(reply.getId());
     }
 }

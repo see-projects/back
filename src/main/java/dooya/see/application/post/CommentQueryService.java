@@ -3,6 +3,7 @@ package dooya.see.application.post;
 import dooya.see.application.post.provided.CommentFinder;
 import dooya.see.application.post.required.CommentRepository;
 import dooya.see.domain.post.Comment;
+import dooya.see.domain.post.CommentNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,7 +20,7 @@ public class CommentQueryService implements CommentFinder {
     @Override
     public Comment find(Long commentId) {
         return commentRepository.findById(commentId)
-                .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다: " + commentId));
+                .orElseThrow(() -> new CommentNotFoundException(commentId));
     }
 
     @Override
