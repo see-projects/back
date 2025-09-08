@@ -30,6 +30,11 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
         return getProblemDetail(HttpStatus.UNAUTHORIZED, exception);
     }
 
+    @ExceptionHandler({EmptyCommentUpdateException.class})
+    public ProblemDetail badRequestExceptionHandler(Exception exception) {
+        return getProblemDetail(HttpStatus.BAD_REQUEST, exception);
+    }
+
     @ExceptionHandler({UnauthorizedPostAccessException.class, UnauthorizedCommentAccessException.class})
     public ProblemDetail forbiddenExceptionHandler(Exception exception) {
         return getProblemDetail(HttpStatus.FORBIDDEN, exception);
