@@ -71,7 +71,7 @@ public class Comment extends AbstractAggregateRoot {
         validateCanBeModified();
 
         if (!request.hasUpdate()) {
-            throw new IllegalArgumentException("수정할 내용이 없습니다");
+            throw new EmptyCommentUpdateException();
         }
 
         String previousContent = this.content.text();
@@ -103,11 +103,11 @@ public class Comment extends AbstractAggregateRoot {
 
     public void hide() {
         if (this.status == CommentStatus.HIDDEN) {
-            throw new IllegalStateException("이미 숨김 처리된 댓글입니다");
+            throw InvalidCommentStatusException.alreadyHidden();
         }
 
         if (this.status == CommentStatus.DELETED) {
-            throw new IllegalStateException("삭제된 댓글을 숨김 처리할 수 없습니다");
+            throw InvalidCommentStatusException.cannotHideDeleted();
         }
 
         CommentStatus previousStatus = this.status;
@@ -148,7 +148,7 @@ public class Comment extends AbstractAggregateRoot {
 
     private void validateCanBeModified() {
         if (!canBeModified()) {
-            throw new IllegalStateException("수정할 수 없는 댓글입니다");
+            throw InvalidCommentStatusException.cannotModify();
         }
     }
 }
