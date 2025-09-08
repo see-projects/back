@@ -41,85 +41,42 @@ public class Comment extends AbstractAggregateRoot {
     public static Comment create(CommentCreateRequest request, Long postId, Long memberId) {
         Comment comment = new Comment();
 
-        comment.content = new CommentContent(request.body());
-        comment.postId = requireNonNull(postId, "게시글 ID는 필수입니다");
-        comment.memberId = requireNonNull(memberId, "회원 ID는 필수입니다");
-        comment.parentCommentId = request.parentCommentId();
-        comment.status = CommentStatus.ACTIVE;
-        comment.metaData = CommentMetaData.create();
-
-        comment.creationContext = new CommentCreationContext(
-                postId, memberId, request.parentCommentId(), request.body()
-        );
+        comment.initializeComment(request, postId, memberId);
+        comment.prepareCreationEvent(request);
 
         return comment;
     }
 
     public void publishCreationEventIfNeeded() {
-        if (creationContext != null && getId() != null) {
-            addDomainEvent(CommentCreated.of(
-                    getId(),
-                    creationContext.postId(),
-                    creationContext.memberId(),
-                    creationContext.parentCommentId()
-            ));
-            creationContext = null;
+        if (hasCreationContext() && getId() != null) {
+            publishCreationEvent();
+            clearCreationContext();
         }
     }
 
     public void update(CommentUpdateRequest request) {
         validateCanBeModified();
+        validateUpdateRequest(request);
 
-        if (!request.hasUpdate()) {
-            throw new EmptyCommentUpdateException();
-        }
-
-        String previousContent = this.content.text();
-        this.content = new CommentContent(request.body());
-        this.metaData = this.metaData.updateModifiedAt();
-
-        addDomainEvent(new CommentUpdated(
-                getId(),
-                this.postId,
-                this.memberId,
-                previousContent,
-                request.body()
-        ));
+        String previousContent = updateContent(request);
+        updateModificationMetadata();
+        publishUpdateEvent(previousContent, request.body());
     }
 
     public void delete() {
         validateCanBeModified();
-
-        this.status = CommentStatus.DELETED;
-        this.metaData = this.metaData.updateModifiedAt();
-
-        addDomainEvent(new CommentDeleted(
-                getId(),
-                this.postId,
-                this.memberId,
-                isReply()
-        ));
+        
+        changeStatusToDeleted();
+        updateModificationMetadata();
+        publishDeleteEvent();
     }
 
     public void hide() {
-        if (this.status == CommentStatus.HIDDEN) {
-            throw InvalidCommentStatusException.alreadyHidden();
-        }
-
-        if (this.status == CommentStatus.DELETED) {
-            throw InvalidCommentStatusException.cannotHideDeleted();
-        }
-
-        CommentStatus previousStatus = this.status;
-        this.status = CommentStatus.HIDDEN;
-        this.metaData = this.metaData.updateModifiedAt();
-
-        addDomainEvent(new CommentHidden(
-                getId(),
-                this.postId,
-                this.memberId,
-                previousStatus
-        ));
+        validateCanHide();
+        
+        CommentStatus previousStatus = changeStatusToHidden();
+        updateModificationMetadata();
+        publishHideEvent(previousStatus);
     }
 
     public boolean isReply() {
@@ -144,6 +101,109 @@ public class Comment extends AbstractAggregateRoot {
 
     public boolean isWrittenBy(Long memberId) {
         return this.memberId.equals(memberId);
+    }
+
+    private void initializeComment(CommentCreateRequest request, Long postId, Long memberId) {
+        this.content = new CommentContent(request.body());
+        this.postId = requireNonNull(postId, "게시글 ID는 필수입니다");
+        this.memberId = requireNonNull(memberId, "회원 ID는 필수입니다");
+        this.parentCommentId = request.parentCommentId();
+        this.status = CommentStatus.ACTIVE;
+        this.metaData = CommentMetaData.create();
+    }
+
+    private void prepareCreationEvent(CommentCreateRequest request) {
+        this.creationContext = new CommentCreationContext(
+                this.postId, this.memberId, request.parentCommentId(), request.body()
+        );
+    }
+
+    private boolean hasCreationContext() {
+        return creationContext != null;
+    }
+
+    private void publishCreationEvent() {
+        addDomainEvent(CommentCreated.of(
+                getId(),
+                creationContext.postId(),
+                creationContext.memberId(),
+                creationContext.parentCommentId()
+        ));
+    }
+
+    private void clearCreationContext() {
+        creationContext = null;
+    }
+
+    private void validateUpdateRequest(CommentUpdateRequest request) {
+        if (!request.hasUpdate()) {
+            throw new EmptyCommentUpdateException();
+        }
+    }
+
+    private String updateContent(CommentUpdateRequest request) {
+        String previousContent = this.content.text();
+        this.content = new CommentContent(request.body());
+        return previousContent;
+    }
+
+    private void updateModificationMetadata() {
+        this.metaData = this.metaData.updateModifiedAt();
+    }
+
+    private void publishUpdateEvent(String previousContent, String newContent) {
+        addDomainEvent(new CommentUpdated(
+                getId(),
+                this.postId,
+                this.memberId,
+                previousContent,
+                newContent
+        ));
+    }
+
+    private void changeStatusToDeleted() {
+        this.status = CommentStatus.DELETED;
+    }
+
+    private void publishDeleteEvent() {
+        addDomainEvent(new CommentDeleted(
+                getId(),
+                this.postId,
+                this.memberId,
+                isReply()
+        ));
+    }
+
+    private void validateCanHide() {
+        validateNotAlreadyHidden();
+        validateNotDeleted();
+    }
+
+    private void validateNotAlreadyHidden() {
+        if (this.status == CommentStatus.HIDDEN) {
+            throw InvalidCommentStatusException.alreadyHidden();
+        }
+    }
+
+    private void validateNotDeleted() {
+        if (this.status == CommentStatus.DELETED) {
+            throw InvalidCommentStatusException.cannotHideDeleted();
+        }
+    }
+
+    private CommentStatus changeStatusToHidden() {
+        CommentStatus previousStatus = this.status;
+        this.status = CommentStatus.HIDDEN;
+        return previousStatus;
+    }
+
+    private void publishHideEvent(CommentStatus previousStatus) {
+        addDomainEvent(new CommentHidden(
+                getId(),
+                this.postId,
+                this.memberId,
+                previousStatus
+        ));
     }
 
     private void validateCanBeModified() {
