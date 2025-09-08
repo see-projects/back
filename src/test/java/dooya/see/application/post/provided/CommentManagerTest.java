@@ -86,6 +86,17 @@ record CommentManagerTest(
             assertThatThrownBy(() -> commentManager.update(request, 1L, 1L))
                 .isInstanceOf(IllegalArgumentException.class);
         }
+
+        @DisplayName("")
+        @Test
+        void c() {
+            Post post = createPost();
+            createComment(post.getId());
+            CommentUpdateRequest request = new CommentUpdateRequest("업데이트 댓글");
+
+            assertThatThrownBy(() -> commentManager.update(request, 1L, 2L))
+                .isInstanceOf(IllegalArgumentException.class);
+        }
     }
 
     @Nested
@@ -119,6 +130,16 @@ record CommentManagerTest(
 
             assertThatThrownBy(() -> commentManager.delete(1L, 1L))
                 .isInstanceOf(IllegalStateException.class);
+        }
+
+        @DisplayName("")
+        @Test
+        void d() {
+            Post post = createPost();
+            createComment(post.getId());
+
+            assertThatThrownBy(() -> commentManager.delete(1L, 2L))
+                .isInstanceOf(IllegalArgumentException.class);
         }
     }
 
