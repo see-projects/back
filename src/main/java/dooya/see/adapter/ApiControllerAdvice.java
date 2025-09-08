@@ -4,9 +4,7 @@ import dooya.see.domain.member.exception.AuthenticateException;
 import dooya.see.domain.member.exception.DuplicateEmailException;
 import dooya.see.domain.member.exception.DuplicateProfileException;
 import dooya.see.domain.member.exception.MemberNotFoundException;
-import dooya.see.domain.post.exception.InvalidPostStatusTransitionException;
-import dooya.see.domain.post.exception.PostNotFoundException;
-import dooya.see.domain.post.exception.UnauthorizedPostAccessException;
+import dooya.see.domain.post.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -22,7 +20,7 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
         return getProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, exception);
     }
 
-    @ExceptionHandler({DuplicateEmailException.class, DuplicateProfileException.class, InvalidPostStatusTransitionException.class})
+    @ExceptionHandler({DuplicateEmailException.class, DuplicateProfileException.class, InvalidPostStatusTransitionException.class, InvalidCommentStatusException.class})
     public ProblemDetail conflictExceptionHandler(Exception exception) {
         return getProblemDetail(HttpStatus.CONFLICT, exception);
     }
@@ -32,12 +30,12 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
         return getProblemDetail(HttpStatus.UNAUTHORIZED, exception);
     }
 
-    @ExceptionHandler(UnauthorizedPostAccessException.class)
+    @ExceptionHandler({UnauthorizedPostAccessException.class, UnauthorizedCommentAccessException.class})
     public ProblemDetail forbiddenExceptionHandler(Exception exception) {
         return getProblemDetail(HttpStatus.FORBIDDEN, exception);
     }
 
-    @ExceptionHandler({MemberNotFoundException.class, PostNotFoundException.class})
+    @ExceptionHandler({MemberNotFoundException.class, PostNotFoundException.class, CommentNotFoundException.class})
     public ProblemDetail notFoundExceptionHandler(Exception exception) {
         return getProblemDetail(HttpStatus.NOT_FOUND, exception);
     }
