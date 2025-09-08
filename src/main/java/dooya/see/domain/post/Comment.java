@@ -9,6 +9,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.Objects;
+
 import static java.util.Objects.*;
 
 @Entity
@@ -107,7 +109,7 @@ public class Comment extends AbstractAggregateRoot {
     }
 
     public boolean isWrittenBy(Long memberId) {
-        return this.memberId.equals(memberId);
+        return Objects.equals(this.memberId, memberId);
     }
 
     private void initializeComment(CommentCreateRequest request, Long postId, Long memberId) {
