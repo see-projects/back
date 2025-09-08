@@ -10,6 +10,7 @@ import dooya.see.application.member.required.MemberRepository;
 import dooya.see.domain.member.*;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -35,313 +36,338 @@ class MemberApiTest {
     final MemberRepository memberRepository;
     final MemberRegister memberRegister;
 
-    @DisplayName("회원 등록 요청 시 회원 ID와 이메일이 포함된 응답을 반환하고 데이터베이스에 저장된다")
-    @Test
-    void register() throws JsonProcessingException, UnsupportedEncodingException {
-        MemberRegisterRequest request = createMemberRegisterRequest();
-        String requestJson = objectMapper.writeValueAsString(request);
+    @Nested
+    @DisplayName("회원 등록")
+    class RegisterMember {
 
-        MvcTestResult result = mvcTester.post().uri("/api/members").contentType(MediaType.APPLICATION_JSON)
-                .content(requestJson).exchange();
+        @DisplayName("회원 등록 요청 시 회원 ID와 이메일이 포함된 응답을 반환하고 데이터베이스에 저장된다")
+        @Test
+        void register() throws JsonProcessingException, UnsupportedEncodingException {
+            MemberRegisterRequest request = createMemberRegisterRequest();
+            String requestJson = objectMapper.writeValueAsString(request);
 
-        assertThat(result)
-                .hasStatusOk()
-                .bodyJson()
-                .hasPathSatisfying("$.memberId", value -> assertThat(value).isNotNull())
-                .hasPathSatisfying("$.email", value -> assertThat(value).isEqualTo(request.email()));
+            MvcTestResult result = mvcTester.post().uri("/api/members").contentType(MediaType.APPLICATION_JSON)
+                    .content(requestJson).exchange();
 
-        MemberRegisterResponse response =
-                objectMapper.readValue(result.getResponse().getContentAsString(), MemberRegisterResponse.class);
+            assertThat(result)
+                    .hasStatusOk()
+                    .bodyJson()
+                    .hasPathSatisfying("$.memberId", value -> assertThat(value).isNotNull())
+                    .hasPathSatisfying("$.email", value -> assertThat(value).isEqualTo(request.email()));
 
-        Member member = memberRepository.findById(response.memberId()).orElseThrow();
+            MemberRegisterResponse response =
+                    objectMapper.readValue(result.getResponse().getContentAsString(), MemberRegisterResponse.class);
 
-        assertThat(member.getEmail().address()).isEqualTo(request.email());
-        assertThat(member.getNickname()).isEqualTo(request.nickname());
-        assertThat(member.getStatus()).isEqualTo(MemberStatus.ACTIVE);
+            Member member = memberRepository.findById(response.memberId()).orElseThrow();
+
+            assertThat(member.getEmail().address()).isEqualTo(request.email());
+            assertThat(member.getNickname()).isEqualTo(request.nickname());
+            assertThat(member.getStatus()).isEqualTo(MemberStatus.ACTIVE);
+        }
+
+        @DisplayName("동일한 이메일로 회원 등록 시도 시 409 Conflict 상태 코드를 반환한다")
+        @Test
+        void duplicateEmail() throws JsonProcessingException {
+            memberRegister.register(createMemberRegisterRequest());
+
+            MemberRegisterRequest request = createMemberRegisterRequest();
+            String requestJson = objectMapper.writeValueAsString(request);
+
+            MvcTestResult result = mvcTester.post().uri("/api/members").contentType(MediaType.APPLICATION_JSON)
+                    .content(requestJson).exchange();
+
+            assertThat(result)
+                    .apply(print())
+                    .hasStatus(HttpStatus.CONFLICT);
+        }
     }
 
-    @DisplayName("동일한 이메일로 회원 등록 시도 시 409 Conflict 상태 코드를 반환한다")
-    @Test
-    void duplicateEmail() throws JsonProcessingException {
-        memberRegister.register(createMemberRegisterRequest());
+    @Nested
+    @DisplayName("회원 로그인")
+    class LoginMember {
 
-        MemberRegisterRequest request = createMemberRegisterRequest();
-        String requestJson = objectMapper.writeValueAsString(request);
+        @DisplayName("올바른 회원 정보로 로그인 시 회원 ID와 액세스 토큰이 포함된 응답을 반환한다")
+        @Test
+        void login() throws JsonProcessingException, UnsupportedEncodingException {
+            memberRegister.register(createMemberRegisterRequest());
 
-        MvcTestResult result = mvcTester.post().uri("/api/members").contentType(MediaType.APPLICATION_JSON)
-                .content(requestJson).exchange();
+            MemberAuthRequest request = createMemberAuthRequest();
+            String requestJson = objectMapper.writeValueAsString(request);
 
-        assertThat(result)
-                .apply(print())
-                .hasStatus(HttpStatus.CONFLICT);
+            MvcTestResult result = mvcTester.post().uri("/api/members/login").contentType(MediaType.APPLICATION_JSON)
+                    .content(requestJson).exchange();
+
+            assertThat(result)
+                    .hasStatusOk()
+                    .bodyJson()
+                    .hasPathSatisfying("$.email", value -> assertThat(value).isEqualTo(request.email()));
+
+            MemberAuthResponse response =
+                    objectMapper.readValue(result.getResponse().getContentAsString(), MemberAuthResponse.class);
+
+            Member member = memberRepository.findById(response.memberId()).orElseThrow();
+
+            assertThat(member.getEmail().address()).isEqualTo(request.email());
+            assertThat(response.accessToken()).isNotNull();
+        }
+
+        @DisplayName("존재하지 않는 이메일로 로그인 시도 시 404 Not Found 상태 코드를 반환한다")
+        @Test
+        void loginFailWithWrongEmail() throws JsonProcessingException {
+            memberRegister.register(createMemberRegisterRequest());
+
+            MemberAuthRequest request = createMemberAuthRequest("wrong@see.com");
+            String requestJson = objectMapper.writeValueAsString(request);
+
+            MvcTestResult result = mvcTester.post().uri("/api/members/login").contentType(MediaType.APPLICATION_JSON)
+                    .content(requestJson).exchange();
+
+            assertThat(result)
+                    .apply(print())
+                    .hasStatus(HttpStatus.NOT_FOUND);
+        }
+
+        @DisplayName("잘못된 비밀번호로 로그인 시도 시 401 Unauthorized 상태 코드를 반환한다")
+        @Test
+        void loginFailWithWrongPassword() throws JsonProcessingException {
+            memberRegister.register(createMemberRegisterRequest());
+
+            MemberAuthRequest request = createAuthRequestWithPassword("wrongPassword");
+            String requestJson = objectMapper.writeValueAsString(request);
+
+            MvcTestResult result = mvcTester.post().uri("/api/members/login").contentType(MediaType.APPLICATION_JSON)
+                    .content(requestJson).exchange();
+
+            assertThat(result)
+                    .apply(print())
+                    .hasStatus(HttpStatus.UNAUTHORIZED);
+        }
     }
 
-    @DisplayName("올바른 회원 정보로 로그인 시 회원 ID와 액세스 토큰이 포함된 응답을 반환한다")
-    @Test
-    void login() throws JsonProcessingException, UnsupportedEncodingException {
-        memberRegister.register(createMemberRegisterRequest());
+    @Nested
+    @DisplayName("현재 회원 정보 조회")
+    class GetCurrentMember {
 
-        MemberAuthRequest request = createMemberAuthRequest();
-        String requestJson = objectMapper.writeValueAsString(request);
+        @DisplayName("유효한 액세스 토큰으로 현재 회원 정보 조회 시 회원 정보를 반환한다")
+        @Test
+        void getCurrentMember() throws JsonProcessingException, UnsupportedEncodingException {
+            memberRegister.register(createMemberRegisterRequest());
 
-        MvcTestResult result = mvcTester.post().uri("/api/members/login").contentType(MediaType.APPLICATION_JSON)
-                .content(requestJson).exchange();
+            MemberAuthRequest request = createMemberAuthRequest();
+            String requestJson = objectMapper.writeValueAsString(request);
 
-        assertThat(result)
-                .hasStatusOk()
-                .bodyJson()
-                .hasPathSatisfying("$.email", value -> assertThat(value).isEqualTo(request.email()));
+            MvcTestResult loginResult = mvcTester.post().uri("/api/members/login")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestJson).exchange();
 
-        MemberAuthResponse response =
-                objectMapper.readValue(result.getResponse().getContentAsString(), MemberAuthResponse.class);
+            MemberAuthResponse authResponse =
+                    objectMapper.readValue(loginResult.getResponse().getContentAsString(), MemberAuthResponse.class);
 
-        Member member = memberRepository.findById(response.memberId()).orElseThrow();
+            MvcTestResult getCurrentMemberResult = mvcTester.get().uri("/api/members/my")
+                    .header("Authorization", "Bearer " + authResponse.accessToken())
+                    .exchange();
 
-        assertThat(member.getEmail().address()).isEqualTo(request.email());
-        assertThat(response.accessToken()).isNotNull();
+            MemberProfileResponse profileResponse =
+                    objectMapper.readValue(getCurrentMemberResult.getResponse().getContentAsString(), MemberProfileResponse.class);
+
+            Member member = memberRepository.findById(profileResponse.memberId()).orElseThrow();
+
+            assertThat(member.getId()).isEqualTo(profileResponse.memberId());
+        }
+
+        @DisplayName("Authorization 헤더 없이 현재 회원 정보 조회 시 401 Unauthorized 상태 코드를 반환한다")
+        @Test
+        void getCurrentMemberFailWithoutAuthorizationHeader() {
+            MvcTestResult result = mvcTester.get().uri("/api/members/my").exchange();
+
+            assertThat(result)
+                    .apply(print())
+                    .hasStatus(HttpStatus.UNAUTHORIZED);
+        }
+
+        @DisplayName("잘못된 형식의 Authorization 헤더로 현재 회원 정보 조회 시 401 Unauthorized 상태 코드를 반환한다")
+        @Test
+        void getCurrentMemberFailWithInvalidAuthorizationHeader() {
+            MvcTestResult result = mvcTester.get().uri("/api/members/my")
+                    .header("Authorization", "InvalidTokenFormat")
+                    .exchange();
+
+            assertThat(result)
+                    .apply(print())
+                    .hasStatus(HttpStatus.UNAUTHORIZED);
+        }
+
+        @DisplayName("유효하지 않은 토큰으로 현재 회원 정보 조회 시 401 Unauthorized 상태 코드를 반환한다")
+        @Test
+        void getCurrentMemberFailWithInvalidToken() {
+            MvcTestResult result = mvcTester.get().uri("/api/members/my")
+                    .header("Authorization", "Bearer invalidToken")
+                    .exchange();
+
+            assertThat(result)
+                    .apply(print())
+                    .hasStatus(HttpStatus.UNAUTHORIZED);
+        }
     }
 
-    @DisplayName("존재하지 않는 이메일로 로그인 시도 시 404 Not Found 상태 코드를 반환한다")
-    @Test
-    void loginFailWithWrongEmail() throws JsonProcessingException {
-        memberRegister.register(createMemberRegisterRequest());
+    @Nested
+    @DisplayName("회원 탈퇴")
+    class DeactivateMember {
 
-        MemberAuthRequest request = createMemberAuthRequest("wrong@see.com");
-        String requestJson = objectMapper.writeValueAsString(request);
+        @DisplayName("유효한 토큰으로 회원 탈퇴 요청 시 회원 상태가 DEACTIVATED로 변경되고 성공 응답을 반환한다")
+        @Test
+        void deactivateMyself() throws JsonProcessingException, UnsupportedEncodingException {
+            memberRegister.register(createMemberRegisterRequest());
 
-        MvcTestResult result = mvcTester.post().uri("/api/members/login").contentType(MediaType.APPLICATION_JSON)
-                .content(requestJson).exchange();
+            MemberAuthRequest request = createMemberAuthRequest();
+            String requestJson = objectMapper.writeValueAsString(request);
 
-        assertThat(result)
-                .apply(print())
-                .hasStatus(HttpStatus.NOT_FOUND);
+            MvcTestResult loginResult = mvcTester.post().uri("/api/members/login")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestJson).exchange();
+
+            MemberAuthResponse authResponse =
+                    objectMapper.readValue(loginResult.getResponse().getContentAsString(), MemberAuthResponse.class);
+
+            MvcTestResult result = mvcTester.patch().uri("/api/members/my/deactivate")
+                    .header("Authorization", "Bearer " + authResponse.accessToken())
+                    .exchange();
+
+            assertThat(result).hasStatusOk();
+
+            Member member = memberRepository.findById(authResponse.memberId()).orElseThrow();
+            assertThat(member.getStatus()).isEqualTo(MemberStatus.DEACTIVATED);
+        }
+
+        @DisplayName("Authorization 헤더 없이 회원 탈퇴 요청 시 401 Unauthorized 상태 코드를 반환한다")
+        @Test
+        void deactivateMyselfWithoutAuthorizationHeader() {
+            MvcTestResult result = mvcTester.patch().uri("/api/members/my/deactivate").exchange();
+
+            assertThat(result)
+                    .apply(print())
+                    .hasStatus(HttpStatus.UNAUTHORIZED);
+        }
+
+        @DisplayName("잘못된 형식의 Authorization 헤더로 회원 탈퇴 요청 시 401 Unauthorized 상태 코드를 반환한다")
+        @Test
+        void deactivateMyselfWithInvalidAuthorizationHeader() {
+            MvcTestResult result = mvcTester.patch().uri("/api/members/my/deactivate")
+                    .header("Authorization", "InvalidTokenFormat")
+                    .exchange();
+
+            assertThat(result)
+                    .apply(print())
+                    .hasStatus(HttpStatus.UNAUTHORIZED);
+        }
+        
+        @DisplayName("유효하지 않은 토큰으로 회원 탈퇴 요청 시 401 Unauthorized 상태 코드를 반환한다")
+        @Test
+        void deactivateMyselfWithInvalidToken() {
+            MvcTestResult result = mvcTester.patch().uri("/api/members/my/deactivate")
+                    .header("Authorization", "Bearer invalidToken")
+                    .exchange();
+
+            assertThat(result)
+                    .apply(print())
+                    .hasStatus(HttpStatus.UNAUTHORIZED);
+        }
     }
 
-    @DisplayName("잘못된 비밀번호로 로그인 시도 시 401 Unauthorized 상태 코드를 반환한다")
-    @Test
-    void loginFailWithWrongPassword() throws JsonProcessingException {
-        memberRegister.register(createMemberRegisterRequest());
+    @Nested
+    @DisplayName("회원 정보 수정")
+    class UpdateMemberInfo {
 
-        MemberAuthRequest request = createAuthRequestWithPassword("wrongPassword");
-        String requestJson = objectMapper.writeValueAsString(request);
+        @DisplayName("유효한 토큰으로 회원 정보 수정 요청 시 회원 정보가 변경되고 성공 응답을 반환한다")
+        @Test
+        void updateMyInfo() throws JsonProcessingException, UnsupportedEncodingException {
+            memberRegister.register(createMemberRegisterRequest());
 
-        MvcTestResult result = mvcTester.post().uri("/api/members/login").contentType(MediaType.APPLICATION_JSON)
-                .content(requestJson).exchange();
+            MemberAuthRequest request = createMemberAuthRequest();
+            String requestJson = objectMapper.writeValueAsString(request);
 
-        assertThat(result)
-                .apply(print())
-                .hasStatus(HttpStatus.UNAUTHORIZED);
-    }
+            MvcTestResult loginResult = mvcTester.post().uri("/api/members/login")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestJson).exchange();
 
-    @DisplayName("유효한 액세스 토큰으로 현재 회원 정보 조회 시 회원 정보를 반환한다")
-    @Test
-    void getCurrentMember() throws JsonProcessingException, UnsupportedEncodingException {
-        memberRegister.register(createMemberRegisterRequest());
+            MemberAuthResponse authResponse =
+                    objectMapper.readValue(loginResult.getResponse().getContentAsString(), MemberAuthResponse.class);
 
-        MemberAuthRequest request = createMemberAuthRequest();
-        String requestJson = objectMapper.writeValueAsString(request);
+            MemberInfoUpdateRequest updateInfoRequest = createMemberInfoUpdateRequest();
+            String updateRequestJson = objectMapper.writeValueAsString(updateInfoRequest);
 
-        MvcTestResult loginResult = mvcTester.post().uri("/api/members/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestJson).exchange();
+            MvcTestResult result = mvcTester.put().uri("/api/members/my/updateInfo")
+                    .header("Authorization", "Bearer " + authResponse.accessToken())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(updateRequestJson)
+                    .exchange();
 
-        MemberAuthResponse authResponse =
-                objectMapper.readValue(loginResult.getResponse().getContentAsString(), MemberAuthResponse.class);
+            assertThat(result).hasStatusOk();
 
-        MvcTestResult getCurrentMemberResult = mvcTester.get().uri("/api/members/my")
-                .header("Authorization", "Bearer " + authResponse.accessToken())
-                .exchange();
+            Member member = memberRepository.findById(authResponse.memberId()).orElseThrow();
+            assertThat(member.getNickname()).isEqualTo(updateInfoRequest.nickname());
+            assertThat(member.getDetail().getProfile().address()).isEqualTo(updateInfoRequest.profileAddress());
+            assertThat(member.getDetail().getIntroduction()).isEqualTo(updateInfoRequest.introduction());
+        }
 
-        MemberProfileResponse profileResponse =
-                objectMapper.readValue(getCurrentMemberResult.getResponse().getContentAsString(), MemberProfileResponse.class);
+        @DisplayName("본문 없이 회원 정보 수정 요청 시 400 Bad Request 상태 코드를 반환한다")
+        @Test
+        void updateMyInfoWithoutRequestBody() {
+            MvcTestResult result = mvcTester.put().uri("/api/members/my/updateInfo").exchange();
 
-        Member member = memberRepository.findById(profileResponse.memberId()).orElseThrow();
+            assertThat(result)
+                    .apply(print())
+                    .hasStatus(HttpStatus.BAD_REQUEST);
+        }
 
-        assertThat(member.getId()).isEqualTo(profileResponse.memberId());
-    }
+        @DisplayName("Authorization 헤더 없이 회원 정보 수정 요청 시 401 Unauthorized 상태 코드를 반환한다")
+        @Test
+        void updateMyInfoWithoutAuthorizationHeader() throws JsonProcessingException {
+            MemberInfoUpdateRequest request = createMemberInfoUpdateRequest();
+            String requestJson = objectMapper.writeValueAsString(request);
 
-    @DisplayName("Authorization 헤더 없이 현재 회원 정보 조회 시 401 Unauthorized 상태 코드를 반환한다")
-    @Test
-    void getCurrentMemberFailWithoutAuthorizationHeader() {
-        MvcTestResult result = mvcTester.get().uri("/api/members/my").exchange();
+            MvcTestResult result = mvcTester.put().uri("/api/members/my/updateInfo")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestJson)
+                    .exchange();
 
-        assertThat(result)
-                .apply(print())
-                .hasStatus(HttpStatus.UNAUTHORIZED);
-    }
+            assertThat(result)
+                    .apply(print())
+                    .hasStatus(HttpStatus.UNAUTHORIZED);
+        }
 
-    @DisplayName("잘못된 형식의 Authorization 헤더로 현재 회원 정보 조회 시 401 Unauthorized 상태 코드를 반환한다")
-    @Test
-    void getCurrentMemberFailWithInvalidAuthorizationHeader() {
-        MvcTestResult result = mvcTester.get().uri("/api/members/my")
-                .header("Authorization", "InvalidTokenFormat")
-                .exchange();
+        @DisplayName("잘못된 형식의 Authorization 헤더로 회원 정보 수정 요청 시 401 Unauthorized 상태 코드를 반환한다")
+        @Test
+        void updateMyInfoWithInvalidAuthorizationHeader() throws JsonProcessingException {
+            MemberInfoUpdateRequest request = createMemberInfoUpdateRequest();
+            String requestJson = objectMapper.writeValueAsString(request);
 
-        assertThat(result)
-                .apply(print())
-                .hasStatus(HttpStatus.UNAUTHORIZED);
-    }
+            MvcTestResult result = mvcTester.put().uri("/api/members/my/updateInfo")
+                    .header("Authorization", "InvalidTokenFormat")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestJson)
+                    .exchange();
 
-    @DisplayName("유효하지 않은 토큰으로 현재 회원 정보 조회 시 401 Unauthorized 상태 코드를 반환한다")
-    @Test
-    void getCurrentMemberFailWithInvalidToken() {
-        MvcTestResult result = mvcTester.get().uri("/api/members/my")
-                .header("Authorization", "Bearer invalidToken")
-                .exchange();
+            assertThat(result)
+                    .apply(print())
+                    .hasStatus(HttpStatus.UNAUTHORIZED);
+        }
 
-        assertThat(result)
-                .apply(print())
-                .hasStatus(HttpStatus.UNAUTHORIZED);
-    }
+        @DisplayName("유효하지 않은 토큰으로 회원 정보 수정 요청 시 401 Unauthorized 상태 코드를 반환한다")
+        @Test
+        void updateMyInfoWithInvalidToken() throws JsonProcessingException {
+            MemberInfoUpdateRequest request = createMemberInfoUpdateRequest();
+            String requestJson = objectMapper.writeValueAsString(request);
 
-    @DisplayName("유효한 토큰으로 회원 탈퇴 요청 시 회원 상태가 DEACTIVATED로 변경되고 성공 응답을 반환한다")
-    @Test
-    void deactivateMyself() throws JsonProcessingException, UnsupportedEncodingException {
-        memberRegister.register(createMemberRegisterRequest());
+            MvcTestResult result = mvcTester.put().uri("/api/members/my/updateInfo")
+                    .header("Authorization", "Bearer invalidToken")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestJson)
+                    .exchange();
 
-        MemberAuthRequest request = createMemberAuthRequest();
-        String requestJson = objectMapper.writeValueAsString(request);
-
-        MvcTestResult loginResult = mvcTester.post().uri("/api/members/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestJson).exchange();
-
-        MemberAuthResponse authResponse =
-                objectMapper.readValue(loginResult.getResponse().getContentAsString(), MemberAuthResponse.class);
-
-        MvcTestResult result = mvcTester.patch().uri("/api/members/my/deactivate")
-                .header("Authorization", "Bearer " + authResponse.accessToken())
-                .exchange();
-
-        assertThat(result).hasStatusOk();
-
-        Member member = memberRepository.findById(authResponse.memberId()).orElseThrow();
-        assertThat(member.getStatus()).isEqualTo(MemberStatus.DEACTIVATED);
-    }
-
-    @DisplayName("Authorization 헤더 없이 회원 탈퇴 요청 시 401 Unauthorized 상태 코드를 반환한다")
-    @Test
-    void deactivateMyselfWithoutAuthorizationHeader() {
-        MvcTestResult result = mvcTester.patch().uri("/api/members/my/deactivate").exchange();
-
-        assertThat(result)
-                .apply(print())
-                .hasStatus(HttpStatus.UNAUTHORIZED);
-    }
-
-    @DisplayName("잘못된 형식의 Authorization 헤더로 회원 탈퇴 요청 시 401 Unauthorized 상태 코드를 반환한다")
-    @Test
-    void deactivateMyselfWithInvalidAuthorizationHeader() {
-        MvcTestResult result = mvcTester.patch().uri("/api/members/my/deactivate")
-                .header("Authorization", "InvalidTokenFormat")
-                .exchange();
-
-        assertThat(result)
-                .apply(print())
-                .hasStatus(HttpStatus.UNAUTHORIZED);
-    }
-    
-    @DisplayName("유효하지 않은 토큰으로 회원 탈퇴 요청 시 401 Unauthorized 상태 코드를 반환한다")
-    @Test
-    void deactivateMyselfWithInvalidToken() {
-        MvcTestResult result = mvcTester.patch().uri("/api/members/my/deactivate")
-                .header("Authorization", "Bearer invalidToken")
-                .exchange();
-
-        assertThat(result)
-                .apply(print())
-                .hasStatus(HttpStatus.UNAUTHORIZED);
-    }
-
-    @DisplayName("유효한 토큰으로 회원 정보 수정 요청 시 회원 정보가 변경되고 성공 응답을 반환한다")
-    @Test
-    void updateMyInfo() throws JsonProcessingException, UnsupportedEncodingException {
-        memberRegister.register(createMemberRegisterRequest());
-
-        MemberAuthRequest request = createMemberAuthRequest();
-        String requestJson = objectMapper.writeValueAsString(request);
-
-        MvcTestResult loginResult = mvcTester.post().uri("/api/members/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestJson).exchange();
-
-        MemberAuthResponse authResponse =
-                objectMapper.readValue(loginResult.getResponse().getContentAsString(), MemberAuthResponse.class);
-
-        MemberInfoUpdateRequest updateInfoRequest = createMemberInfoUpdateRequest();
-        String updateRequestJson = objectMapper.writeValueAsString(updateInfoRequest);
-
-        MvcTestResult result = mvcTester.put().uri("/api/members/my/updateInfo")
-                .header("Authorization", "Bearer " + authResponse.accessToken())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(updateRequestJson)
-                .exchange();
-
-        assertThat(result).hasStatusOk();
-
-        Member member = memberRepository.findById(authResponse.memberId()).orElseThrow();
-        assertThat(member.getNickname()).isEqualTo(updateInfoRequest.nickname());
-        assertThat(member.getDetail().getProfile().address()).isEqualTo(updateInfoRequest.profileAddress());
-        assertThat(member.getDetail().getIntroduction()).isEqualTo(updateInfoRequest.introduction());
-    }
-
-    @DisplayName("본문 없이 회원 정보 수정 요청 시 400 Bad Request 상태 코드를 반환한다")
-    @Test
-    void updateMyInfoWithoutRequestBody() {
-        MvcTestResult result = mvcTester.put().uri("/api/members/my/updateInfo").exchange();
-
-        assertThat(result)
-                .apply(print())
-                .hasStatus(HttpStatus.BAD_REQUEST);
-    }
-
-    @DisplayName("Authorization 헤더 없이 회원 정보 수정 요청 시 401 Unauthorized 상태 코드를 반환한다")
-    @Test
-    void updateMyInfoWithoutAuthorizationHeader() throws JsonProcessingException {
-        MemberInfoUpdateRequest request = createMemberInfoUpdateRequest();
-        String requestJson = objectMapper.writeValueAsString(request);
-
-        MvcTestResult result = mvcTester.put().uri("/api/members/my/updateInfo")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestJson)
-                .exchange();
-
-        assertThat(result)
-                .apply(print())
-                .hasStatus(HttpStatus.UNAUTHORIZED);
-    }
-
-    @DisplayName("잘못된 형식의 Authorization 헤더로 회원 정보 수정 요청 시 401 Unauthorized 상태 코드를 반환한다")
-    @Test
-    void updateMyInfoWithInvalidAuthorizationHeader() throws JsonProcessingException {
-        MemberInfoUpdateRequest request = createMemberInfoUpdateRequest();
-        String requestJson = objectMapper.writeValueAsString(request);
-
-        MvcTestResult result = mvcTester.put().uri("/api/members/my/updateInfo")
-                .header("Authorization", "InvalidTokenFormat")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestJson)
-                .exchange();
-
-        assertThat(result)
-                .apply(print())
-                .hasStatus(HttpStatus.UNAUTHORIZED);
-    }
-
-    @DisplayName("유효하지 않은 토큰으로 회원 정보 수정 요청 시 401 Unauthorized 상태 코드를 반환한다")
-    @Test
-    void updateMyInfoWithInvalidToken() throws JsonProcessingException {
-        MemberInfoUpdateRequest request = createMemberInfoUpdateRequest();
-        String requestJson = objectMapper.writeValueAsString(request);
-
-        MvcTestResult result = mvcTester.put().uri("/api/members/my/updateInfo")
-                .header("Authorization", "Bearer invalidToken")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestJson)
-                .exchange();
-
-        assertThat(result)
-                .apply(print())
-                .hasStatus(HttpStatus.UNAUTHORIZED);
+            assertThat(result)
+                    .apply(print())
+                    .hasStatus(HttpStatus.UNAUTHORIZED);
+        }
     }
 }

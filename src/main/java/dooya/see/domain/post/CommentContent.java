@@ -1,5 +1,8 @@
 package dooya.see.domain.post;
 
+import jakarta.persistence.Embeddable;
+
+@Embeddable
 public record CommentContent(String text) {
     public CommentContent {
         if (text == null) {
