@@ -26,7 +26,6 @@ import java.io.UnsupportedEncodingException;
 import static dooya.see.domain.member.MemberFixture.createMemberAuthRequest;
 import static dooya.see.domain.member.MemberFixture.createMemberRegisterRequest;
 import static dooya.see.domain.post.PostFixture.*;
-import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
