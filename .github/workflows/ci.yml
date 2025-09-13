@@ -9,7 +9,6 @@ on:
       - dev
       - develop
 
-# 동시 실행 제어 - 같은 PR에서 새 커밋이 올라오면 이전 워크플로우 취소
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -22,7 +21,6 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
-          # 전체 히스토리가 필요하지 않으면 shallow clone 사용
           fetch-depth: 1
 
       - name: Set up JDK 21
@@ -30,13 +28,18 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-          # Gradle 의존성을 JDK와 함께 캐시
           cache: gradle
 
       - name: Create application.yml file
         run: |
           mkdir -p ./src/main/resources
           echo "${{ secrets.APPLICATION_YML }}" > ./src/main/resources/application.yml
+
+      # IPv6 비활성화 (네트워크 오류 방지)
+      - name: Disable IPv6
+        run: |
+          sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
+          sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
 
       # Gradle Wrapper 검증 (보안)
       - name: Validate Gradle wrapper
@@ -45,29 +48,22 @@ jobs:
           min-wrapper-count: 1
           allow-snapshots: false
 
-      # Gradle Wrapper 실행 권한 확인
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
-      # Gradle Wrapper 체크섬 검증 (추가 보안)
       - name: Verify Gradle Wrapper Checksum
         run: |
-          # gradle-wrapper.properties에서 지정된 Gradle 버전의 체크섬 검증
           if [ -f "gradle/wrapper/gradle-wrapper.properties" ]; then
             echo "Gradle wrapper configuration verified"
             cat gradle/wrapper/gradle-wrapper.properties
           fi
 
-      # Gradle 빌드 액션 사용 (캐싱과 최적화가 내장됨)
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
         with:
-          # 빌드 스캔 활성화 (선택적)
           gradle-build-scan-report: true
-          # 캐시 설정
           cache-read-only: false
 
-      # 테스트 실행 - 병렬 처리 및 최적화 옵션 추가
       - name: Run tests
         run: |
           ./gradlew clean test \
@@ -78,7 +74,6 @@ jobs:
             -Dorg.gradle.jvmargs="-Xmx2g -XX:+UseParallelGC" \
             -Dspring.profiles.active=test
 
-      # 테스트 결과 리포트 업로드 (실패 시에도 실행)
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
@@ -89,11 +84,10 @@ jobs:
             build/test-results/
           retention-days: 7
 
-  # 빌드 검증을 별도 job으로 분리 (빠른 피드백용)
   build-check:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
-    
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -115,7 +109,6 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
 
-      # 컴파일만 확인 (테스트 제외)
       - name: Compile check
         run: |
           ./gradlew compileJava compileTestJava \
