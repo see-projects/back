@@ -1,14 +1,12 @@
 package dooya.see.domain.shared;
 
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class AbstractAggregateRootTest {
-    @DisplayName("도메인 이벤트를 추가하면 이벤트 목록이 저장된다")
     @Test
-    void addDomainEvent() {
+    void 도메인_이벤트를_추가하면_이벤트_목록이_저장된다() {
         TestAggregateRoot aggregateRoot = new TestAggregateRoot();
         TestDomainEvent event = new TestDomainEvent("test");
 
@@ -19,9 +17,8 @@ class AbstractAggregateRootTest {
         assertThat(aggregateRoot.hasDomainEvents()).isTrue();
     }
 
-    @DisplayName("도메인 이벤트를 클리어하면 이벤트 목록이 비어진다")
     @Test
-    void clearDomainEvents() {
+    void 도메인_이벤트를_클리어하면_이벤트_목록이_비어진다() {
         TestAggregateRoot aggregateRoot = new TestAggregateRoot();
         aggregateRoot.addTestEvent(new TestDomainEvent("test"));
 
@@ -31,9 +28,8 @@ class AbstractAggregateRootTest {
         assertThat(aggregateRoot.hasDomainEvents()).isFalse();
     }
 
-    @DisplayName("도메인 이벤트를 추가하면 순서대로 저장된다")
     @Test
-    void c() {
+    void 도메인_이벤트를_추가하면_순서대로_저장된다() {
         TestAggregateRoot aggregateRoot = new TestAggregateRoot();
         TestDomainEvent event1 = new TestDomainEvent("first");
         TestDomainEvent event2 = new TestDomainEvent("second");
