@@ -6,9 +6,8 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class MemberStatusTest {
-    @DisplayName("MemberStatus enum의 ACTIVE와 DEACTIVATED 상태가 정의되어 있다")
     @Test
-    void memberStatus_hasRequiredStatuses() {
+    void MemberStatus_enum의_ACTIVE와_DEACTIVATED_상태가_정의되어_있다() {
         assertThat(MemberStatus.ACTIVE).isNotNull();
         assertThat(MemberStatus.DEACTIVATED).isNotNull();
     }
