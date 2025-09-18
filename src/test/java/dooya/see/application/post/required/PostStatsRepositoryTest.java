@@ -2,19 +2,17 @@ package dooya.see.application.post.required;
 
 import dooya.see.domain.post.PostStats;
 import jakarta.persistence.EntityManager;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.dao.DataIntegrityViolationException;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
 record PostStatsRepositoryTest(PostStatsRepository postStatsRepository, EntityManager entityManager) {
-    
-    @DisplayName("게시물 통계를 생성하면 ID가 자동 생성되고 영속화된다")
     @Test
-    void createPostStats() {
+    void 게시물_통계를_생성하면_ID가_자동_생성되고_영속화된다() {
         PostStats postStats = PostStats.create(1L);
 
         assertThat(postStats.getId()).isNull();
@@ -33,9 +31,8 @@ record PostStatsRepositoryTest(PostStatsRepository postStatsRepository, EntityMa
         assertThat(found.getCommentCount()).isEqualTo(0);
     }
 
-    @DisplayName("게시물 ID로 통계를 조회할 수 있다")
     @Test
-    void findByPostId() {
+    void 게시물_ID로_통계를_조회할_수_있다() {
         PostStats postStats = PostStats.create(1L);
         postStatsRepository.save(postStats);
 
@@ -50,9 +47,8 @@ record PostStatsRepositoryTest(PostStatsRepository postStatsRepository, EntityMa
         assertThat(notFound).isEmpty();
     }
 
-    @DisplayName("게시물 통계의 조회수를 증가시킬 수 있다")
     @Test
-    void incrementViewCount() {
+    void 게시물_통계의_조회수를_증가시킬_수_있다() {
         PostStats postStats = PostStats.create(1L);
         postStatsRepository.save(postStats);
 
@@ -71,9 +67,8 @@ record PostStatsRepositoryTest(PostStatsRepository postStatsRepository, EntityMa
         assertThat(updated.getViewCount()).isEqualTo(1);
     }
 
-    @DisplayName("게시물 통계의 좋아요수를 증가시킬 수 있다")
     @Test
-    void incrementLikeCount() {
+    void 게시물_통계의_좋아요수를_증가시킬_수_있다() {
         PostStats postStats = PostStats.create(1L);
         postStatsRepository.save(postStats);
 
@@ -92,9 +87,8 @@ record PostStatsRepositoryTest(PostStatsRepository postStatsRepository, EntityMa
         assertThat(updated.getLikeCount()).isEqualTo(1);
     }
 
-    @DisplayName("게시물 통계의 좋아요수를 감소시킬 수 있다")
     @Test
-    void decrementLikeCount() {
+    void 게시물_통계의_좋아요수를_감소시킬_수_있다() {
         PostStats postStats = PostStats.create(1L);
         postStats.incrementLikeCount();
         postStats.incrementLikeCount();
@@ -115,9 +109,8 @@ record PostStatsRepositoryTest(PostStatsRepository postStatsRepository, EntityMa
         assertThat(updated.getLikeCount()).isEqualTo(1);
     }
 
-    @DisplayName("좋아요수는 0 미만으로 감소하지 않는다")
     @Test
-    void likeCountCannotGoNegative() {
+    void 좋아요수는_0_미만으로_감소하지_않는다() {
         PostStats postStats = PostStats.create(1L);
         postStatsRepository.save(postStats);
 
@@ -135,9 +128,8 @@ record PostStatsRepositoryTest(PostStatsRepository postStatsRepository, EntityMa
         assertThat(updated.getLikeCount()).isEqualTo(0);
     }
 
-    @DisplayName("동일한 게시물에 대해 중복으로 통계를 생성하면 데이터 무결성 예외가 발생한다")
     @Test
-    void duplicatePostStatsFail() {
+    void 동일한_게시물에_대해_중복으로_통계를_생성하면_데이터_무결성_예외가_발생한다() {
         PostStats stats1 = PostStats.create(1L);
         PostStats stats2 = PostStats.create(1L);
 
@@ -152,9 +144,8 @@ record PostStatsRepositoryTest(PostStatsRepository postStatsRepository, EntityMa
         }).isInstanceOf(DataIntegrityViolationException.class);
     }
 
-    @DisplayName("서로 다른 게시물의 통계를 독립적으로 관리할 수 있다")
     @Test
-    void manageMultiplePostStatsIndependently() {
+    void 서로_다른_게시물의_통계를_독립적으로_관리할_수_있다() {
         PostStats stats1 = PostStats.create(1L);
         PostStats stats2 = PostStats.create(2L);
 
@@ -188,9 +179,8 @@ record PostStatsRepositoryTest(PostStatsRepository postStatsRepository, EntityMa
         assertThat(updated2.getLikeCount()).isEqualTo(0);
     }
 
-    @DisplayName("통계 데이터의 기본 속성들이 올바르게 설정된다")
     @Test
-    void basicStatsPropertiesAreSet() {
+    void 통계_데이터의_기본_속성들이_올바르게_설정된다() {
         PostStats postStats = PostStats.create(1L);
         postStatsRepository.save(postStats);
 
@@ -206,9 +196,8 @@ record PostStatsRepositoryTest(PostStatsRepository postStatsRepository, EntityMa
         assertThat(found.getEngagementRate()).isEqualTo(0.0);
     }
 
-    @DisplayName("대량의 통계 업데이트가 가능하다")
     @Test
-    void handleMassiveStatsUpdates() {
+    void 대량의_통계_업데이트가_가능하다() {
         PostStats postStats = PostStats.create(1L);
         postStatsRepository.save(postStats);
 
@@ -229,9 +218,8 @@ record PostStatsRepositoryTest(PostStatsRepository postStatsRepository, EntityMa
         assertThat(finalStats.getViewCount()).isEqualTo(100);
     }
 
-    @DisplayName("통계 조회 시 해당 게시물이 없으면 빈 결과를 반환한다")
     @Test
-    void findByNonExistentPostId() {
+    void 통계_조회_시_해당_게시물이_없으면_빈_결과를_반환한다() {
         var result = postStatsRepository.findByPostId(999L);
 
         assertThat(result).isEmpty();
