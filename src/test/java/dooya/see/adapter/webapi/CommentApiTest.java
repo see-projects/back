@@ -230,13 +230,13 @@ class CommentApiTest {
             String token = createMemberAndGetToken();
             Long postId = createAndPublishPost(token);
 
-            Long memberId = getCurrentMemberId(token);
+            Long memberId = extractCurrentMemberId(token);
 
             createCommentHelper(token, postId, "활성 댓글");
             Long commentId = createCommentHelper(token, postId, "삭제할 댓글");
 
             // 댓글 삭제
-            mvcTester.post().uri("/api/comments/{commentId}/delete", commentId)
+            mvcTester.delete().uri("/api/comments/{commentId}/delete", commentId)
                     .header("Authorization", "Bearer " + token)
                     .exchange();
 
@@ -258,13 +258,13 @@ class CommentApiTest {
             String authorToken = createMemberAndGetToken();
             Long postId = createAndPublishPost(authorToken);
 
-            Long authorMemberId = getCurrentMemberId(authorToken);
+            Long authorMemberId = extractCurrentMemberId(authorToken);
 
             createCommentHelper(authorToken, postId, "활성 댓글");
             Long commentId = createCommentHelper(authorToken, postId, "삭제할 댓글");
 
             // 댓글 삭제
-            mvcTester.post().uri("/api/comments/{commentId}/delete", commentId)
+            mvcTester.delete().uri("/api/comments/{commentId}/delete", commentId)
                     .header("Authorization", "Bearer " + authorToken)
                     .exchange();
 
@@ -368,7 +368,7 @@ class CommentApiTest {
             Long postId = createAndPublishPost(token);
             Long commentId = createCommentHelper(token, postId, "삭제할 댓글");
 
-            MvcTestResult result = mvcTester.post().uri("/api/comments/{commentId}/delete", commentId)
+            MvcTestResult result = mvcTester.delete().uri("/api/comments/{commentId}/delete", commentId)
                     .header("Authorization", "Bearer " + token)
                     .exchange();
 
@@ -387,7 +387,7 @@ class CommentApiTest {
             Long postId = createAndPublishPost(token);
             Long commentId = createCommentHelper(token, postId, "삭제할 댓글");
 
-            MvcTestResult result = mvcTester.post().uri("/api/comments/{commentId}/delete", commentId)
+            MvcTestResult result = mvcTester.delete().uri("/api/comments/{commentId}/delete", commentId)
                     .exchange();
 
             assertThat(result)
@@ -404,7 +404,7 @@ class CommentApiTest {
 
             String readerToken = createSecondMemberAndGetToken();
 
-            MvcTestResult result = mvcTester.post().uri("/api/comments/{commentId}/delete", commentId)
+            MvcTestResult result = mvcTester.delete().uri("/api/comments/{commentId}/delete", commentId)
                     .header("Authorization", "Bearer " + readerToken)
                     .exchange();
 
@@ -421,12 +421,12 @@ class CommentApiTest {
             Long commentId = createCommentHelper(token, postId, "삭제할 댓글");
 
             // 첫 번째 삭제
-            mvcTester.post().uri("/api/comments/{commentId}/delete", commentId)
+            mvcTester.delete().uri("/api/comments/{commentId}/delete", commentId)
                     .header("Authorization", "Bearer " + token)
                     .exchange();
 
             // 두 번째 삭제 시도
-            MvcTestResult result = mvcTester.post().uri("/api/comments/{commentId}/delete", commentId)
+            MvcTestResult result = mvcTester.delete().uri("/api/comments/{commentId}/delete", commentId)
                     .header("Authorization", "Bearer " + token)
                     .exchange();
 
@@ -447,7 +447,7 @@ class CommentApiTest {
             Long postId = createAndPublishPost(token);
             Long commentId = createCommentHelper(token, postId, "숨길 댓글");
 
-            MvcTestResult result = mvcTester.post().uri("/api/comments/{commentId}/hide", commentId)
+            MvcTestResult result = mvcTester.patch().uri("/api/comments/{commentId}/hide", commentId)
                     .header("Authorization", "Bearer " + token)
                     .exchange();
 
@@ -466,7 +466,7 @@ class CommentApiTest {
             Long postId = createAndPublishPost(token);
             Long commentId = createCommentHelper(token, postId, "숨길 댓글");
 
-            MvcTestResult result = mvcTester.post().uri("/api/comments/{commentId}/hide", commentId)
+            MvcTestResult result = mvcTester.patch().uri("/api/comments/{commentId}/hide", commentId)
                     .exchange();
 
             assertThat(result)
@@ -483,7 +483,7 @@ class CommentApiTest {
 
             String readerToken = createSecondMemberAndGetToken();
 
-            MvcTestResult result = mvcTester.post().uri("/api/comments/{commentId}/hide", commentId)
+            MvcTestResult result = mvcTester.patch().uri("/api/comments/{commentId}/hide", commentId)
                     .header("Authorization", "Bearer " + readerToken)
                     .exchange();
 
@@ -500,12 +500,12 @@ class CommentApiTest {
             Long commentId = createCommentHelper(token, postId, "숨길 댓글");
 
             // 첫 번째 숨김
-            mvcTester.post().uri("/api/comments/{commentId}/hide", commentId)
+            mvcTester.patch().uri("/api/comments/{commentId}/hide", commentId)
                     .header("Authorization", "Bearer " + token)
                     .exchange();
 
             // 두 번째 숨김 시도
-            MvcTestResult result = mvcTester.post().uri("/api/comments/{commentId}/hide", commentId)
+            MvcTestResult result = mvcTester.patch().uri("/api/comments/{commentId}/hide", commentId)
                     .header("Authorization", "Bearer " + token)
                     .exchange();
 
@@ -522,12 +522,12 @@ class CommentApiTest {
             Long commentId = createCommentHelper(token, postId, "댓글");
 
             // 댓글 삭제
-            mvcTester.post().uri("/api/comments/{commentId}/delete", commentId)
+            mvcTester.delete().uri("/api/comments/{commentId}/delete", commentId)
                     .header("Authorization", "Bearer " + token)
                     .exchange();
 
             // 삭제된 댓글 숨김 시도
-            MvcTestResult result = mvcTester.post().uri("/api/comments/{commentId}/hide", commentId)
+            MvcTestResult result = mvcTester.patch().uri("/api/comments/{commentId}/hide", commentId)
                     .header("Authorization", "Bearer " + token)
                     .exchange();
 
@@ -618,7 +618,7 @@ class CommentApiTest {
         return response.commentId();
     }
 
-    private Long getCurrentMemberId(String token) throws JsonProcessingException, UnsupportedEncodingException {
+    private Long extractCurrentMemberId(String token) throws JsonProcessingException, UnsupportedEncodingException {
         MvcTestResult result = mvcTester.get().uri("/api/members/my")
                 .header("Authorization", "Bearer " + token)
                 .exchange();
