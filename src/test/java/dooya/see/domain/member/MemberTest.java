@@ -9,12 +9,12 @@ import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class MemberTest {
-    Member member;
-    PasswordEncoder passwordEncoder;
+    private Member member;
+    private PasswordEncoder passwordEncoder;
 
-    String ORIGINAL_PASSWORD = "longsecret";
-    String NEW_PASSWORD = "verysecret";
-    String WRONG_PASSWORD = "wrong";
+    private static final String ORIGINAL_PASSWORD = "longsecret";
+    private static final String NEW_PASSWORD = "verysecret";
+    private static final String WRONG_PASSWORD = "wrong";
 
     @BeforeEach
     void setUp() {
