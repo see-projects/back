@@ -49,6 +49,10 @@ public class Post extends AbstractAggregateRoot {
     }
 
     public void publishCreationEventIfNeeded() {
+        publishCreationEvent();
+    }
+
+    private void publishCreationEvent() {
         if (creationContext != null && getId() != null) {
             addDomainEvent(new PostCreated(
                     getId(), memberId, category, creationContext.publishImmediately()
