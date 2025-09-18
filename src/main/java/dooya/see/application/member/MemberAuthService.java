@@ -18,30 +18,52 @@ public class MemberAuthService implements MemberAuth {
 
     @Override
     public LoginResult login(MemberAuthRequest memberAuthRequest) {
-        Member member = memberFinder.findByEmail(new Email(memberAuthRequest.email()));
+        Member member = findMemberByEmail(memberAuthRequest.email());
 
-        validatePassword(memberAuthRequest, member);
-        validateAccountStatus(member);
+        validateAuthentication(memberAuthRequest, member);
 
-        String token = tokenManager.generateToken(member);
+        String token = generateTokenForMember(member);
 
-        return new LoginResult(member, token);
+        return createLoginResult(member, token);
     }
 
     @Override
     public Member getCurrentMember(String token) {
-        return memberFinder.findByEmail(new Email(tokenManager.extractEmailFromToken(token)));
+        String email = extractEmailFromToken(token);
+        return findMemberByEmail(email);
+    }
+
+    // Authentication 관련 메서드
+    private Member findMemberByEmail(String email) {
+        return memberFinder.findByEmail(new Email(email));
+    }
+
+    private void validateAuthentication(MemberAuthRequest memberAuthRequest, Member member) {
+        validatePassword(memberAuthRequest, member);
+        validateAccountStatus(member);
     }
 
     private void validatePassword(MemberAuthRequest memberAuthRequest, Member member) {
-        if (!member.verifyPassword(memberAuthRequest.password(), passwordEncoder)) {
+        if (!member.verifyPassword(memberAuthRequest.password(), passwordEncoder))
             throw new AuthenticateException("이메일 또는 비밀번호가 일치하지 않습니다");
-        }
     }
 
     private static void validateAccountStatus(Member member) {
-        if (member.getStatus() == MemberStatus.DEACTIVATED) {
+        if (member.getStatus() == MemberStatus.DEACTIVATED)
             throw new AuthenticateException("비활성화된 계정입니다");
-        }
+    }
+
+    // Token 관련 메서드
+    private String generateTokenForMember(Member member) {
+        return tokenManager.generateToken(member);
+
+    }
+
+    private String extractEmailFromToken(String token) {
+        return tokenManager.extractEmailFromToken(token);
+    }
+
+    private static LoginResult createLoginResult(Member member, String token) {
+        return new LoginResult(member, token);
     }
 }
