@@ -21,9 +21,8 @@ class PostTest {
         post = Post.create(createPostRequest(), 1L);
     }
 
-    @DisplayName("Post 생성 시 요청 정보와 작성자 ID가 올바르게 설정되고 초기 상태는 DRAFT가 된다")
     @Test
-    void createPost() {
+    void Post_생성_시_요정_정보와_작성자_ID가_올바르게_설정되고_초기_상태는_DRAFT가_된다() {
         assertThat(post.getContent().title()).isNotNull();
         assertThat(post.getMemberId()).isEqualTo(1L);
         assertThat(post.getCategory()).isEqualTo(PostCategory.TECH);
@@ -34,8 +33,7 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("모든 필드를 업데이트하면 제목, 내용, 카테고리가 모두 변경되고 수정일시가 설정된다")
-    void updateAllFields() {
+    void 모든_필드를_업데이트하면_제목_내용_카테고리가_모두_변경되고_수정일시가_설정된다() {
         PostUpdateRequest request = updateAllFieldsRequest();
 
         post.update(request);
@@ -47,8 +45,7 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("제목만 업데이트하면 제목만 변경되고 내용과 카테고리는 기존 값을 유지한다")
-    void updateTitleOnly() {
+    void 제목만_업데이트하면_제목만_변경되고_내용과_카테고리는_기존_값을_유지한다() {
         String originalBody = post.getContent().body();
         PostCategory originalCategory = post.getCategory();
 
@@ -62,8 +59,7 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("내용만 업데이트하면 내용만 변경되고 제목과 카테고리는 기존 값을 유지한다")
-    void updateBodyOnly() {
+    void 내용만_업데이트하면_내용만_변경되고_제목과_카테고리는_기존_값을_유지한다() {
         String originalTitle = post.getContent().title();
         PostCategory originalCategory = post.getCategory();
 
@@ -77,8 +73,7 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("카테고리만 업데이트하면 카테고리만 변경되고 제목과 내용은 기존 값을 유지한다")
-    void updateCategoryOnly() {
+    void 카테고리만_업데이트하면_카테고리만_변경되고_제목과_내용은_기존_값을_유지한다() {
         String originalTitle = post.getContent().title();
         String originalBody = post.getContent().body();
 
@@ -92,8 +87,7 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("제목과 카테고리를 함께 업데이트하면 해당 필드들만 변경되고 내용은 기존 값을 유지한다")
-    void updateTitleAndCategory() {
+    void 제목과_카테고리를_함께_업데이트하면_해당_필드들만_변경되고_내용은_기존_값을_유지한다() {
         String originalBody = post.getContent().body();
 
         PostUpdateRequest request = updateTitleAndCategoryRequest();
@@ -106,8 +100,7 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("변경사항이 없는 요청으로 업데이트 시 IllegalStateException이 발생한다")
-    void updateWithNoChanges() {
+    void 변경하상이_없는_요청으로_업데이트_시_IllegalStateException이_발생한다() {
         PostUpdateRequest request = noUpdateRequest();
 
         assertThatThrownBy(() -> post.update(request))
@@ -115,8 +108,7 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("DRAFT 상태의 게시글을 발행하면 상태가 PUBLISHED로 변경되고 발행일시가 설정된다")
-    void publishDraftPost() {
+    void DRAFT_상태의_게시글을_발행하면_상태가_PUBLISHED로_변경되고_발행일시가_설정된다() {
         post.publish();
 
         assertThat(post.getStatus()).isEqualTo(PostStatus.PUBLISHED);
@@ -124,8 +116,7 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("PUBLISHED 상태의 게시글을 숨김 처리하면 상태가 HIDDEN으로 변경된다")
-    void hidePublishedPost() {
+    void PUBLISHED_상태의_게시글을_숨김_처리하면_상태가_HIDDEN으로_변경된다() {
         post.publish();
         post.hide();
 
@@ -133,8 +124,7 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("HIDDEN 상태의 게시글을 발행하면 상태가 PUBLISHED로 변경되고 발행일시가 갱신된다")
-    void publishHiddenPost() {
+    void HIDDEN_상태의_게시글을_발행하면_상태가_PUBLISHED로_변경되고_발행일시가_갱신된다() {
         post.publish();
         post.hide();
         
@@ -145,16 +135,14 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("DRAFT 상태의 게시글을 숨김 처리하면 상태가 HIDDEN으로 변경된다")
-    void hideDraftPost() {
+    void DRAFT_상태의_게시글을_숨김_처리하면_상태가_HIDDEN으로_변경된다() {
         post.hide();
 
         assertThat(post.getStatus()).isEqualTo(PostStatus.HIDDEN);
     }
 
     @Test
-    @DisplayName("PUBLISHED 상태의 게시글을 다시 발행하려고 하면 InvalidPostStatusTransitionException이 발생한다")
-    void publishAlreadyPublishedPostThrowsException() {
+    void PUBLISHED_상태의_게시글을_다시_발행하려고_하면_InvalidPostStatusTransitionException이_발생한다() {
         post.publish();
         
         assertThatThrownBy(() -> post.publish())
@@ -162,8 +150,7 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("HIDDEN 상태의 게시글을 다시 숨기려고 하면 InvalidPostStatusTransitionException이 발생한다")
-    void hideAlreadyHiddenPostThrowsException() {
+    void HIDDEN_상태의_게시글을_다시_숨기려고_하면_InvalidPostStatusTransitionException이_발생한다() {
         post.publish();
         post.hide();
         
@@ -172,16 +159,14 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("게시글을 삭제하면 상태가 DELETED로 변경된다")
-    void deletePost() {
+    void 게시글을_삭제하면_상태가_DELETED로_변경된다() {
         post.delete();
 
         assertThat(post.getStatus()).isEqualTo(PostStatus.DELETED);
     }
 
     @Test
-    @DisplayName("이미 삭제된 게시글을 다시 삭제하려고 하면 InvalidPostStatusTransitionException이 발생한다")
-    void deleteAlreadyDeletedPostThrowsException() {
+    void 이미_삭제된_게시글을_다시_삭제하려고_하면_InvalidPostStatusTransitionException이_발생한다() {
         post.delete();
 
         assertThatThrownBy(() -> post.delete())
@@ -189,15 +174,13 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("게시글 작성자 확인 시 올바른 memberId면 true, 다른 memberId면 false를 반환한다")
-    void isWrittenByMember() {
+    void 게시글_작성자_확인_시_올바른_memberId면_true_다른_memberId면_false를_반환한다() {
         assertThat(post.isWrittenBy(1L)).isTrue();
         assertThat(post.isWrittenBy(2L)).isFalse();
     }
 
     @Test
-    @DisplayName("Post 생성 후 ID 할당하고 이벤트 발행하면 PostCreated 도메인 이벤트가 발생한다")
-    void createPostGeneratesDomainEvent() {
+    void Post_생성_후_ID_할당하고_이벤트_발행하면_PostCreated_도메인_이벤트가_발생한다() {
         PostCreateRequest request = createPostRequest();
         Long memberId = 1L;
 
@@ -226,8 +209,7 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("즉시 발행으로 Post 생성 후 ID 할당하고 이벤트 발행하면 PostCreated 이벤트의 publishImmediately가 true다")
-    void createPostWithImmediatePublishGeneratesCorrectEvent() {
+    void 즉시_발행으로_Post_생성_후_ID_할당하고_이벤트_발행하면_PostCreated_이벤트의_publishImmediately가_true다() {
         PostCreateRequest request = createPostRequest(true);
         Long memberId = 1L;
 
@@ -244,8 +226,7 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("게시글 발행 시 PostPublished 도메인 이벤트가 발생한다")
-    void publishPostGeneratesDomainEvent() {
+    void 게시글_발행_시_PostPublished_도메인_이벤트가_발생한다() {
         Post post = Post.create(createPostRequest(), 1L);
         post.clearDomainEvents();
 
@@ -263,8 +244,7 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("도메인 이벤트를 클리어하면 이벤트 목록이 비워진다")
-    void clearDomainEvents() {
+    void 도메인_이벤트를_클리어하면_이벤트_목록이_비워진다() {
         Post post = Post.create(createPostRequest(), 1L);
         
         // ID 할당 후 이벤트 발행
@@ -280,8 +260,7 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("게시글 수정 시 PostUpdated 도메인 이벤트가 발생한다")
-    void updatePostGeneratesDomainEvent() {
+    void 게시글_수정_시_PostUpdated_도메인_이벤트가_발생한다() {
         Post post = Post.create(createPostRequest(), 1L);
         post.clearDomainEvents();
         PostUpdateRequest request = updateAllFieldsRequest();
@@ -303,8 +282,7 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("제목만 수정 시 PostUpdated 이벤트에서 titleChanged만 true다")
-    void updateTitleOnlyGeneratesCorrectEvent() {
+    void 제목만_수정_시_PostUpdated_이벤트에서_titleChanged만_true다() {
         Post post = Post.create(createPostRequest(), 1L);
         post.clearDomainEvents();
         PostUpdateRequest request = updateTitleOnlyRequest();
@@ -318,8 +296,7 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("게시글 숨김 시 PostHidden 도메인 이벤트가 발생한다")
-    void hidePostGeneratesDomainEvent() {
+    void 게시글_숨김_시_PostHidden_도메인_이벤트가_발생한다() {
         Post post = Post.create(createPostRequest(), 1L);
         post.publish();
         post.clearDomainEvents();
@@ -339,8 +316,7 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("게시글 삭제 시 PostDeleted 도메인 이벤트가 발생한다")
-    void deletePostGeneratesDomainEvent() {
+    void 게시글_삭제_시_PostDeleted_도메인_이벤트가_발생한다() {
         Post post = Post.create(createPostRequest(), 1L);
         post.publish();
         post.clearDomainEvents();
@@ -360,8 +336,7 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("DRAFT 상태에서 숨김 처리 시 이전 상태가 DRAFT로 기록된다")
-    void hideDraftPostGeneratesEventWithCorrectPreviousStatus() {
+    void DRAFT_상태에서_숨김_처리_시_이전_상태가_DRAFT로_기록된다() {
         Post post = Post.create(createPostRequest(), 1L);
         post.clearDomainEvents();
 
@@ -372,8 +347,7 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("게시글 조회 시 PostViewed 도메인 이벤트가 발생한다")
-    void viewPostGeneratesDomainEvent() {
+    void 게시글_조회_시_PostViewed_도메인_이벤트가_발생한다() {
         Post post = Post.create(createPostRequest(), 1L);
         setPostId(post, 100L);
         post.clearDomainEvents();
@@ -392,8 +366,7 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("익명 사용자가 게시글 조회 시 PostViewed 이벤트의 memberId가 null이다")
-    void viewPostByAnonymousUserGeneratesCorrectEvent() {
+    void 익명_사용자가_게시글_조회_시_PostViewed_이벤트의_memberId가_null이다() {
         Post post = Post.create(createPostRequest(), 1L);
         setPostId(post, 100L);
         post.clearDomainEvents();
@@ -406,8 +379,7 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("게시글 좋아요 시 PostLiked 도메인 이벤트가 발생한다")
-    void like() {
+    void 게시글_좋아요_시_PostLiked_도메인_이벤트가_발생한다() {
         Post post = Post.create(createPostRequest(), 1L);
         setPostId(post, 200L);
         post.clearDomainEvents();
@@ -426,8 +398,7 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("게시글 좋아요 취소 시 PostUnliked 도메인 이벤트가 발생한다")
-    void unlike() {
+    void 게시글_좋아요_취소_시_PostUnliked_도메인_이벤트가_발생한다() {
         Post post = Post.create(createPostRequest(), 1L);
         setPostId(post, 300L);
         post.clearDomainEvents();
@@ -446,8 +417,7 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("좋아요할 회원 ID가 null이면 IllegalArgumentException이 발생한다")
-    void likeWithNullMemberIdThrowsException() {
+    void 좋아요할_회원_ID가_null이면_IllegalArgumentException이_발생한다() {
         Post post = Post.create(createPostRequest(), 1L);
         setPostId(post, 400L);
 
@@ -457,8 +427,7 @@ class PostTest {
     }
 
     @Test
-    @DisplayName("좋아요 취소할 회원 ID가 null이면 IllegalArgumentException이 발생한다")
-    void unlikeWithNullMemberIdThrowsException() {
+    void 좋아요_취소할_회원_ID가_null이면_IllegalArgumentException이_발생한다() {
         Post post = Post.create(createPostRequest(), 1L);
         setPostId(post, 500L);
 
