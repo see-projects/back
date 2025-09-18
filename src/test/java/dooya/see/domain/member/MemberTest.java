@@ -19,49 +19,43 @@ class MemberTest {
         member = Member.register(createMemberRegisterRequest(), passwordEncoder);
     }
 
-    @DisplayName("등록된 회원은 ACTIVE 상태이고 등록일시가 설정되어 있다")
     @Test
-    void memberRegister() {
+    void 등록된_회원은_ACTIVE_상태이고_등록일시가_설정되어_있다() {
         assertThat(member.getStatus()).isEqualTo(MemberStatus.ACTIVE);
         assertThat(member.getDetail().getRegisteredAt()).isNotNull();
     }
 
-    @DisplayName("올바른 비밀번호와 틀린 비밀번호를 구분하여 검증한다")
     @Test
-    void verifyPassword() {
+    void 올바른_비밀번호와_틀린_비밀번호를_구분하여_검증한다() {
         assertThat(member.verifyPassword("longsecret", passwordEncoder)).isTrue();
         assertThat(member.verifyPassword("longsecret1", passwordEncoder)).isFalse();
     }
 
-    @DisplayName("비밀번호 변경 후 새 비밀번호로만 인증에 성공한다")
     @Test
-    void changePassword() {
+    void 비밀번호_변경_후_새_비밀번호로만_인증에_성공한다() {
         member.changePassword("verysecret", passwordEncoder);
 
         assertThat(member.verifyPassword("verysecret", passwordEncoder)).isTrue();
     }
 
-    @DisplayName("회원 비활성화 시 DEACTIVATED 상태와 비활성화일시가 설정된다")
     @Test
-    void deactivate() {
+    void 회원_비활성화_시_DEACTIVATED_상태와_비활성화일시가_설정된다() {
         member.deactivate();
 
         assertThat(member.getStatus()).isEqualTo(MemberStatus.DEACTIVATED);
         assertThat(member.getDetail().getDeactivatedAt()).isNotNull();
     }
 
-    @DisplayName("이미 비활성화된 회원을 다시 비활성화하면 예외가 발생한다")
     @Test
-    void deactivateAlreadyDeactivatedMember() {
+    void 이미_비활성화된_회원을_다시_비활성화하면_예외가_발생한다() {
         member.deactivate();
 
         assertThatThrownBy(() -> member.deactivate())
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
-    @DisplayName("회원 정보 수정 시 닉네임, 프로필 주소, 자기소개가 변경된다")
     @Test
-    void updateInfo() {
+    void 회원_정보_수정_시_닉네임_프로필_주소_자기소개가_변경된다() {
         var request = new MemberInfoUpdateRequest("dooya", "korea", "자기소개");
         member.updateInfo(request);
 
