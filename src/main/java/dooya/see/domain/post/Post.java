@@ -62,40 +62,61 @@ public class Post extends AbstractAggregateRoot {
     }
 
     public void update(PostUpdateRequest request) {
-        state(request.hasAnyUpdate(), "변경사항이 없습니다");
+        validateHasChanges(request);
 
-        boolean titleChanged = false;
-        boolean bodyChanged = false;
-        boolean categoryChanged = false;
+        ContentUpdateResult contentResult = updateContentIfNeeded(request);
+        boolean categoryChanged = updateCategoryIfNeeded(request);
+
+        updateMetaData();
+
+        publishUpdateEvent(requireNonNull(contentResult), categoryChanged);
+    }
+
+    private ContentUpdateResult updateContentIfNeeded(PostUpdateRequest request) {
+        if (!hasContentToUpdate(request)) {
+            return new ContentUpdateResult(false, false);
+        }
 
         if (hasContentToUpdate(request)) {
             String originalTitle = this.content.title();
             String originalBody = this.content.body();
-            
+
             String newTitle = request.title().orElse(originalTitle);
             String newBody = request.body().orElse(originalBody);
 
-            titleChanged = !originalTitle.equals(newTitle);
-            bodyChanged = !originalBody.equals(newBody);
+            boolean titleChanged = !originalTitle.equals(newTitle);
+            boolean bodyChanged = !originalBody.equals(newBody);
 
             this.content = new PostContent(newTitle, newBody);
-        }
 
-        if (hasCategoryToUpdate(request)) {
-            PostCategory originalCategory = this.category;
-            this.category = request.category().get();
-            categoryChanged = !originalCategory.equals(this.category);
+            return new ContentUpdateResult(titleChanged, bodyChanged);
         }
+        return null;
+    }
 
+    private static void validateHasChanges(PostUpdateRequest request) {
+        state(request.hasAnyUpdate(), "변경사항이 없습니다");
+    }
+
+    private boolean updateCategoryIfNeeded(PostUpdateRequest request) {
+        if (!hasCategoryToUpdate(request))
+            return false;
+        PostCategory originalCategory = this.category;
+        this.category = request.category().get();
+        return !originalCategory.equals(this.category);
+    }
+
+    private void updateMetaData() {
         this.metaData = this.metaData.updateModifiedAt();
+    }
 
-        // 도메인 이벤트 발행
+    private void publishUpdateEvent(ContentUpdateResult contentResult, boolean categoryChanged) {
         this.addDomainEvent(new PostUpdated(
             this.getId(),
             this.memberId,
-            titleChanged,
-            bodyChanged,
-            categoryChanged
+            contentResult.titleChanged(),
+            contentResult.bodyChanged(),
+                categoryChanged
         ));
     }
 
@@ -151,12 +172,23 @@ public class Post extends AbstractAggregateRoot {
     }
 
     public void delete() {
-        validateStatusNotEquals(PostStatus.DELETED, "삭제");
+        validateCanDelete();
 
+        PostStatus previousStatus = changeStatusToDeleted();
+        publishDeleteEvent(previousStatus);
+    }
+
+    private void validateCanDelete() {
+        validateStatusNotEquals(PostStatus.DELETED, "삭제");
+    }
+
+    private PostStatus changeStatusToDeleted() {
         PostStatus previousStatus = this.status;
         this.status = PostStatus.DELETED;
+        return previousStatus;
+    }
 
-        // 도메인 이벤트 발행
+    private void publishDeleteEvent(PostStatus previousStatus) {
         this.addDomainEvent(new PostDeleted(this.getId(), this.memberId, previousStatus));
     }
 
