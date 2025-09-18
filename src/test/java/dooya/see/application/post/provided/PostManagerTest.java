@@ -2,12 +2,13 @@ package dooya.see.application.post.provided;
 
 import dooya.see.SeeTestConfiguration;
 import dooya.see.application.post.required.PostLikeRepository;
-import dooya.see.domain.post.*;
+import dooya.see.domain.post.Post;
+import dooya.see.domain.post.PostCategory;
+import dooya.see.domain.post.PostStatus;
 import dooya.see.domain.post.exception.InvalidPostStatusTransitionException;
 import dooya.see.domain.post.exception.PostNotFoundException;
 import dooya.see.domain.post.exception.UnauthorizedPostAccessException;
 import jakarta.persistence.EntityManager;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationEventPublisher;
@@ -21,16 +22,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @SpringBootTest
 @Transactional
 @Import(SeeTestConfiguration.class)
-record PostManagerTest(
-    PostManager postManager, 
-    EntityManager entityManager, 
-    PostFinder postFinder, 
-    ApplicationEventPublisher eventPublisher,
-    PostLikeRepository postLikeRepository
-) {
-    @DisplayName("게시글 생성 시 ID가 할당되고 초기 상태는 DRAFT가 된다")
+record PostManagerTest(PostManager postManager, EntityManager entityManager, PostFinder postFinder, ApplicationEventPublisher eventPublisher, PostLikeRepository postLikeRepository) {
     @Test
-    void create() {
+    void 게시글_생성_시_ID가_할당되고_초기_상태는_DRAFT가_된다() {
         Post post = createPost();
 
         assertThat(post.getId()).isNotNull();
@@ -39,9 +33,8 @@ record PostManagerTest(
         assertThat(post.getMetaData()).isNotNull();
     }
 
-    @DisplayName("모든 필드를 수정하면 제목, 내용, 카테고리가 모두 변경된다")
     @Test
-    void updateAllFields() {
+    void 모든_필드를_수정하면_제목_내용_카테고리가_모두_변경된다() {
         Post post = createPost();
 
         postManager.update(updateAllFieldsRequest(), post.getId(), 1L);
@@ -51,9 +44,8 @@ record PostManagerTest(
         assertThat(post.getCategory()).isEqualTo(PostCategory.QNA);
     }
 
-    @DisplayName("제목만 수정하면 제목만 변경되고 내용과 카테고리는 기존 값을 유지한다")
     @Test
-    void updateTitleOnly() {
+    void 제목만_수정하면_제목만_변경되고_내용과_카테고리는_기존_값을_유지한다() {
         Post post = createPost();
 
         String originalBody = post.getContent().body();
@@ -66,9 +58,8 @@ record PostManagerTest(
         assertThat(post.getCategory()).isEqualTo(originalCategory);
     }
 
-    @DisplayName("내용만 수정하면 내용만 변경되고 제목과 카테고리는 기존 값을 유지한다")
     @Test
-    void updateBodyOnly() {
+    void 내용만_수정하면_내용만_변경되고_제목과_카테고리는_기존_값을_유지한다() {
         Post post = createPost();
         String originalTitle = post.getContent().title();
         PostCategory originalCategory = post.getCategory();
@@ -80,9 +71,8 @@ record PostManagerTest(
         assertThat(post.getCategory()).isEqualTo(originalCategory);
     }
 
-    @DisplayName("카테고리만 수정하면 카테고리만 변경되고 제목과 내용은 기존 값을 유지한다")
     @Test
-    void updateCategoryOnly() {
+    void 카테고리만_수정하면_카테고리만_변경되고_제목과_내용은_기존_값을_유지한다() {
         Post post = createPost();
         String originalTitle = post.getContent().title();
         String originalBody = post.getContent().body();
@@ -94,34 +84,30 @@ record PostManagerTest(
         assertThat(post.getCategory()).isEqualTo(PostCategory.NOTICE);
     }
 
-    @DisplayName("변경사항이 없는 요청으로 수정 시 IllegalStateException이 발생한다")
     @Test
-    void updateWithNoChanges() {
+    void 변경사항이_없는_요청으로_수정_시_IllegalStateException이_발생한다() {
         Post post = createPost();
 
         assertThatThrownBy(() -> postManager.update(noUpdateRequest(), post.getId(), 1L))
                 .isInstanceOf(IllegalStateException.class);
     }
 
-    @DisplayName("존재하지 않는 게시글을 수정하려고 하면 PostNotFoundException이 발생한다")
     @Test
-    void updateNonExistentPost() {
+    void 존재하지_않는_게시글을_수정하려고_하면_PostNotFoundException이_발생한다() {
         assertThatThrownBy(() -> postManager.update(updateAllFieldsRequest(), 999L, 1L))
                 .isInstanceOf(PostNotFoundException.class);
     }
 
-    @DisplayName("작성자가 아닌 사용자가 게시글 수정 시도 시 UnauthorizedPostAccessException이 발생한다")
     @Test
-    void updateByNonOwner() {
+    void 작성자가_아닌_사용자가_게시글_수정_시도_시_UnauthorizedPostAccessException이_발생한다() {
         Post post = createPost();
 
         assertThatThrownBy(() -> postManager.update(updateAllFieldsRequest(), post.getId(), 2L))
                 .isInstanceOf(UnauthorizedPostAccessException.class);
     }
 
-    @DisplayName("게시글을 발행하면 PUBLISHED 상태가 되고 발행 시간이 기록된다")
     @Test
-    void publishDraftPost() {
+    void 게시글을_발행하면_PUBLISHED_상태가_되고_발행_시간이_기록된다() {
         Post post = createPost();
 
         postManager.publish(post.getId(), 1L);
@@ -130,9 +116,8 @@ record PostManagerTest(
         assertThat(post.getMetaData().publishedAt()).isNotNull();
     }
 
-    @DisplayName("이미 발행된 게시글을 다시 발행하려고 하면 IllegalStateException이 발생한다")
     @Test
-    void publishAlreadyPublishedPost() {
+    void 이미_발행된_게시글을_다시_발행하려고_하면_IllegalStateException이_발생한다() {
         Post post = createPost();
         postManager.publish(post.getId(), 1L);
 
@@ -140,9 +125,8 @@ record PostManagerTest(
                 .isInstanceOf(InvalidPostStatusTransitionException.class);
     }
 
-    @DisplayName("발행된 게시글을 숨김 처리하면 HIDDEN 상태로 변경된다")
     @Test
-    void hidePublishedPost() {
+    void 발행된_게시글을_숨김_처리하면_HIDDEN_상태로_변경된다() {
         Post post = createPost();
         postManager.publish(post.getId(), 1L);
 
@@ -151,9 +135,8 @@ record PostManagerTest(
         assertThat(post.getStatus()).isEqualTo(PostStatus.HIDDEN);
     }
 
-    @DisplayName("HIDDEN 상태의 게시글을 발행하면 PUBLISHED 상태로 변경된다")
     @Test
-    void publishHiddenPost() {
+    void HIDDEN_상태의_게시글을_발행하면_PUBLISHED_상태로_변경된다() {
         Post post = createPost();
         postManager.publish(post.getId(), 1L);
         postManager.hide(post.getId(), 1L);
@@ -164,9 +147,8 @@ record PostManagerTest(
         assertThat(post.getMetaData().publishedAt()).isNotNull();
     }
 
-    @DisplayName("이미 숨김 처리된 게시글을 다시 숨기려고 하면 InvalidPostStatusTransitionException이 발생한다")
     @Test
-    void hideAlreadyHiddenPost() {
+    void 이미_숨김_처리된_게시글을_다시_숨기려고_하면_InvalidPostStatusTransitionException이_발생한다() {
         Post post = createPost();
         postManager.publish(post.getId(), 1L);
         postManager.hide(post.getId(), 1L);
@@ -175,9 +157,8 @@ record PostManagerTest(
                 .isInstanceOf(InvalidPostStatusTransitionException.class);
     }
 
-    @DisplayName("DRAFT 상태의 게시글을 숨김 처리하면 HIDDEN 상태로 변경된다")
     @Test
-    void hideDraftPost() {
+    void DRAFT_상태의_게시글을_숨김_처리하면_HIDDEN_상태로_변경된다() {
         Post post = createPost();
 
         postManager.hide(post.getId(), 1L);
@@ -185,9 +166,8 @@ record PostManagerTest(
         assertThat(post.getStatus()).isEqualTo(PostStatus.HIDDEN);
     }
 
-    @DisplayName("게시글을 삭제하면 DELETED 상태로 변경된다")
     @Test
-    void deletePost() {
+    void 게시글을_삭제하면_DELETED_상태로_변경된다() {
         Post post = createPost();
 
         postManager.delete(post.getId(), 1L);
@@ -195,9 +175,8 @@ record PostManagerTest(
         assertThat(post.getStatus()).isEqualTo(PostStatus.DELETED);
     }
 
-    @DisplayName("이미 삭제된 게시글을 다시 삭제하려고 하면 InvalidPostStatusTransitionException이 발생한다")
     @Test
-    void deleteAlreadyDeletedPost() {
+    void 이미_삭제된_게시글을_다시_삭제하려고_하면_InvalidPostStatusTransitionException이_발생한다() {
         Post post = createPost();
         postManager.delete(post.getId(), 1L);
 
@@ -205,9 +184,8 @@ record PostManagerTest(
                 .isInstanceOf(InvalidPostStatusTransitionException.class);
     }
 
-    @DisplayName("게시글에 좋아요를 누르면 PostLike가 저장된다")
     @Test
-    void likePost() {
+    void 게시글에_좋아요를_누르면_PostLike가_저장된다() {
         Post post = createPost();
         Long memberId = 2L;
         
@@ -218,9 +196,8 @@ record PostManagerTest(
         assertThat(postLikeRepository.countByPostId(post.getId())).isEqualTo(1);
     }
 
-    @DisplayName("게시글 좋아요를 취소하면 PostLike가 삭제된다")
     @Test
-    void unlikePost() {
+    void 게시글_좋아요를_취소하면_PostLike가_삭제된다() {
         Post post = createPost();
         Long memberId = 3L;
         
@@ -234,9 +211,8 @@ record PostManagerTest(
         assertThat(postLikeRepository.countByPostId(post.getId())).isEqualTo(0);
     }
 
-    @DisplayName("동일 회원이 같은 게시글에 중복 좋아요를 누르면 멱등성이 보장된다")
     @Test
-    void likeDuplicatePost() {
+    void 동일_회원이_같은_게시글에_중복_좋아요를_누르면_멱등성이_보장된다() {
         Post post = createPost();
         Long memberId = 4L;
         
@@ -253,9 +229,8 @@ record PostManagerTest(
         assertThat(postLikeRepository.existsByPostIdAndMemberId(post.getId(), memberId)).isTrue();
     }
 
-    @DisplayName("존재하지 않는 좋아요를 취소하면 멱등성이 보장된다")
     @Test
-    void unlikeNonExistentLike() {
+    void 존재하지_않는_좋아요를_취소하면_멱등성이_보장된다() {
         Post post = createPost();
         Long memberId = 5L;
         
@@ -265,9 +240,8 @@ record PostManagerTest(
         assertThat(postLikeRepository.countByPostId(post.getId())).isEqualTo(0);
     }
 
-    @DisplayName("여러 회원이 동일 게시글에 좋아요를 누를 수 있다")
     @Test
-    void likePostByMultipleMembers() {
+    void 여러_회원이_동일_게시글에_좋아요를_누를_수_있다() {
         Post post = createPost();
         Long member1 = 10L;
         Long member2 = 20L;
@@ -283,9 +257,8 @@ record PostManagerTest(
         assertThat(postLikeRepository.existsByPostIdAndMemberId(post.getId(), member3)).isTrue();
     }
 
-    @DisplayName("좋아요 후 중복 좋아요를 시도해도 1개만 유지된다")
     @Test
-    void maintainSingleLikeAfterDuplicateAttempts() {
+    void 좋아요_후_중복_좋아요를_시도해도_1개만_유지된다() {
         Post post = createPost();
         Long memberId = 6L;
         
@@ -301,9 +274,8 @@ record PostManagerTest(
         assertThat(finalCount).isEqualTo(1);
     }
 
-    @DisplayName("좋아요 취소 후 다시 좋아요를 누를 수 있다")
     @Test
-    void likeAfterUnlike() {
+    void 좋아요_취소_후_다시_좋아요를_누를_수_있다() {
         Post post = createPost();
         Long memberId = 7L;
         
@@ -319,16 +291,14 @@ record PostManagerTest(
         assertThat(postLikeRepository.countByPostId(post.getId())).isEqualTo(1);
     }
 
-    @DisplayName("존재하지 않는 게시글에 좋아요를 누르려고 하면 PostNotFoundException이 발생한다")
     @Test
-    void likeNonExistentPost() {
+    void 존재하지_않는_게시글에_좋아요를_누르려고_하면_PostNotFoundException이_발생한다() {
         assertThatThrownBy(() -> postManager.likePost(999L, 1L))
                 .isInstanceOf(PostNotFoundException.class);
     }
 
-    @DisplayName("존재하지 않는 게시글의 좋아요를 취소하려고 하면 PostNotFoundException이 발생한다")
     @Test
-    void unlikeNonExistentPost() {
+    void 존재하지_않는_게시글의_좋아요를_취소하려고_하면_PostNotFoundException이_발생한다() {
         assertThatThrownBy(() -> postManager.unlikePost(999L, 1L))
                 .isInstanceOf(PostNotFoundException.class);
     }
