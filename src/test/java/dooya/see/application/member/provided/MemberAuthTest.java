@@ -1,18 +1,18 @@
 package dooya.see.application.member.provided;
 
 import dooya.see.SeeTestConfiguration;
-import dooya.see.domain.member.exception.AuthenticateException;
 import dooya.see.domain.member.LoginResult;
 import dooya.see.domain.member.Member;
 import dooya.see.domain.member.MemberFixture;
+import dooya.see.domain.member.exception.AuthenticateException;
 import jakarta.persistence.EntityManager;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Transactional;
 
-import static dooya.see.domain.member.MemberFixture.*;
+import static dooya.see.domain.member.MemberFixture.createAuthRequestWithPassword;
+import static dooya.see.domain.member.MemberFixture.createMemberRegisterRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -20,9 +20,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @Transactional
 @Import(SeeTestConfiguration.class)
 record MemberAuthTest(MemberRegister memberRegister, MemberAuth memberAuth, EntityManager entityManager) {
-    @DisplayName("올바른 이메일과 비밀번호로 로그인 시 회원 정보와 액세스 토큰을 반환한다")
     @Test
-    void login() {
+    void 올바른_이메일과_비밀번호로_로그인_시_회원_정보와_액세스_토큰을_반환한다() {
         Member member = memberRegister.register(createMemberRegisterRequest());
         entityManager.flush();
         entityManager.clear();
@@ -33,9 +32,8 @@ record MemberAuthTest(MemberRegister memberRegister, MemberAuth memberAuth, Enti
         assertThat(loginResult.accessToken()).isNotNull();
     }
 
-    @DisplayName("잘못된 비밀번호로 로그인 시도 시 인증 예외가 발생한다")
     @Test
-    void loginFailWithWrongPassword() {
+    void 잘못된_비밀번호로_로그인_시도_시_인증_예외가_발생한다() {
         memberRegister.register(createMemberRegisterRequest());
         entityManager.flush();
         entityManager.clear();
@@ -44,9 +42,8 @@ record MemberAuthTest(MemberRegister memberRegister, MemberAuth memberAuth, Enti
             .isInstanceOf(AuthenticateException.class);
     }
 
-    @DisplayName("비활성화된 계정으로 로그인 시도 시 인증 예외가 발생한다")
     @Test
-    void loginFailWithDeactivatedAccount() {
+    void 비활성화된_계정으로_로그인_시도_시_인증_예외가_발생한다() {
         Member member = memberRegister.register(createMemberRegisterRequest());
         entityManager.flush();
         entityManager.clear();
@@ -57,9 +54,8 @@ record MemberAuthTest(MemberRegister memberRegister, MemberAuth memberAuth, Enti
             .isInstanceOf(AuthenticateException.class);
     }
 
-    @DisplayName("유효한 액세스 토큰으로 현재 로그인된 회원 정보를 조회한다")
     @Test
-    void getCurrentMember() {
+    void 유효한_액세스_토큰으로_현재_로그인된_회원_정보를_조회한다() {
         memberRegister.register(createMemberRegisterRequest());
         entityManager.flush();
         entityManager.clear();
@@ -71,9 +67,8 @@ record MemberAuthTest(MemberRegister memberRegister, MemberAuth memberAuth, Enti
         assertThat(member.getId()).isEqualTo(loginResult.member().getId());
     }
 
-    @DisplayName("잘못된 액세스 토큰으로 회원 정보 조회 시 인증 예외가 발생한다")
     @Test
-    void getCurrentMemberFailWithInvalidToken() {
+    void 잘못된_액세스_토큰으로_회원_정보_조회_시_인증_예외가_발생한다() {
         memberRegister.register(createMemberRegisterRequest());
         entityManager.flush();
         entityManager.clear();
