@@ -2,19 +2,16 @@ package dooya.see.application.post.required;
 
 import dooya.see.domain.post.PostLike;
 import jakarta.persistence.EntityManager;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.dao.DataIntegrityViolationException;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 
 @DataJpaTest
 record PostLikeRepositoryTest(PostLikeRepository postLikeRepository, EntityManager entityManager) {
-    
-    @DisplayName("게시물 좋아요를 생성하면 ID가 자동 생성되고 영속화된다")
     @Test
-    void createPostLike() {
+    void 게시물_좋아요를_생성하면_ID가_자동_생성되고_영속화된다() {
         PostLike postLike = PostLike.create(1L, 100L);
 
         assertThat(postLike.getId()).isNull();
@@ -32,9 +29,8 @@ record PostLikeRepositoryTest(PostLikeRepository postLikeRepository, EntityManag
         assertThat(found.getLikedAt()).isNotNull();
     }
 
-    @DisplayName("특정 게시물에 특정 회원이 좋아요를 눌렀는지 확인할 수 있다")
     @Test
-    void existsByPostIdAndMemberId() {
+    void 특정_게시물에_특정_회원이_좋아요를_눌렀는지_확인할_수_있다() {
         PostLike postLike = PostLike.create(1L, 100L);
         postLikeRepository.save(postLike);
 
@@ -48,9 +44,8 @@ record PostLikeRepositoryTest(PostLikeRepository postLikeRepository, EntityManag
         assertThat(notExists).isFalse();
     }
 
-    @DisplayName("특정 게시물의 좋아요 개수를 조회할 수 있다")
     @Test
-    void countByPostId() {
+    void 특정_게시물의_좋아요_개수를_조회할_수_있다() {
         PostLike like1 = PostLike.create(1L, 100L);
         PostLike like2 = PostLike.create(1L, 200L);
         PostLike like3 = PostLike.create(2L, 100L);
@@ -71,9 +66,8 @@ record PostLikeRepositoryTest(PostLikeRepository postLikeRepository, EntityManag
         assertThat(count3).isEqualTo(0);
     }
 
-    @DisplayName("특정 게시물과 회원의 좋아요를 삭제할 수 있다")
     @Test
-    void deleteByPostIdAndMemberId() {
+    void 특정_게시물과_회원의_좋아요를_삭제할_수_있다() {
         PostLike like1 = PostLike.create(1L, 100L);
         PostLike like2 = PostLike.create(1L, 200L);
         PostLike like3 = PostLike.create(2L, 100L);
@@ -99,16 +93,14 @@ record PostLikeRepositoryTest(PostLikeRepository postLikeRepository, EntityManag
         assertThat(anotherPostExists).isTrue();
     }
 
-    @DisplayName("존재하지 않는 좋아요를 삭제해도 오류가 발생하지 않는다")
     @Test
-    void deleteNonExistentLike() {
+    void 존재하지_않는_좋아요를_삭제해도_오류가_발생하지_않는다() {
         assertThatNoException()
             .isThrownBy(() -> postLikeRepository.deleteByPostIdAndMemberId(999L, 999L));
     }
 
-    @DisplayName("동일한 게시물에 동일한 회원이 중복 좋아요를 누르는 것을 허용한다")
     @Test
-    void allowDuplicateLike() {
+    void 동일한_게시물에_동일한_회원이_중복_좋아요를_누르는_것을_허용한다() {
         PostLike like1 = PostLike.create(1L, 100L);
         PostLike like2 = PostLike.create(1L, 100L);
 
@@ -122,9 +114,8 @@ record PostLikeRepositoryTest(PostLikeRepository postLikeRepository, EntityManag
         assertThat(count).isEqualTo(2);
     }
 
-    @DisplayName("서로 다른 회원이 같은 게시물에 좋아요를 누를 수 있다")
     @Test
-    void multipleMembersCanLikeSamePost() {
+    void 서로_다른_회원이_같은_게시물에_좋아요를_누를_수_있다() {
         PostLike like1 = PostLike.create(1L, 100L);
         PostLike like2 = PostLike.create(1L, 200L);
         PostLike like3 = PostLike.create(1L, 300L);
@@ -144,9 +135,8 @@ record PostLikeRepositoryTest(PostLikeRepository postLikeRepository, EntityManag
         assertThat(postLikeRepository.existsByPostIdAndMemberId(1L, 300L)).isTrue();
     }
 
-    @DisplayName("한 회원이 서로 다른 게시물에 좋아요를 누를 수 있다")
     @Test
-    void sameMemberCanLikeMultiplePosts() {
+    void 한_회원이_서로_다른_게시물에_좋아요를_누를_수_있다() {
         PostLike like1 = PostLike.create(1L, 100L);
         PostLike like2 = PostLike.create(2L, 100L);
         PostLike like3 = PostLike.create(3L, 100L);
@@ -163,9 +153,8 @@ record PostLikeRepositoryTest(PostLikeRepository postLikeRepository, EntityManag
         assertThat(postLikeRepository.existsByPostIdAndMemberId(3L, 100L)).isTrue();
     }
 
-    @DisplayName("좋아요 삭제 후 다시 좋아요를 누를 수 있다")
     @Test
-    void likeAfterUnlike() {
+    void 좋아요_삭제_후_다시_좋아요를_누를_수_있다() {
         PostLike originalLike = PostLike.create(1L, 100L);
         postLikeRepository.save(originalLike);
 
@@ -191,9 +180,8 @@ record PostLikeRepositoryTest(PostLikeRepository postLikeRepository, EntityManag
         assertThat(postLikeRepository.countByPostId(1L)).isEqualTo(1);
     }
 
-    @DisplayName("대량의 좋아요 데이터 처리가 가능하다")
     @Test
-    void handleMassiveLikes() {
+    void 대량의_좋아요_데이터_처리가_가능하다() {
         // 100개의 좋아요 생성
         for (int i = 1; i <= 100; i++) {
             PostLike like = PostLike.create(1L, (long) i);
