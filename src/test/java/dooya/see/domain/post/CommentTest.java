@@ -3,7 +3,6 @@ package dooya.see.domain.post;
 import dooya.see.domain.post.event.*;
 import dooya.see.domain.post.exception.EmptyCommentUpdateException;
 import dooya.see.domain.post.exception.InvalidCommentStatusException;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -15,11 +14,9 @@ class CommentTest {
     private static final Long MEMBER_ID = 1L;
 
     @Nested
-    @DisplayName("댓글 생성")
-    class CreateComment {
-        @DisplayName("일반 댓글 생성 시 댓글 정보가 올바르게 설정된다")
+    class 댓글_생성 {
         @Test
-        void createTopLevelComment () {
+        void 일반_댓글_생성_시_댓글_정보가_올바르게_설정된다() {
             CommentCreateRequest request = new CommentCreateRequest("좋은 글이네요!");
 
             Comment comment = Comment.create(request, POST_ID, MEMBER_ID);
@@ -35,9 +32,8 @@ class CommentTest {
             assertThat(comment.isTopLevel()).isTrue();
         }
 
-        @DisplayName("답글 댓글 생성 시 부모 댓글 ID가 올바르게 설정된다")
         @Test
-        void createReplyComment() {
+        void 답글_댓글_생성_시_부모_댓글_ID가_올바르게_설정된다() {
             Long parentCommentId = 1L;
             CommentCreateRequest request = new CommentCreateRequest("답글입니다!", parentCommentId);
 
@@ -52,18 +48,16 @@ class CommentTest {
             assertThat(reply.isTopLevel()).isFalse();
         }
 
-        @DisplayName("null 내용으로 댓글 생성 시 예외가 발생한다")
         @Test
-        void createCommentWithNullContent() {
+        void null_내용으로_댓글_생성_시_예외가_발생한다() {
             CommentCreateRequest request = new CommentCreateRequest(null);
 
             assertThatThrownBy(() -> Comment.create(request, POST_ID, MEMBER_ID))
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
-        @DisplayName("빈 내용으로 댓글 생성 시 예외가 발생한다")
         @Test
-        void createCommentWithEmptyContent() {
+        void 빈_내용으로_댓글_생성_시_예외가_발생한다() {
             CommentCreateRequest request = new CommentCreateRequest("  ");
 
             assertThatThrownBy(() -> Comment.create(request, POST_ID, MEMBER_ID))
@@ -71,9 +65,8 @@ class CommentTest {
 
         }
 
-        @DisplayName("길이 제한을 초과한 내용으로 댓글 생성 시 예외가 발생한다")
         @Test
-        void createCommentWithWhiteTooLongContent() {
+        void 길이_제한을_초과한_내용으로_댓글_생성_시_예외가_발생한다() {
             String longContent = "a".repeat(1001);
             CommentCreateRequest request = new CommentCreateRequest(longContent);
 
@@ -83,11 +76,9 @@ class CommentTest {
     }
 
     @Nested
-    @DisplayName("댓글 수정")
-    class UpdateComment {
-        @DisplayName("댓글 수정 시 내용과 수정일시가 변경된다")
+    class 댓글_수정 {
         @Test
-        void updateComment() {
+        void 댓글_수정_시_내용과_수정일시가_변경된다() {
             CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
             Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
             CommentUpdateRequest request = new CommentUpdateRequest("수정된 댓글입니다!");
@@ -102,9 +93,8 @@ class CommentTest {
             assertThat(comment.getDomainEvents().get(0)).isInstanceOf(CommentUpdated.class);
         }
 
-        @DisplayName("삭제된 댓글은 수정할 수 없다")
         @Test
-        void cannotUpdateDeleteComment() {
+        void 삭제된_댓글은_수정할_수_없다() {
             CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
             Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
             comment.delete();
@@ -114,9 +104,8 @@ class CommentTest {
                 .isInstanceOf(InvalidCommentStatusException.class);
         }
 
-        @DisplayName("null 내용으로 댓글 수정 시 예외가 발생한다")
         @Test
-        void updateCommentWithNoContent() {
+        void null_내용으로_댓글_수정_시_예외가_발생한다() {
             CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
             Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
             CommentUpdateRequest request = new CommentUpdateRequest(null);
@@ -127,11 +116,9 @@ class CommentTest {
     }
 
     @Nested
-    @DisplayName("댓글 삭제")
-    class DeleteComment {
-        @DisplayName("댓글 삭제 시 상태가 DELETED로 변경되고 수정일시가 설정된다")
+    class 댓글_삭제 {
         @Test
-        void deleteComment() {
+        void 댓글_삭제_시_상태가_DELETED로_변경되고_수정일시가_설정된다() {
             CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
             Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
 
@@ -146,9 +133,8 @@ class CommentTest {
             assertThat(comment.getDomainEvents().get(0)).isInstanceOf(CommentDeleted.class);
         }
 
-        @DisplayName("이미 삭제된 댓글을 다시 삭제할 수 없다")
         @Test
-        void cannotDeleteAlreadyDeleteComment() {
+        void 이미_삭제된_댓글을_다시_삭제할_수_없다() {
             CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
             Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
             comment.delete();
@@ -159,11 +145,9 @@ class CommentTest {
     }
 
     @Nested
-    @DisplayName("댓글 숨김")
-    class HideComment {
-        @DisplayName("댓글 숨김 시 상태가 HIDDEN으로 변경되고 수정일시가 설정된다")
+    class 댓글_숨김 {
         @Test
-        void hideComment() {
+        void 댓글_숨김_시_상태가_HIDDEN으로_변경되고_수정일시가_설정된다() {
             CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
             Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
 
@@ -178,9 +162,8 @@ class CommentTest {
             assertThat(comment.getDomainEvents().get(0)).isInstanceOf(CommentHidden.class);
         }
 
-        @DisplayName("이미 숨김 처리된 댓글을 다시 숨길 수 없다")
         @Test
-        void cannotHideDeletedComment() {
+        void 이미_숨김_처리된_댓글을_다시_숨길_수_없다() {
             CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
             Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
             comment.hide();
@@ -189,9 +172,8 @@ class CommentTest {
                 .isInstanceOf(InvalidCommentStatusException.class);
         }
 
-        @DisplayName("삭제된 댓글은 숨김 처리할 수 없다")
         @Test
-        void cannotHideDeleteComment() {
+        void 삭제된_댓글은_숨김_처리할_수_없다() {
             CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
             Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
             comment.delete();
@@ -202,29 +184,25 @@ class CommentTest {
     }
     
     @Nested
-    @DisplayName("권한 검증")
-    class Authorization {
-        @DisplayName("작성자 ID와 일치하는 회원이 작성자인지 확인한다")
+    class 권한_검증 {
         @Test
-        void isWrittenByOwner() {
+        void 작성자_ID와_일치하는_회원이_작성자인지_확인한다() {
             CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
             Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
             
             assertThat(comment.isWrittenBy(MEMBER_ID)).isTrue();
         }
-        
-        @DisplayName("활성 상태의 댓글은 수정 가능하다")
+
         @Test
-        void canBeModifiedWhenActive() {
+        void 활성_상태의_댓글은_수정_가능하다() {
             CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
             Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
 
             assertThat(comment.canBeModified()).isTrue();
         }
 
-        @DisplayName("삭제된 댓글은 수정할 수 없다")
         @Test
-        void cannotBeModifiedWhenDelete() {
+        void 삭제된_댓글은_수정할_수_없다() {
             CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
             Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
             comment.delete();
@@ -234,11 +212,9 @@ class CommentTest {
     }
 
     @Nested
-    @DisplayName("대댓글 관련")
-    class ReplyComments {
-        @DisplayName("일반 댓글은 답글이 아니고 최상위 댓글이다")
+    class 대댓글_관련 {
         @Test
-        void isReplyForTopLevelComment() {
+        void 일반_댓글은_답글이_아니고_최상위_댓글이다() {
             CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
             Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
 
@@ -246,9 +222,8 @@ class CommentTest {
             assertThat(comment.isTopLevel()).isTrue();
         }
 
-        @DisplayName("부모 댓글 ID가 있는 댓글은 답글이고 최상위 댓글이 아니다")
         @Test
-        void isReplyForReplyComment() {
+        void 부모_댓글_ID가_있는_댓글은_답글이고_최상위_댓글이_아니다() {
             Long parentCommentId = 10L;
             CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!", parentCommentId);
             Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
