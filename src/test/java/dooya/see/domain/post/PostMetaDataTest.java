@@ -1,6 +1,5 @@
 package dooya.see.domain.post;
 
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -8,9 +7,8 @@ import java.time.LocalDateTime;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class PostMetaDataTest {
-    @DisplayName("PostMetaData 생성 시 생성일시가 설정되고 나머지 값들은 초기값으로 설정된다")
     @Test
-    void createPostMetaData() {
+    void PostMetaData_생성_시_생성일시가_설정되고_나머지_값들은_초기값으로_설정된다() {
         LocalDateTime beforeCreate = LocalDateTime.now().minusSeconds(1);
         
         PostMetaData postMetaData = PostMetaData.create();
@@ -21,10 +19,9 @@ class PostMetaDataTest {
         assertThat(postMetaData.modifiedAt()).isNull();
         assertThat(postMetaData.publishedAt()).isNull();
     }
-    
-    @DisplayName("수정일시 업데이트 시 modifiedAt만 현재 시간으로 변경되고 나머지는 기존 값을 유지한다")
+
     @Test
-    void updateModifiedAt() {
+    void 수정일시_업데이트_시_modifiedAt만_현재_시간으로_변경되고_나머지는_기존_값을_유지한다() {
         PostMetaData original = PostMetaData.create();
         LocalDateTime beforeUpdate = LocalDateTime.now().minusSeconds(1);
         
@@ -37,9 +34,8 @@ class PostMetaDataTest {
         assertThat(updated.publishedAt()).isEqualTo(original.publishedAt());
     }
 
-    @DisplayName("발행일시 업데이트 시 publishedAt만 현재 시간으로 변경되고 나머지는 기존 값을 유지한다")
     @Test
-    void updatePublishedAt() {
+    void 발행일시_업데이트_시_publishedAt만_현재_시간으로_변경되고_나머지는_기존_값을_유지한다() {
         PostMetaData original = PostMetaData.create();
         LocalDateTime beforePublish = LocalDateTime.now().minusSeconds(1);
         
