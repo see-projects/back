@@ -37,15 +37,26 @@ public class Post extends AbstractAggregateRoot {
     public static Post create(PostCreateRequest request, Long memberId) {
         Post post = new Post();
 
-        post.content = new PostContent(request.title(), request.body());
-        post.memberId = requireNonNull(memberId);
-        post.category = requireNonNull(request.category());
-        post.status = request.publishImmediately() ? PostStatus.PUBLISHED : PostStatus.DRAFT;
-        post.metaData = request.publishImmediately() ? PostMetaData.createPublished() : PostMetaData.create();
-
-        post.creationContext = new PostCreationContext(request.publishImmediately());
+        post.initializeBasicFields(request, memberId);
+        post.determineInitialStatus(request);
+        post.setupCreationContext(request);
 
         return post;
+    }
+
+    private void determineInitialStatus(PostCreateRequest request) {
+        this.status = request.publishImmediately() ? PostStatus.PUBLISHED : PostStatus.DRAFT;
+        this.metaData = request.publishImmediately() ? PostMetaData.createPublished() : PostMetaData.create();
+    }
+
+    private void setupCreationContext(PostCreateRequest request) {
+        this.creationContext = new PostCreationContext(request.publishImmediately());
+    }
+
+    private void initializeBasicFields(PostCreateRequest request, Long memberId) {
+        this.content = new PostContent(request.title(), request.body());
+        this.memberId = requireNonNull(memberId);
+        this.category = requireNonNull(request.category());
     }
 
     public void publishCreationEventIfNeeded() {
