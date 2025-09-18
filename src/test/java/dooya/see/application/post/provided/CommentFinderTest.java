@@ -2,10 +2,12 @@ package dooya.see.application.post.provided;
 
 import dooya.see.SeeTestConfiguration;
 import dooya.see.application.post.required.CommentRepository;
-import dooya.see.domain.post.*;
+import dooya.see.domain.post.Comment;
+import dooya.see.domain.post.CommentFixture;
+import dooya.see.domain.post.CommentStatus;
+import dooya.see.domain.post.Post;
 import dooya.see.domain.post.exception.CommentNotFoundException;
 import jakarta.persistence.EntityManager;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -20,16 +22,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @SpringBootTest
 @Transactional
 @Import(SeeTestConfiguration.class)
-public record CommentFinderTest(
-        CommentFinder commentFinder,
-        CommentManager commentManager,
-        CommentRepository commentRepository,
-        PostManager postManager,
-        PostFinder postFinder,
-        EntityManager entityManager) {
-    @DisplayName("댓글 ID로 댓글을 조회한다")
+public record CommentFinderTest(CommentFinder commentFinder, CommentManager commentManager, CommentRepository commentRepository, PostManager postManager, PostFinder postFinder, EntityManager entityManager) {
     @Test
-    void findCommentById() {
+    void 댓글_ID로_댓글을_조회한다() {
         Post post = createPost();
         Comment comment = createComment(post.getId(), 1L, "테스트 댓글");
 
@@ -45,9 +40,8 @@ public record CommentFinderTest(
         assertThat(foundComment.getMetaData().modifiedAt()).isNull();
     }
 
-    @DisplayName("존재하지 않는 댓글 ID로 조회하면 예외가 발생한다")
     @Test
-    void findCommentByNonexistentIdThrowsException() {
+    void 존재하지_않는_댓글_ID로_조회하면_예외가_발생한다() {
         Long nonexistentCommentId = 999L;
 
         assertThatThrownBy(() -> commentFinder.find(nonexistentCommentId))
@@ -55,9 +49,8 @@ public record CommentFinderTest(
                 .hasMessage("댓글을 찾을 수 없습니다: " + nonexistentCommentId);
     }
 
-    @DisplayName("게시글 ID로 댓글 목록을 조회한다")
     @Test
-    void findCommentsByPostId() {
+    void 게시글_ID로_댓글_목록을_조회한다() {
         Post post = createPost();
         Comment comment1 = createComment(post.getId(), 1L, "첫 번째 댓글");
         Comment comment2 = createComment(post.getId(), 2L, "두 번째 댓글");
@@ -71,9 +64,8 @@ public record CommentFinderTest(
                 .containsExactlyInAnyOrder(comment1.getId(), comment2.getId(), comment3.getId());
     }
 
-    @DisplayName("댓글이 없는 게시글의 댓글 목록 조회 시 빈 목록을 반환한다")
     @Test
-    void findCommentsByPostIdWithNoCommentsReturnsEmptyList() {
+    void 댓글이_없는_게시글의_댓글_목록_조회_시_빈_목록을_반환한다() {
         Post post = createPost();
 
         List<Comment> comments = commentFinder.findByPostId(post.getId());
@@ -81,9 +73,8 @@ public record CommentFinderTest(
         assertThat(comments).isEmpty();
     }
 
-    @DisplayName("부모 댓글 ID로 답글 목록을 조회한다")
     @Test
-    void findRepliesByParentCommentId() {
+    void 부모_댓글_ID로_답글_목록을_조회한다() {
         Post post = createPost();
         Comment parentComment = createComment(post.getId(), 1L, "부모 댓글");
         Comment reply1 = createReply(post.getId(), 2L, "첫 번째 답글", parentComment.getId());
@@ -100,9 +91,8 @@ public record CommentFinderTest(
                 .allMatch(parentId -> parentId.equals(parentComment.getId()));
     }
 
-    @DisplayName("답글이 없는 댓글의 답글 목록 조회 시 빈 목록을 반환한다")
     @Test
-    void findRepliesByParentCommentIdWithNoRepliesReturnsEmptyList() {
+    void 답글이_없는_댓글의_답글_목록_조회_시_빈_목록을_반환한다() {
         Post post = createPost();
         Comment parentComment = createComment(post.getId(), 1L, "부모 댓글");
 
@@ -111,9 +101,8 @@ public record CommentFinderTest(
         assertThat(replies).isEmpty();
     }
 
-    @DisplayName("회원 ID로 해당 회원이 작성한 댓글 목록을 조회한다")
     @Test
-    void findCommentsByMemberId() {
+    void 회원_ID로_해당_회원이_작성한_댓글_목록을_조회한다() {
         Post post1 = createPost();
         Post post2 = createPost();
         
@@ -132,9 +121,8 @@ public record CommentFinderTest(
                 .allMatch(memberId -> memberId.equals(1L));
     }
 
-    @DisplayName("댓글을 작성하지 않은 회원의 댓글 목록 조회 시 빈 목록을 반환한다")
     @Test
-    void findCommentsByMemberIdWithNoCommentsReturnsEmptyList() {
+    void 댓글을_작성하지_않은_회원의_댓글_목록_조회_시_빈_목록을_반환한다() {
         Long memberWithNoComments = 999L;
 
         List<Comment> memberComments = commentFinder.findByMemberId(memberWithNoComments);
