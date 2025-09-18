@@ -6,9 +6,8 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class PostLikeTest {
-    @DisplayName("PostLike 생성 시 postId, memberId, likedAt이 올바르게 설정된다")
     @Test
-    void create_setsAllRequiredFields() {
+    void PostLike_생성_시_postId_memberId_likedAt이_올바르게_설정된다() {
         PostLike postLike = PostLike.create(1L, 1L);
 
         assertThat(postLike).isNotNull();
