@@ -108,14 +108,18 @@ public class Post extends AbstractAggregateRoot {
     }
 
     public void publish() {
-        if (this.status != PostStatus.DRAFT && this.status != PostStatus.HIDDEN) {
-            throw new InvalidPostStatusTransitionException(this.status, "발행");
-        }
+        validateCanPublish();
 
         this.status = PostStatus.PUBLISHED;
         this.metaData = this.metaData.updatePublishedAt();
 
         this.addDomainEvent(new PostPublished(this.getId(), this.memberId));
+    }
+
+    private void validateCanPublish() {
+        if (this.status != PostStatus.DRAFT && this.status != PostStatus.HIDDEN) {
+            throw new InvalidPostStatusTransitionException(this.status, "발행");
+        }
     }
 
     public void hide() {
