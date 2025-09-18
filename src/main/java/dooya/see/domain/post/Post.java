@@ -73,25 +73,21 @@ public class Post extends AbstractAggregateRoot {
     }
 
     private ContentUpdateResult updateContentIfNeeded(PostUpdateRequest request) {
-        if (!hasContentToUpdate(request)) {
+        if (!hasContentToUpdate(request))
             return new ContentUpdateResult(false, false);
-        }
+        
+        String originalTitle = this.content.title();
+        String originalBody = this.content.body();
 
-        if (hasContentToUpdate(request)) {
-            String originalTitle = this.content.title();
-            String originalBody = this.content.body();
+        String newTitle = request.title().orElse(originalTitle);
+        String newBody = request.body().orElse(originalBody);
 
-            String newTitle = request.title().orElse(originalTitle);
-            String newBody = request.body().orElse(originalBody);
+        boolean titleChanged = !originalTitle.equals(newTitle);
+        boolean bodyChanged = !originalBody.equals(newBody);
 
-            boolean titleChanged = !originalTitle.equals(newTitle);
-            boolean bodyChanged = !originalBody.equals(newBody);
-
-            this.content = new PostContent(newTitle, newBody);
-
-            return new ContentUpdateResult(titleChanged, bodyChanged);
-        }
-        return null;
+        this.content = new PostContent(newTitle, newBody);
+        
+        return new ContentUpdateResult(titleChanged, bodyChanged);
     }
 
     private static void validateHasChanges(PostUpdateRequest request) {
@@ -165,9 +161,9 @@ public class Post extends AbstractAggregateRoot {
         this.addDomainEvent(new PostHidden(this.getId(), this.memberId, previousStatus));
     }
 
-    private void validateStatusNotEquals(PostStatus hidden, String s) {
-        if (this.status == hidden) {
-            throw new InvalidPostStatusTransitionException(this.status, s);
+    private void validateStatusNotEquals(PostStatus prohibitedStatus, String operation) {
+        if (this.status == prohibitedStatus) {
+            throw new InvalidPostStatusTransitionException(this.status, operation);
         }
     }
 
