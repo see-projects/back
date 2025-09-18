@@ -68,7 +68,7 @@ public class Post extends AbstractAggregateRoot {
         boolean bodyChanged = false;
         boolean categoryChanged = false;
 
-        if (request.title().isPresent() || request.body().isPresent()) {
+        if (hasContentToUpdate(request)) {
             String originalTitle = this.content.title();
             String originalBody = this.content.body();
             
@@ -81,7 +81,7 @@ public class Post extends AbstractAggregateRoot {
             this.content = new PostContent(newTitle, newBody);
         }
 
-        if (request.category().isPresent()) {
+        if (hasCategoryToUpdate(request)) {
             PostCategory originalCategory = this.category;
             this.category = request.category().get();
             categoryChanged = !originalCategory.equals(this.category);
@@ -97,6 +97,14 @@ public class Post extends AbstractAggregateRoot {
             bodyChanged,
             categoryChanged
         ));
+    }
+
+    private static boolean hasCategoryToUpdate(PostUpdateRequest request) {
+        return request.category().isPresent();
+    }
+
+    private static boolean hasContentToUpdate(PostUpdateRequest request) {
+        return request.title().isPresent() || request.body().isPresent();
     }
 
     public void publish() {
