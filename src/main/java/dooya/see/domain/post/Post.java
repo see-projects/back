@@ -123,13 +123,24 @@ public class Post extends AbstractAggregateRoot {
     }
 
     public void hide() {
+        validateCanHide();
+
+        PostStatus previousStatus = changeStatusToHidden();
+        publishHideEvent(previousStatus);
+    }
+
+    private void validateCanHide() {
         validateStatusNotEquals(PostStatus.HIDDEN, "숨김");
         validateStatusNotEquals(PostStatus.DELETED, "숨김");
+    }
 
+    private PostStatus changeStatusToHidden() {
         PostStatus previousStatus = this.status;
         this.status = PostStatus.HIDDEN;
+        return previousStatus;
+    }
 
-        // 도메인 이벤트 발행
+    private void publishHideEvent(PostStatus previousStatus) {
         this.addDomainEvent(new PostHidden(this.getId(), this.memberId, previousStatus));
     }
 
