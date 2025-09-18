@@ -7,9 +7,11 @@ import dooya.see.application.member.provided.MemberRegister;
 import dooya.see.domain.member.MemberAuthRequest;
 import dooya.see.domain.member.MemberFixture;
 import dooya.see.domain.member.MemberRegisterRequest;
-import dooya.see.domain.post.*;
+import dooya.see.domain.post.CommentCreateRequest;
+import dooya.see.domain.post.CommentStatus;
+import dooya.see.domain.post.CommentUpdateRequest;
+import dooya.see.domain.post.PostCreateRequest;
 import lombok.RequiredArgsConstructor;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -22,8 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.UnsupportedEncodingException;
 
-import static dooya.see.domain.member.MemberFixture.*;
-import static dooya.see.domain.post.PostFixture.*;
+import static dooya.see.domain.member.MemberFixture.createMemberAuthRequest;
+import static dooya.see.domain.member.MemberFixture.createMemberRegisterRequest;
+import static dooya.see.domain.post.PostFixture.createPostRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
@@ -37,12 +40,9 @@ class CommentApiTest {
     final MemberRegister memberRegister;
 
     @Nested
-    @DisplayName("댓글 생성")
-    class CreateComment {
-
-        @DisplayName("로그인한 사용자가 게시글에 댓글을 작성할 수 있다")
+    class 댓글_생성 {
         @Test
-        void createComment() throws JsonProcessingException, UnsupportedEncodingException {
+        void 로그인한_사용자가_게시글에_댓글을_작성할_수_있다() throws JsonProcessingException, UnsupportedEncodingException {
             String token = createMemberAndGetToken();
             Long postId = createAndPublishPost(token);
 
@@ -68,9 +68,8 @@ class CommentApiTest {
             assertThat(response.createdAt()).isNotNull();
         }
 
-        @DisplayName("답글을 작성할 수 있다")
         @Test
-        void createReply() throws JsonProcessingException, UnsupportedEncodingException {
+        void 답글을_작성할_수_있다() throws JsonProcessingException, UnsupportedEncodingException {
             String token = createMemberAndGetToken();
             Long postId = createAndPublishPost(token);
             Long parentCommentId = createCommentHelper(token, postId, "원본 댓글");
@@ -95,9 +94,8 @@ class CommentApiTest {
             assertThat(response.body()).isEqualTo("답글입니다");
         }
 
-        @DisplayName("토큰 없이 댓글 작성 요청 시 401 Unauthorized가 발생한다")
         @Test
-        void createCommentWithoutToken() throws JsonProcessingException, UnsupportedEncodingException {
+        void 토큰_없이_댓글_작성_요청_시_401_Unauthorized가_발생한다() throws JsonProcessingException, UnsupportedEncodingException {
             String token = createMemberAndGetToken();
             Long postId = createAndPublishPost(token);
 
@@ -114,9 +112,8 @@ class CommentApiTest {
                     .hasStatus(HttpStatus.UNAUTHORIZED);
         }
 
-        @DisplayName("존재하지 않는 게시글에 댓글을 작성하려고 하면 404 Not Found가 발생한다")
         @Test
-        void createCommentOnNonExistentPost() throws JsonProcessingException, UnsupportedEncodingException {
+        void 존재하지_않는_게시글에_댓글을_작성하려고_하면_404_Not_Found가_발생한다() throws JsonProcessingException, UnsupportedEncodingException {
             String token = createMemberAndGetToken();
 
             CommentCreateRequest request = new CommentCreateRequest("댓글 내용");
@@ -135,12 +132,9 @@ class CommentApiTest {
     }
 
     @Nested
-    @DisplayName("댓글 조회")
-    class GetComment {
-
-        @DisplayName("게시글의 댓글 목록을 조회할 수 있다")
+    class 댓글_조회 {
         @Test
-        void getCommentsByPost() throws JsonProcessingException, UnsupportedEncodingException {
+        void 게시글의_댓글_목록을_조회할_수_있다() throws JsonProcessingException, UnsupportedEncodingException {
             String token = createMemberAndGetToken();
             Long postId = createAndPublishPost(token);
 
@@ -162,9 +156,8 @@ class CommentApiTest {
             assertThat(comments[1].body()).contains("댓글");
         }
 
-        @DisplayName("특정 댓글을 조회할 수 있다")
         @Test
-        void getComment() throws JsonProcessingException, UnsupportedEncodingException {
+        void 특정_댓글을_조회할_수_있다() throws JsonProcessingException, UnsupportedEncodingException {
             String token = createMemberAndGetToken();
             Long postId = createAndPublishPost(token);
             Long commentId = createCommentHelper(token, postId, "조회할 댓글");
@@ -183,9 +176,8 @@ class CommentApiTest {
             assertThat(response.isReply()).isFalse();
         }
 
-        @DisplayName("특정 댓글의 답글 목록을 조회할 수 있다")
         @Test
-        void getReplies() throws JsonProcessingException, UnsupportedEncodingException {
+        void 특정_댓글의_답글_목록을_조회할_수_있다() throws JsonProcessingException, UnsupportedEncodingException {
             String token = createMemberAndGetToken();
             Long postId = createAndPublishPost(token);
             Long parentCommentId = createCommentHelper(token, postId, "원본 댓글");
@@ -208,9 +200,8 @@ class CommentApiTest {
             assertThat(replies[1].isReply()).isTrue();
         }
 
-        @DisplayName("존재하지 않는 댓글을 조회하려고 하면 404 Not Found가 발생한다")
         @Test
-        void getNonExistentComment() {
+        void 존재하지_않는_댓글을_조회하려고_하면_404_Not_Found가_발생한다() {
             MvcTestResult result = mvcTester.get().uri("/api/comments/{commentId}", 999L)
                     .exchange();
 
@@ -221,12 +212,9 @@ class CommentApiTest {
     }
 
     @Nested
-    @DisplayName("회원별 댓글 조회")
-    class GetCommentsByMember {
-
-        @DisplayName("본인의 댓글 목록을 조회하면 모든 상태의 댓글이 반환된다")
+    class 회원별_댓글_조회 {
         @Test
-        void getMyComments() throws JsonProcessingException, UnsupportedEncodingException {
+        void 본인의_댓글_목록을_조회하면_모든_상태의_댓글이_반환된다() throws JsonProcessingException, UnsupportedEncodingException {
             String token = createMemberAndGetToken();
             Long postId = createAndPublishPost(token);
 
@@ -252,9 +240,8 @@ class CommentApiTest {
             assertThat(comments).hasSize(2); // ACTIVE + DELETED 모두 반환
         }
 
-        @DisplayName("다른 사용자의 댓글 목록을 조회하면 활성 상태만 반환된다")
         @Test
-        void getOtherUserComments() throws JsonProcessingException, UnsupportedEncodingException {
+        void 다른_사용자의_댓글_목록을_조회하면_활성_상태만_반환된다() throws JsonProcessingException, UnsupportedEncodingException {
             String authorToken = createMemberAndGetToken();
             Long postId = createAndPublishPost(authorToken);
 
@@ -285,12 +272,9 @@ class CommentApiTest {
     }
 
     @Nested
-    @DisplayName("댓글 수정")
-    class UpdateComment {
-
-        @DisplayName("작성자가 댓글을 수정할 수 있다")
+    class 댓글_수정 {
         @Test
-        void updateComment() throws JsonProcessingException, UnsupportedEncodingException {
+        void 작성자가_댓글을_수정할_수_있다() throws JsonProcessingException, UnsupportedEncodingException {
             String token = createMemberAndGetToken();
             Long postId = createAndPublishPost(token);
             Long commentId = createCommentHelper(token, postId, "원본 댓글");
@@ -313,9 +297,8 @@ class CommentApiTest {
             assertThat(response.modifiedAt()).isNotNull();
         }
 
-        @DisplayName("토큰 없이 댓글 수정 요청 시 401 Unauthorized가 발생한다")
         @Test
-        void updateCommentWithoutToken() throws JsonProcessingException, UnsupportedEncodingException {
+        void 토큰_없이_댓글_수정_요청_시_401_Unauthorized가_발생한다() throws JsonProcessingException, UnsupportedEncodingException {
             String token = createMemberAndGetToken();
             Long postId = createAndPublishPost(token);
             Long commentId = createCommentHelper(token, postId, "원본 댓글");
@@ -333,9 +316,8 @@ class CommentApiTest {
                     .hasStatus(HttpStatus.UNAUTHORIZED);
         }
 
-        @DisplayName("작성자가 아닌 사용자가 댓글 수정 시 403 Forbidden이 발생한다")
         @Test
-        void updateCommentWithoutAuthorization() throws JsonProcessingException, UnsupportedEncodingException {
+        void 작성자가_아닌_사용자가_댓글_수정_시_403_Forbidden이_발생한다() throws JsonProcessingException, UnsupportedEncodingException {
             String authorToken = createMemberAndGetToken();
             Long postId = createAndPublishPost(authorToken);
             Long commentId = createCommentHelper(authorToken, postId, "원본 댓글");
@@ -358,12 +340,9 @@ class CommentApiTest {
     }
 
     @Nested
-    @DisplayName("댓글 삭제")
-    class DeleteComment {
-
-        @DisplayName("작성자가 댓글을 삭제할 수 있다")
+    class 댓글_삭제 {
         @Test
-        void deleteComment() throws JsonProcessingException, UnsupportedEncodingException {
+        void 작성자가_댓글을_삭제할_수_있다() throws JsonProcessingException, UnsupportedEncodingException {
             String token = createMemberAndGetToken();
             Long postId = createAndPublishPost(token);
             Long commentId = createCommentHelper(token, postId, "삭제할 댓글");
@@ -380,9 +359,8 @@ class CommentApiTest {
             assertThat(response.status()).isEqualTo(CommentStatus.DELETED);
         }
 
-        @DisplayName("토큰 없이 댓글 삭제 요청 시 401 Unauthorized가 발생한다")
         @Test
-        void deleteCommentWithoutToken() throws JsonProcessingException, UnsupportedEncodingException {
+        void 토큰_없이_댓글_삭제_요청_시_401_Unauthorized가_발생한다() throws JsonProcessingException, UnsupportedEncodingException {
             String token = createMemberAndGetToken();
             Long postId = createAndPublishPost(token);
             Long commentId = createCommentHelper(token, postId, "삭제할 댓글");
@@ -395,9 +373,8 @@ class CommentApiTest {
                     .hasStatus(HttpStatus.UNAUTHORIZED);
         }
 
-        @DisplayName("작성자가 아닌 사용자가 댓글 삭제 시 403 Forbidden이 발생한다")
         @Test
-        void deleteCommentWithoutAuthorization() throws JsonProcessingException, UnsupportedEncodingException {
+        void 작성자가_아닌_사용자가_댓글_삭제_시_403_Forbidden이_발생한다() throws JsonProcessingException, UnsupportedEncodingException {
             String authorToken = createMemberAndGetToken();
             Long postId = createAndPublishPost(authorToken);
             Long commentId = createCommentHelper(authorToken, postId, "삭제할 댓글");
@@ -413,9 +390,8 @@ class CommentApiTest {
                     .hasStatus(HttpStatus.FORBIDDEN);
         }
 
-        @DisplayName("이미 삭제된 댓글을 다시 삭제하려고 하면 409 Conflict가 발생한다")
         @Test
-        void deleteCommentAlreadyDeleted() throws JsonProcessingException, UnsupportedEncodingException {
+        void 이미_삭제된_댓글을_다시_삭제하려고_하면_409_Conflict가_발생한다() throws JsonProcessingException, UnsupportedEncodingException {
             String token = createMemberAndGetToken();
             Long postId = createAndPublishPost(token);
             Long commentId = createCommentHelper(token, postId, "삭제할 댓글");
@@ -437,12 +413,9 @@ class CommentApiTest {
     }
 
     @Nested
-    @DisplayName("댓글 숨김")
-    class HideComment {
-
-        @DisplayName("작성자가 댓글을 숨김 처리할 수 있다")
+    class 댓글_숨김 {
         @Test
-        void hideComment() throws JsonProcessingException, UnsupportedEncodingException {
+        void 작성자가_댓글을_숨김_처리할_수_있다() throws JsonProcessingException, UnsupportedEncodingException {
             String token = createMemberAndGetToken();
             Long postId = createAndPublishPost(token);
             Long commentId = createCommentHelper(token, postId, "숨길 댓글");
@@ -459,9 +432,8 @@ class CommentApiTest {
             assertThat(response.status()).isEqualTo(CommentStatus.HIDDEN);
         }
 
-        @DisplayName("토큰 없이 댓글 숨김 요청 시 401 Unauthorized가 발생한다")
         @Test
-        void hideCommentWithoutToken() throws JsonProcessingException, UnsupportedEncodingException {
+        void 토큰_없이_댓글_숨김_요청_시_401_Unauthorized가_발생한다() throws JsonProcessingException, UnsupportedEncodingException {
             String token = createMemberAndGetToken();
             Long postId = createAndPublishPost(token);
             Long commentId = createCommentHelper(token, postId, "숨길 댓글");
@@ -474,9 +446,8 @@ class CommentApiTest {
                     .hasStatus(HttpStatus.UNAUTHORIZED);
         }
 
-        @DisplayName("작성자가 아닌 사용자가 댓글 숨김 시 403 Forbidden이 발생한다")
         @Test
-        void hideCommentWithoutAuthorization() throws JsonProcessingException, UnsupportedEncodingException {
+        void 작성자가_아닌_사용자가_댓글_숨김_시_403_Forbidden이_발생한다() throws JsonProcessingException, UnsupportedEncodingException {
             String authorToken = createMemberAndGetToken();
             Long postId = createAndPublishPost(authorToken);
             Long commentId = createCommentHelper(authorToken, postId, "숨길 댓글");
@@ -492,9 +463,8 @@ class CommentApiTest {
                     .hasStatus(HttpStatus.FORBIDDEN);
         }
 
-        @DisplayName("이미 숨김 처리된 댓글을 다시 숨기려고 하면 409 Conflict가 발생한다")
         @Test
-        void hideCommentAlreadyHidden() throws JsonProcessingException, UnsupportedEncodingException {
+        void 이미_숨김_처리된_댓글을_다시_숨기려고_하면_409_Conflict가_발생한다() throws JsonProcessingException, UnsupportedEncodingException {
             String token = createMemberAndGetToken();
             Long postId = createAndPublishPost(token);
             Long commentId = createCommentHelper(token, postId, "숨길 댓글");
@@ -514,9 +484,8 @@ class CommentApiTest {
                     .hasStatus(HttpStatus.CONFLICT);
         }
 
-        @DisplayName("삭제된 댓글을 숨기려고 하면 409 Conflict가 발생한다")
         @Test
-        void hideDeletedComment() throws JsonProcessingException, UnsupportedEncodingException {
+        void 삭제된_댓글을_숨기려고_하면_409_Conflict가_발생한다() throws JsonProcessingException, UnsupportedEncodingException {
             String token = createMemberAndGetToken();
             Long postId = createAndPublishPost(token);
             Long commentId = createCommentHelper(token, postId, "댓글");
