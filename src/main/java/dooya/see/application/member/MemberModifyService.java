@@ -23,49 +23,83 @@ public class MemberModifyService implements MemberRegister {
 
     @Override
     public Member register(MemberRegisterRequest registerRequest) {
-        checkDuplicateEmail(registerRequest);
+        validateUniqueEmail(registerRequest);
 
-        Member member = Member.register(registerRequest, passwordEncoder);
+        Member member = createMember(registerRequest);
 
-        memberRepository.save(member);
-
-        return member;
+        return savedMember(member);
     }
 
     @Override
     public Member deactivate(Long memberId) {
-        Member member = memberFinder.find(memberId);
+        Member member = findMember(memberId);
 
         member.deactivate();
 
-        return memberRepository.save(member);
+        return savedMember(member);
     }
 
     @Override
     public Member updateInfo(Long memberId, MemberInfoUpdateRequest memberInfoUpdateRequest) {
-        Member member = memberFinder.find(memberId);
+        Member member = findMember(memberId);
 
-        checkDuplicateProfile(member, memberInfoUpdateRequest.profileAddress());
+        validateUniqueProfile(member, memberInfoUpdateRequest);
 
         member.updateInfo(memberInfoUpdateRequest);
 
+        return savedMember(member);
+    }
+
+    // Member 관련 메서드
+    private Member findMember(Long memberId) {
+        return memberFinder.find(memberId);
+    }
+
+    private Member createMember(MemberRegisterRequest registerRequest) {
+        return Member.register(registerRequest, passwordEncoder);
+    }
+
+    private Member savedMember(Member member) {
         return memberRepository.save(member);
     }
 
-    private void checkDuplicateEmail(MemberRegisterRequest registerRequest) {
-        if (memberRepository.findByEmail(new Email(registerRequest.email())).isPresent()) {
-            throw new DuplicateEmailException("이미 사용중인 이메일입니다: " + registerRequest.email());
-        }
+    // Email 검증 관련 메서드
+    private void validateUniqueEmail(MemberRegisterRequest registerRequest) {
+        Email email = createEmail(registerRequest.email());
+        checkEmailNotExists(email, registerRequest.email());
+    }
+    private Email createEmail(String emailAddress) {
+        return new Email(emailAddress);
     }
 
-    private void checkDuplicateProfile(Member member, String profileAddress) {
-        if (profileAddress.isEmpty()) return;
+    private void checkEmailNotExists(Email email, String emailAddress) {
+        if (memberRepository.findByEmail(email).isPresent())
+            throw new DuplicateEmailException("이미 사용중인 이메일입니다: " + emailAddress);
+    }
 
+    // Profile 검증 관련 메서드
+    private void validateUniqueProfile(Member member, MemberInfoUpdateRequest memberInfoUpdateRequest) {
+        String profileAddress = memberInfoUpdateRequest.profileAddress();
+
+        if (shouldSkipProfileValidation(profileAddress)) return;
+
+        if (isCurrentProfile(member, profileAddress)) return;
+
+        checkProfileNotExists(profileAddress);
+    }
+
+    private boolean shouldSkipProfileValidation(String profileAddress) {
+        return profileAddress.isEmpty();
+    }
+
+    private boolean isCurrentProfile(Member member, String profileAddress) {
         Profile currentProfile = member.getDetail().getProfile();
-        if (currentProfile != null && currentProfile.address().equals(profileAddress)) return;
+        return currentProfile != null && currentProfile.address().equals(profileAddress);
+    }
 
-        if (memberRepository.findByProfile(new Profile(profileAddress)).isPresent()) {
+    private void checkProfileNotExists(String profileAddress) {
+        Profile profile = new Profile(profileAddress);
+        if (memberRepository.findByProfile(profile).isPresent())
             throw new DuplicateProfileException("이미 존재하는 프로필 주소입니다: " + profileAddress);
-        }
     }
 }
