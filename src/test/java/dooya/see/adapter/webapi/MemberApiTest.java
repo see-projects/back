@@ -163,7 +163,7 @@ class MemberApiTest {
             MemberAuthResponse authResponse =
                     objectMapper.readValue(loginResult.getResponse().getContentAsString(), MemberAuthResponse.class);
 
-            MvcTestResult getCurrentMemberResult = mvcTester.get().uri("/api/members/my")
+            MvcTestResult getCurrentMemberResult = mvcTester.get().uri("/api/members/me")
                     .header("Authorization", "Bearer " + authResponse.accessToken())
                     .exchange();
 
@@ -178,7 +178,7 @@ class MemberApiTest {
         @DisplayName("Authorization 헤더 없이 현재 회원 정보 조회 시 401 Unauthorized 상태 코드를 반환한다")
         @Test
         void getCurrentMemberFailWithoutAuthorizationHeader() {
-            MvcTestResult result = mvcTester.get().uri("/api/members/my").exchange();
+            MvcTestResult result = mvcTester.get().uri("/api/members/me").exchange();
 
             assertThat(result)
                     .apply(print())
@@ -188,7 +188,7 @@ class MemberApiTest {
         @DisplayName("잘못된 형식의 Authorization 헤더로 현재 회원 정보 조회 시 401 Unauthorized 상태 코드를 반환한다")
         @Test
         void getCurrentMemberFailWithInvalidAuthorizationHeader() {
-            MvcTestResult result = mvcTester.get().uri("/api/members/my")
+            MvcTestResult result = mvcTester.get().uri("/api/members/me")
                     .header("Authorization", "InvalidTokenFormat")
                     .exchange();
 
@@ -200,7 +200,7 @@ class MemberApiTest {
         @DisplayName("유효하지 않은 토큰으로 현재 회원 정보 조회 시 401 Unauthorized 상태 코드를 반환한다")
         @Test
         void getCurrentMemberFailWithInvalidToken() {
-            MvcTestResult result = mvcTester.get().uri("/api/members/my")
+            MvcTestResult result = mvcTester.get().uri("/api/members/me")
                     .header("Authorization", "Bearer invalidToken")
                     .exchange();
 
@@ -296,7 +296,7 @@ class MemberApiTest {
             MemberInfoUpdateRequest updateInfoRequest = createMemberInfoUpdateRequest();
             String updateRequestJson = objectMapper.writeValueAsString(updateInfoRequest);
 
-            MvcTestResult result = mvcTester.put().uri("/api/members/my/updateInfo")
+            MvcTestResult result = mvcTester.put().uri("/api/members/me")
                     .header("Authorization", "Bearer " + authResponse.accessToken())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(updateRequestJson)
@@ -313,7 +313,7 @@ class MemberApiTest {
         @DisplayName("본문 없이 회원 정보 수정 요청 시 400 Bad Request 상태 코드를 반환한다")
         @Test
         void updateMyInfoWithoutRequestBody() {
-            MvcTestResult result = mvcTester.put().uri("/api/members/my/updateInfo").exchange();
+            MvcTestResult result = mvcTester.put().uri("/api/members/me").exchange();
 
             assertThat(result)
                     .apply(print())
@@ -326,7 +326,7 @@ class MemberApiTest {
             MemberInfoUpdateRequest request = createMemberInfoUpdateRequest();
             String requestJson = objectMapper.writeValueAsString(request);
 
-            MvcTestResult result = mvcTester.put().uri("/api/members/my/updateInfo")
+            MvcTestResult result = mvcTester.put().uri("/api/members/me")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(requestJson)
                     .exchange();
@@ -342,7 +342,7 @@ class MemberApiTest {
             MemberInfoUpdateRequest request = createMemberInfoUpdateRequest();
             String requestJson = objectMapper.writeValueAsString(request);
 
-            MvcTestResult result = mvcTester.put().uri("/api/members/my/updateInfo")
+            MvcTestResult result = mvcTester.put().uri("/api/members/me")
                     .header("Authorization", "InvalidTokenFormat")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(requestJson)
@@ -359,7 +359,7 @@ class MemberApiTest {
             MemberInfoUpdateRequest request = createMemberInfoUpdateRequest();
             String requestJson = objectMapper.writeValueAsString(request);
 
-            MvcTestResult result = mvcTester.put().uri("/api/members/my/updateInfo")
+            MvcTestResult result = mvcTester.put().uri("/api/members/me")
                     .header("Authorization", "Bearer invalidToken")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(requestJson)
