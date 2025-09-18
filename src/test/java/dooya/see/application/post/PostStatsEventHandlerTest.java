@@ -91,7 +91,7 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
 
     @DisplayName("좋아요 수가 0일 때 PostUnliked 이벤트 처리해도 음수가 되지 않는다")
     @Test
-    void handlePostUnlikedWhenPublishLikeEventCountIsZero() {
+    void handlePostUnlikedWhenLikeCountIsZero() {
         Long postId = 600L;
         createPostStats(postId);
         PostUnliked event = new PostUnliked(postId, 5L);

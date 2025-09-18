@@ -151,22 +151,34 @@ public class Post extends AbstractAggregateRoot {
 
     public void view(Long viewerId) {
         // 조회수 증가는 PostStats에서 처리하고, 여기서는 이벤트만 발행
+        publishViewEvent(viewerId);
+    }
+
+    private void publishViewEvent(Long viewerId) {
         if (this.getId() != null) {
             this.addDomainEvent(new PostViewed(this.getId(), viewerId));
         }
     }
 
-    public void publishLikeEvent(Long memberId) {
+    public void like(Long memberId) {
         requireNonNull(memberId, "좋아요를 누를 회원 ID는 필수입니다");
-        
+
+        publishLikeEvent(memberId);
+    }
+
+    private void publishLikeEvent(Long memberId) {
         if (this.getId() != null) {
             this.addDomainEvent(new PostLiked(this.getId(), memberId));
         }
     }
 
-    public void publishUnlikeEvent(Long memberId) {
+    public void unlike(Long memberId) {
         requireNonNull(memberId, "좋아요를 취소할 회원 ID는 필수입니다");
-        
+
+        publishUnlikeEvent(memberId);
+    }
+
+    private void publishUnlikeEvent(Long memberId) {
         if (this.getId() != null) {
             this.addDomainEvent(new PostUnliked(this.getId(), memberId));
         }

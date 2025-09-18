@@ -148,12 +148,12 @@ public class PostModifyService implements PostManager {
     }
 
     private void publishLikeEvent(Post post, Long memberId) {
-        post.publishLikeEvent(memberId);
+        post.like(memberId);
         publishDomainEvents(post);
     }
 
     private void publishUnlikeEvent(Post post, Long memberId) {
-        post.publishUnlikeEvent(memberId);
+        post.unlike(memberId);
         publishDomainEvents(post);
     }
 }

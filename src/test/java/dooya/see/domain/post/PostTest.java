@@ -407,12 +407,12 @@ class PostTest {
 
     @Test
     @DisplayName("게시글 좋아요 시 PostLiked 도메인 이벤트가 발생한다")
-    void publishLikeEventPostGeneratesDomainEvent() {
+    void like() {
         Post post = Post.create(createPostRequest(), 1L);
         setPostId(post, 200L);
         post.clearDomainEvents();
 
-        post.publishLikeEvent(3L);
+        post.like(3L);
 
         assertThat(post.hasDomainEvents()).isTrue();
         assertThat(post.getDomainEvents()).hasSize(1);
@@ -427,12 +427,12 @@ class PostTest {
 
     @Test
     @DisplayName("게시글 좋아요 취소 시 PostUnliked 도메인 이벤트가 발생한다")
-    void publishUnlikeEventPostGeneratesDomainEvent() {
+    void unlike() {
         Post post = Post.create(createPostRequest(), 1L);
         setPostId(post, 300L);
         post.clearDomainEvents();
 
-        post.publishUnlikeEvent(4L);
+        post.unlike(4L);
 
         assertThat(post.hasDomainEvents()).isTrue();
         assertThat(post.getDomainEvents()).hasSize(1);
@@ -447,22 +447,22 @@ class PostTest {
 
     @Test
     @DisplayName("좋아요할 회원 ID가 null이면 IllegalArgumentException이 발생한다")
-    void publishLikeEventWithNullMemberIdThrowsException() {
+    void likeWithNullMemberIdThrowsException() {
         Post post = Post.create(createPostRequest(), 1L);
         setPostId(post, 400L);
 
-        assertThatThrownBy(() -> post.publishLikeEvent(null))
+        assertThatThrownBy(() -> post.like(null))
             .isInstanceOf(NullPointerException.class)
             .hasMessageContaining("좋아요를 누를 회원 ID는 필수입니다");
     }
 
     @Test
     @DisplayName("좋아요 취소할 회원 ID가 null이면 IllegalArgumentException이 발생한다")
-    void publishUnlikeEventWithNullMemberIdThrowsException() {
+    void unlikeWithNullMemberIdThrowsException() {
         Post post = Post.create(createPostRequest(), 1L);
         setPostId(post, 500L);
 
-        assertThatThrownBy(() -> post.publishUnlikeEvent(null))
+        assertThatThrownBy(() -> post.unlike(null))
             .isInstanceOf(NullPointerException.class)
             .hasMessageContaining("좋아요를 취소할 회원 ID는 필수입니다");
     }
