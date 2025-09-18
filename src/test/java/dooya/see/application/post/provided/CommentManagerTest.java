@@ -8,7 +8,6 @@ import dooya.see.domain.post.exception.InvalidCommentStatusException;
 import dooya.see.domain.post.exception.PostNotFoundException;
 import dooya.see.domain.post.exception.UnauthorizedCommentAccessException;
 import jakarta.persistence.EntityManager;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -16,25 +15,17 @@ import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Transactional;
 
 import static dooya.see.domain.post.PostFixture.createPostRequest;
-import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Transactional
 @Import(SeeTestConfiguration.class)
-record CommentManagerTest(
-        CommentManager commentManager,
-        CommentFinder commentFinder,
-        CommentRepository commentRepository,
-        PostManager postManager,
-        PostFinder postFinder,
-        EntityManager entityManager) {
+record CommentManagerTest(CommentManager commentManager, CommentFinder commentFinder, CommentRepository commentRepository, PostManager postManager, PostFinder postFinder, EntityManager entityManager) {
     @Nested
-    @DisplayName("댓글 생성")
-    class CreateComment {
-        @DisplayName("댓글 생성이 성공한다")
+    class 댓글_생성 {
         @Test
-        void createCommentSuccess() {
+        void 댓글_생성이_성공한다() {
             Post post = createPost();
             
             Comment comment = createComment(post.getId());
@@ -49,9 +40,8 @@ record CommentManagerTest(
             assertThat(comment.getMetaData().modifiedAt()).isNull();
         }
 
-        @DisplayName("존재하지 않는 게시글에 댓글 생성 시 예외가 발생한다")
         @Test
-        void createCommentWithNonexistentPostThrowsException() {
+        void 존재하지_않는_게시글에_댓글_생성_시_예외가_발생한다() {
             CommentCreateRequest request = new CommentCreateRequest("테스트 댓글");
 
             assertThatThrownBy(() -> commentManager.create(request, 999L, 1L))
@@ -60,11 +50,9 @@ record CommentManagerTest(
     }
 
     @Nested
-    @DisplayName("댓글 업데이트")
-    class UpdateComment {
-        @DisplayName("댓글 업데이트가 성공한다")
+    class 댓글_업데이트 {
         @Test
-        void updateCommentSuccess() {
+        void 댓글_업데이트가_성공한다() {
             Post post = createPost();
             Comment comment = createComment(post.getId());
             CommentUpdateRequest request = new CommentUpdateRequest("업데이트 댓글");
@@ -81,18 +69,16 @@ record CommentManagerTest(
             assertThat(updatedComment.getMetaData().modifiedAt()).isNotNull();
         }
 
-        @DisplayName("존재하지 않는 댓글 업데이트 시 예외가 발생한다")
         @Test
-        void updateNonexistentCommentThrowsException() {
+        void 존재하지_않는_댓글_업데이트_시_예외가_발생한다() {
             CommentUpdateRequest request = new CommentUpdateRequest("업데이트 댓글");
 
             assertThatThrownBy(() -> commentManager.update(request, 999L, 1L))
                 .isInstanceOf(CommentNotFoundException.class);
         }
 
-        @DisplayName("다른 사용자의 댓글 업데이트 시 예외가 발생한다")
         @Test
-        void updateOthersCommentThrowsException() {
+        void 다른_사용자의_댓글_업데이트_시_예외가_발생한다() {
             Post post = createPost();
             Comment comment = createComment(post.getId());
             CommentUpdateRequest request = new CommentUpdateRequest("업데이트 댓글");
@@ -103,11 +89,9 @@ record CommentManagerTest(
     }
 
     @Nested
-    @DisplayName("댓글 삭제")
-    class DeleteComment {
-        @DisplayName("댓글 삭제가 성공한다")
+    class 댓글_삭제 {
         @Test
-        void deleteCommentSuccess() {
+        void 댓글_삭제가_성공한다() {
             Post post = createPost();
             Comment comment = createComment(post.getId());
 
@@ -117,16 +101,14 @@ record CommentManagerTest(
             assertThat(deletedComment.getStatus()).isEqualTo(CommentStatus.DELETED);
         }
 
-        @DisplayName("존재하지 않는 댓글 삭제 시 예외가 발생한다")
         @Test
-        void deleteNonexistentCommentThrowsException() {
+        void 존재하지_않는_댓글_삭제_시_예외가_발생한다() {
             assertThatThrownBy(() -> commentManager.delete(999L, 1L))
                 .isInstanceOf(CommentNotFoundException.class);
         }
 
-        @DisplayName("이미 삭제된 댓글을 다시 삭제 시 예외가 발생한다")
         @Test
-        void deleteAlreadyDeletedCommentThrowsException() {
+        void 이미_삭제된_댓글을_다시_삭제_시_예외가_발생한다() {
             Post post = createPost();
             Comment comment = createComment(post.getId());
             commentManager.delete(comment.getId(), 1L);
@@ -135,9 +117,8 @@ record CommentManagerTest(
                 .isInstanceOf(InvalidCommentStatusException.class);
         }
 
-        @DisplayName("다른 사용자의 댓글 삭제 시 예외가 발생한다")
         @Test
-        void deleteOthersCommentThrowsException() {
+        void 다른_사용자의_댓글_삭제_시_예외가_발생한다() {
             Post post = createPost();
             Comment comment = createComment(post.getId());
 
@@ -147,11 +128,9 @@ record CommentManagerTest(
     }
 
     @Nested
-    @DisplayName("댓글 숨김")
-    class HideComment {
-        @DisplayName("댓글 숨김이 성공한다")
+    class 댓글_숨김 {
         @Test
-        void hideCommentSuccess() {
+        void 댓글_숨김이_성공한다() {
             Post post = createPost();
             Comment comment = createComment(post.getId());
 
@@ -161,16 +140,14 @@ record CommentManagerTest(
             assertThat(hiddenComment.getStatus()).isEqualTo(CommentStatus.HIDDEN);
         }
 
-        @DisplayName("존재하지 않는 댓글 숨김 시 예외가 발생한다")
         @Test
-        void hideNonexistentCommentThrowsException() {
+        void 존재하지_않는_댓글_숨김_시_예외가_발생한다() {
             assertThatThrownBy(() -> commentManager.hide(999L, 1L))
                 .isInstanceOf(CommentNotFoundException.class);
         }
 
-        @DisplayName("이미 숨김 처리된 댓글을 다시 숨김 시 예외가 발생한다")
         @Test
-        void hideAlreadyHiddenCommentThrowsException() {
+        void 이미_숨김_처리된_댓글을_다시_숨김_시_예외가_발생한다() {
             Post post = createPost();
             Comment comment = createComment(post.getId());
             commentManager.hide(comment.getId(), 1L);
@@ -179,9 +156,8 @@ record CommentManagerTest(
                 .isInstanceOf(InvalidCommentStatusException.class);
         }
 
-        @DisplayName("다른 사용자의 댓글 숨김 시 예외가 발생한다")
         @Test
-        void hideOthersCommentThrowsException() {
+        void 다른_사용자의_댓글_숨김_시_예외가_발생한다() {
             Post post = createPost();
             Comment comment = createComment(post.getId());
 
