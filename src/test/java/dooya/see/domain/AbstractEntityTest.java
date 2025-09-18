@@ -1,6 +1,5 @@
 package dooya.see.domain;
 
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
@@ -8,34 +7,30 @@ import java.lang.reflect.Field;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class AbstractEntityTest {
-    @DisplayName("같은 객체 참조인 경우 equals는 true를 반환한다")
     @Test
-    void sameReference() {
+    void 같은_객체_참조인_경우_equals는_true를_반환한다() {
         TestEntity entity = new TestEntity();
 
         assertThat(entity.equals(entity)).isTrue();
     }
 
-    @DisplayName("null과 비교하면 equals는 false를 반환한다")
     @Test
-    void equalsNull() {
+    void null과_비교하면_equals는_false를_반환한다() {
         TestEntity entity = new TestEntity();
 
         assertThat(entity.equals(null)).isFalse();
     }
 
-    @DisplayName("다른 클래스 타입과 비교하면 equals는 false를 반환한다")
     @Test
-    void differentClass() {
+    void 다른_클래스_타입과_비교하면_equals는_false를_반환한다() {
         TestEntity entity = new TestEntity();
         AnotherTestEntity anotherEntity = new AnotherTestEntity();
 
         assertThat(entity.equals(anotherEntity)).isFalse();
     }
 
-    @DisplayName("ID가 null인 엔티티들은 서로 다르다")
     @Test
-    void bothNullId() {
+    void ID가_null인_엔티티들은_서로_다르다() {
         TestEntity entity1 = new TestEntity();
         TestEntity entity2 = new TestEntity();
 
@@ -44,9 +39,8 @@ class AbstractEntityTest {
         assertThat(entity2.getId()).isNull();
     }
 
-    @DisplayName("한쪽만 ID가 null인 경우 서로 다르다")
     @Test
-    void oneNullId() throws Exception {
+    void 한쪽만_ID가_null인_경우_서로_다르다() throws Exception {
         TestEntity entity1 = new TestEntity();
         TestEntity entity2 = new TestEntity();
         setId(entity2, 1L);
@@ -56,9 +50,8 @@ class AbstractEntityTest {
         assertThat(entity2.getId()).isEqualTo(1L);
     }
 
-    @DisplayName("같은 ID를 가진 엔티티들은 같다")
     @Test
-    void sameId() throws Exception {
+    void 같은_ID를_가진_엔티티들은_같다() throws Exception {
         TestEntity entity1 = new TestEntity();
         TestEntity entity2 = new TestEntity();
         setId(entity1, 1L);
@@ -69,9 +62,8 @@ class AbstractEntityTest {
         assertThat(entity2.getId()).isEqualTo(1L);
     }
 
-    @DisplayName("다른 ID를 가진 엔티티들은 다르다")
     @Test
-    void differentId() throws Exception {
+    void 다른_ID를_가진_엔티티들은_다르다() throws Exception {
         TestEntity entity1 = new TestEntity();
         TestEntity entity2 = new TestEntity();
         setId(entity1, 1L);
@@ -82,9 +74,8 @@ class AbstractEntityTest {
         assertThat(entity2.getId()).isEqualTo(2L);
     }
 
-    @DisplayName("같은 클래스의 다른 인스턴스들은 구조적으로 동등하다")
     @Test
-    void structuralEquality() throws Exception {
+    void 같은_클래스의_다른_인스턴스들은_구조적으로_동등하다() throws Exception {
         ProxySimulationEntity realEntity = new ProxySimulationEntity();
         ProxySimulationEntity proxyEntity = new ProxySimulationEntity();
         setId(realEntity, 1L);
@@ -94,9 +85,8 @@ class AbstractEntityTest {
         assertThat(proxyEntity.equals(realEntity)).isTrue();
     }
 
-    @DisplayName("서로 다른 클래스 타입은 같은 ID라도 다르다")
     @Test
-    void differentClassSameId() throws Exception {
+    void 서로_다른_클래스_타입은_같은_ID라도_다르다() throws Exception {
         TestEntity testEntity = new TestEntity();
         AnotherTestEntity anotherEntity = new AnotherTestEntity();
         setId(testEntity, 1L);
@@ -105,9 +95,8 @@ class AbstractEntityTest {
         assertThat(testEntity.equals(anotherEntity)).isFalse();
     }
 
-    @DisplayName("hashCode는 클래스 기반으로 일관성을 유지한다")
     @Test
-    void hashCodeConsistency() {
+    void hashCode는_클래스_기반으로_일관성을_유지한다() {
         TestEntity entity1 = new TestEntity();
         TestEntity entity2 = new TestEntity();
         AnotherTestEntity anotherEntity = new AnotherTestEntity();
@@ -118,9 +107,8 @@ class AbstractEntityTest {
         assertThat(entity1.hashCode()).isNotEqualTo(anotherEntity.hashCode());
     }
 
-    @DisplayName("toString 메서드가 정상 동작한다")
     @Test
-    void toStringWorksCorrectly() throws Exception {
+    void toString_메서드가_정상_동작한다() throws Exception {
         TestEntity entity = new TestEntity();
         setId(entity, 42L);
 
