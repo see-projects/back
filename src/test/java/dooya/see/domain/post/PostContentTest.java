@@ -1,16 +1,13 @@
 package dooya.see.domain.post;
 
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class PostContentTest {
-    @DisplayName("유효한 제목과 내용으로 PostContent 생성 시 정상적으로 생성된다")
     @Test
-    void createValidPostContent() {
+    void 유효한_제목과_내용으로_PostContent_생성_시_정상적으로_생성된다() {
         String title = "테스트 제목";
         String body = "테스트 내용입니다.";
         
@@ -20,9 +17,8 @@ class PostContentTest {
         assertThat(postContent.body()).isEqualTo(body);
     }
 
-    @DisplayName("제목이 null일 때 PostContent 생성 시 IllegalArgumentException이 발생한다")
     @Test
-    void createPostContentWithNullTitle() {
+    void 제목이_null일_때_PostContent_생성_시_IllegalArgumentException이_발생한다() {
         String nullTitle = null;
         String validBody = "유효한 내용";
         
@@ -31,9 +27,8 @@ class PostContentTest {
                 .hasMessage("게시글 제목은 필수입니다");
     }
 
-    @DisplayName("제목이 빈 문자열일 때 PostContent 생성 시 IllegalArgumentException이 발생한다")
     @Test
-    void createPostContentWithEmptyTitle() {
+    void 제목이_빈_문자열일_때_PostContent_생성_시_IllegalArgumentException이_발생한다() {
         String emptyTitle = "";
         String validBody = "유효한 내용";
         
@@ -42,9 +37,8 @@ class PostContentTest {
                 .hasMessage("게시글 제목은 필수입니다");
     }
 
-    @DisplayName("제목이 공백만 있을 때 PostContent 생성 시 IllegalArgumentException이 발생한다")
     @Test
-    void createPostContentWithBlankTitle() {
+    void 제목이_공백만_있을_때_PostContent_생성_시_IllegalArgumentException이_발생한다() {
         String blankTitle = "   ";
         String validBody = "유효한 내용";
         
@@ -53,9 +47,8 @@ class PostContentTest {
                 .hasMessage("게시글 제목은 필수입니다");
     }
 
-    @DisplayName("내용이 null일 때 PostContent 생성 시 IllegalArgumentException이 발생한다")
     @Test
-    void createPostContentWithNullBody() {
+    void 내용이_null일_때_PostContent_생성_시_IllegalArgumentException이_발생한다() {
         String validTitle = "유효한 제목";
         String nullBody = null;
         
@@ -64,9 +57,8 @@ class PostContentTest {
                 .hasMessage("게시글 내용은 필수입니다");
     }
 
-    @DisplayName("내용이 빈 문자열일 때 PostContent 생성 시 IllegalArgumentException이 발생한다")
     @Test
-    void createPostContentWithEmptyBody() {
+    void 내용이_빈_문자열일_때_PostContent_생성_시_IllegalArgumentException이_발생한다() {
         String validTitle = "유효한 제목";
         String emptyBody = "";
         
@@ -75,9 +67,8 @@ class PostContentTest {
                 .hasMessage("게시글 내용은 필수입니다");
     }
 
-    @DisplayName("제목이 100자를 초과할 때 PostContent 생성 시 IllegalArgumentException이 발생한다")
     @Test
-    void createPostContentWithTooLongTitle() {
+    void 제목이_100자를_초과할_때_PostContent_생성_시_IllegalArgumentException이_발생한다() {
         String tooLongTitle = "a".repeat(101);
         String validBody = "유효한 내용";
         
@@ -86,9 +77,8 @@ class PostContentTest {
                 .hasMessage("게시글 제목은 100자를 초과할 수 없습니다");
     }
 
-    @DisplayName("제목이 정확히 100자일 때 PostContent 생성이 성공한다")
     @Test
-    void createPostContentWithMaxLengthTitle() {
+    void 제목이_정확히_100자일_때_PostContent_생성이_성공한다() {
         String maxLengthTitle = "a".repeat(100);
         String validBody = "유효한 내용";
         
@@ -98,9 +88,8 @@ class PostContentTest {
         assertThat(postContent.body()).isEqualTo(validBody);
     }
 
-    @DisplayName("내용이 50,000자를 초과할 때 PostContent 생성 시 IllegalArgumentException이 발생한다")
     @Test
-    void createPostContentWithTooLongBody() {
+    void 내용이_50000자를_초과할_때_PostContent_생성_시_IllegalArgumentException이_발생한다() {
         String validTitle = "유효한 제목";
         String tooLongBody = "a".repeat(50001);
         
@@ -109,9 +98,8 @@ class PostContentTest {
                 .hasMessage("게시글 내용은 50,000자를 초과할 수 없습니다");
     }
 
-    @DisplayName("내용이 정확히 50,000자일 때 PostContent 생성이 성공한다")
     @Test
-    void createPostContentWithMaxLengthBody() {
+    void 내용이_정확히_50000자일_때_PostContent_생성이_성공한다() {
         String validTitle = "유효한 제목";
         String maxLengthBody = "a".repeat(50000);
         
