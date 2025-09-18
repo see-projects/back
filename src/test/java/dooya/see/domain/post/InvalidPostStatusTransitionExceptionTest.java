@@ -1,7 +1,6 @@
 package dooya.see.domain.post;
 
 import dooya.see.domain.post.exception.InvalidPostStatusTransitionException;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -11,8 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class InvalidPostStatusTransitionExceptionTest {
     @Test
-    @DisplayName("현재 상태와 시도한 작업으로 예외가 생성된다")
-    void createExceptionWithCurrentStatusAndAction() {
+    void 현재_상태와_시도한_작업으로_예외가_생성된다() {
         PostStatus currentStatus = PostStatus.PUBLISHED;
         String attemptedAction = "delete";
 
@@ -28,8 +26,7 @@ class InvalidPostStatusTransitionExceptionTest {
 
     @ParameterizedTest
     @EnumSource(PostStatus.class)
-    @DisplayName("모든 PostStatus에 대해 예외가 생성된다")
-    void createExceptionWithAllPostStatuses(PostStatus status) {
+    void 모든_PostStatus에_대해_예외가_생성된다(PostStatus status) {
         String attemptedAction = "invalidAction";
 
         InvalidPostStatusTransitionException exception = 
@@ -44,8 +41,7 @@ class InvalidPostStatusTransitionExceptionTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"publish", "hide", "delete", "edit", "archive"})
-    @DisplayName("다양한 작업 이름으로 예외가 생성된다")
-    void createExceptionWithVariousActions(String action) {
+    void 다양한_작업_이름으로_예외가_생성된다(String action) {
         PostStatus currentStatus = PostStatus.DRAFT;
 
         InvalidPostStatusTransitionException exception = 
@@ -59,8 +55,7 @@ class InvalidPostStatusTransitionExceptionTest {
     }
 
     @Test
-    @DisplayName("null 값들로 예외가 생성된다")
-    void createExceptionWithNullValues() {
+    void null_값들로_예외가_생성된다() {
         PostStatus currentStatus = null;
         String attemptedAction = null;
 
@@ -74,8 +69,7 @@ class InvalidPostStatusTransitionExceptionTest {
     }
 
     @Test
-    @DisplayName("메시지 포맷이 올바르게 생성된다")
-    void messageFormatIsCorrect() {
+    void 메시지_포맷이_올바르게_생성된다() {
         PostStatus currentStatus = PostStatus.HIDDEN;
         String attemptedAction = "publish";
 
