@@ -58,11 +58,6 @@ public class Comment extends AbstractAggregateRoot {
         }
     }
 
-    @PostPersist
-    private void onPostPersist() {
-        publishCreationEvent();
-    }
-
     public void update(CommentUpdateRequest request) {
         validateCanBeModified();
         validateUpdateRequest(request);
@@ -74,7 +69,7 @@ public class Comment extends AbstractAggregateRoot {
 
     public void delete() {
         validateCanBeModified();
-        
+
         changeStatusToDeleted();
         updateModificationMetadata();
         publishDeleteEvent();
@@ -82,7 +77,7 @@ public class Comment extends AbstractAggregateRoot {
 
     public void hide() {
         validateCanHide();
-        
+
         CommentStatus previousStatus = changeStatusToHidden();
         updateModificationMetadata();
         publishHideEvent(previousStatus);
@@ -112,6 +107,12 @@ public class Comment extends AbstractAggregateRoot {
         return Objects.equals(this.memberId, memberId);
     }
 
+    @PostPersist
+    private void onPostPersist() {
+        publishCreationEvent();
+    }
+
+    // Create 관련 메서드
     private void initializeComment(CommentCreateRequest request, Long postId, Long memberId) {
         this.content = new CommentContent(request.body());
         this.postId = requireNonNull(postId, "게시글 ID는 필수입니다");
@@ -127,6 +128,7 @@ public class Comment extends AbstractAggregateRoot {
         );
     }
 
+    // Creation Event 관련 메서드
     private boolean hasCreationContext() {
         return creationContext != null;
     }
@@ -144,10 +146,10 @@ public class Comment extends AbstractAggregateRoot {
         creationContext = null;
     }
 
+    // Update 관련 메서드
     private void validateUpdateRequest(CommentUpdateRequest request) {
-        if (!request.hasUpdate()) {
+        if (!request.hasUpdate())
             throw new EmptyCommentUpdateException();
-        }
     }
 
     private String updateContent(CommentUpdateRequest request) {
@@ -170,10 +172,33 @@ public class Comment extends AbstractAggregateRoot {
         ));
     }
 
+    // Status Transition 관련 메서드
+    private void validateCanBeModified() {
+        if (!canBeModified())
+            throw InvalidCommentStatusException.cannotModify();
+    }
+
+    private void validateCanHide() {
+        validateStatusNotEquals(CommentStatus.HIDDEN, "댓글 숨김");
+        validateStatusNotEquals(CommentStatus.DELETED, "댓글 숨김");
+    }
+
+    private void validateStatusNotEquals(CommentStatus prohibitedStatus, String operation) {
+        if (this.status == prohibitedStatus)
+            throw InvalidCommentStatusException.forOperation(prohibitedStatus, operation);
+    }
+
     private void changeStatusToDeleted() {
         this.status = CommentStatus.DELETED;
     }
 
+    private CommentStatus changeStatusToHidden() {
+        CommentStatus previousStatus = this.status;
+        this.status = CommentStatus.HIDDEN;
+        return previousStatus;
+    }
+
+    // Event Publishing 메서드
     private void publishDeleteEvent() {
         addDomainEvent(new CommentDeleted(
                 getId(),
@@ -183,29 +208,6 @@ public class Comment extends AbstractAggregateRoot {
         ));
     }
 
-    private void validateCanHide() {
-        validateNotAlreadyHidden();
-        validateNotDeleted();
-    }
-
-    private void validateNotAlreadyHidden() {
-        if (this.status == CommentStatus.HIDDEN) {
-            throw InvalidCommentStatusException.alreadyHidden();
-        }
-    }
-
-    private void validateNotDeleted() {
-        if (this.status == CommentStatus.DELETED) {
-            throw InvalidCommentStatusException.cannotHideDeleted();
-        }
-    }
-
-    private CommentStatus changeStatusToHidden() {
-        CommentStatus previousStatus = this.status;
-        this.status = CommentStatus.HIDDEN;
-        return previousStatus;
-    }
-
     private void publishHideEvent(CommentStatus previousStatus) {
         addDomainEvent(new CommentHidden(
                 getId(),
@@ -213,11 +215,5 @@ public class Comment extends AbstractAggregateRoot {
                 this.memberId,
                 previousStatus
         ));
-    }
-
-    private void validateCanBeModified() {
-        if (!canBeModified()) {
-            throw InvalidCommentStatusException.cannotModify();
-        }
     }
 }
