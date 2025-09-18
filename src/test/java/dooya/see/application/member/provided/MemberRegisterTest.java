@@ -6,7 +6,6 @@ import dooya.see.domain.member.exception.DuplicateEmailException;
 import dooya.see.domain.member.exception.DuplicateProfileException;
 import jakarta.persistence.EntityManager;
 import jakarta.validation.ConstraintViolationException;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -20,27 +19,24 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @Transactional
 @Import(SeeTestConfiguration.class)
 record MemberRegisterTest(MemberRegister memberRegister, EntityManager entityManager) {
-    @DisplayName("회원 등록 시 ID가 부여되고 ACTIVE 상태로 설정된다")
     @Test
-    void register() {
+    void 회원_등록_시_ID가_부여되고_ACTIVE_상태로_설정된다() {
         Member member = memberRegister.register(createMemberRegisterRequest());
 
         assertThat(member.getId()).isNotNull();
         assertThat(member.getStatus()).isEqualTo(MemberStatus.ACTIVE);
     }
 
-    @DisplayName("동일한 이메일로 회원 등록 시 중복 예외가 발생한다")
     @Test
-    void duplicateEmailFail() {
+    void 동일한_이메일로_회원_등록_시_중복_예외가_발생한다() {
         Member member = memberRegister.register(createMemberRegisterRequest());
 
         assertThatThrownBy(() -> memberRegister.register(createMemberRegisterRequest()))
                 .isInstanceOf(DuplicateEmailException.class);
     }
 
-    @DisplayName("회원 비활성화 시 DEACTIVATED 상태와 비활성화일시가 설정된다")
     @Test
-    void deactivate() {
+    void 회원_비활성화_시_DEACTIVATED_상태와_비활성화일시가_설정된다() {
         Member member = registerMember();
 
         member = memberRegister.deactivate(member.getId());
@@ -49,9 +45,8 @@ record MemberRegisterTest(MemberRegister memberRegister, EntityManager entityMan
         assertThat(member.getDetail().getDeactivatedAt()).isNotNull();
     }
 
-    @DisplayName("회원 정보 수정 시 닉네임과 프로필 정보가 변경된다")
     @Test
-    void updateInfo() {
+    void 회원_정보_수정_시_닉네임과_프로필_정보가_변경된다() {
         Member member = registerMember();
 
         memberRegister.updateInfo(member.getId(), new MemberInfoUpdateRequest("dooya2", "america", "자기소개"));
@@ -63,9 +58,8 @@ record MemberRegisterTest(MemberRegister memberRegister, EntityManager entityMan
         assertThat(updatedMember.getDetail().getIntroduction()).isEqualTo("자기소개");
     }
 
-    @DisplayName("프로필 주소 중복 검증과 변경 시나리오를 테스트한다")
     @Test
-    void updateInfoFail () {
+    void 프로필_주소_중복_검증과_변경_시나리오를_테스트한다() {
         Member member = registerMember();
         memberRegister.updateInfo(member.getId(), new MemberInfoUpdateRequest("dooya2", "korea", "자기소개"));
 
@@ -90,14 +84,6 @@ record MemberRegisterTest(MemberRegister memberRegister, EntityManager entityMan
         assertThatThrownBy(() -> memberRegister.updateInfo(member2.getId(), new MemberInfoUpdateRequest("dooya1441", "china", "자기소개")))
             .isInstanceOf(DuplicateProfileException.class);
     }
-
-//    @Test
-//    @DisplayName("잘못된 회원 등록 요청 시 검증 예외가 발생한다")
-//    void memberRegisterRequestFail() {
-//        checkValidation(new MemberRegisterRequest("invalid@email.com", "dooya", "secret"));
-//        checkValidation(new MemberRegisterRequest("invalid@email.com", "dooya_______________________________", "longSecret"));
-//        checkValidation(new MemberRegisterRequest("invalidemail.com", "dooya", "longSecret"));
-//    }
 
     private Member registerMember() {
         Member member = memberRegister.register(createMemberRegisterRequest());
