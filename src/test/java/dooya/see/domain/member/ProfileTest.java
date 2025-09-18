@@ -7,48 +7,42 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ProfileTest {
-    @DisplayName("프로필 주소가 null이면 예외가 발생한다")
     @Test
-    void createProfile_withNullAddress_throwsException() {
+    void 프로필_주소가_null이면_예외가_발생한다() {
         assertThatThrownBy(() -> new Profile(null))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
-    @DisplayName("올바른 형식의 프로필 주소로 Profile을 생성할 수 있다")
     @Test
-    void createProfile_withValidAddress_success() {
+    void 올바른_형식의_프로필_주소로_Profile을_생성할_수_있다() {
         Profile profile = new Profile("user123");
         
         assertThat(profile.address()).isEqualTo("user123");
     }
 
-    @DisplayName("빈 문자열로 Profile을 생성할 수 있다")
     @Test
-    void createProfile_withEmptyString_success() {
+    void 빈_문자열로_Profile을_생성할_수_있다() {
         Profile profile = new Profile("");
         
         assertThat(profile.address()).isEqualTo("");
     }
 
-    @DisplayName("프로필 주소가 유효하지 않은 형식이면 예외가 발생한다")
     @Test
-    void createProfile_withInvalidFormat_throwsException() {
+    void 프로필_주소가_유효하지_않은_형식이면_예외가_발생한다() {
         assertThatThrownBy(() -> new Profile("A"))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new Profile("한글 프로필"))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
-    @DisplayName("프로필 주소가 15자를 초과하면 예외가 발생한다")
     @Test
-    void createProfile_withTooLongAddress_throwsException() {
+    void 프로필_주소가_15자를_초과하면_예외가_발생한다() {
         assertThatThrownBy(() -> new Profile("longlonglonglonglonglongprofile"))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
-    @DisplayName("프로필 주소가 정확히 15자일 때 생성할 수 있다")
     @Test
-    void createProfile_withExactly15Characters_success() {
+    void 프로필_주소가_정확히_15자일_때_생성할_수_있다() {
         Profile profile = new Profile("123456789012345"); // 정확히 15자
         
         assertThat(profile.address()).isEqualTo("123456789012345");
