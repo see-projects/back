@@ -123,12 +123,8 @@ public class Post extends AbstractAggregateRoot {
     }
 
     public void hide() {
-        if (this.status == PostStatus.HIDDEN) {
-            throw new InvalidPostStatusTransitionException(this.status, "숨김");
-        }
-        if (this.status == PostStatus.DELETED) {
-            throw new InvalidPostStatusTransitionException(this.status, "숨김");
-        }
+        extracted(PostStatus.HIDDEN, "숨김");
+        extracted(PostStatus.DELETED, "숨김");
 
         PostStatus previousStatus = this.status;
         this.status = PostStatus.HIDDEN;
@@ -137,10 +133,14 @@ public class Post extends AbstractAggregateRoot {
         this.addDomainEvent(new PostHidden(this.getId(), this.memberId, previousStatus));
     }
 
-    public void delete() {
-        if (this.status == PostStatus.DELETED) {
-            throw new InvalidPostStatusTransitionException(this.status, "삭제");
+    private void extracted(PostStatus hidden, String s) {
+        if (this.status == hidden) {
+            throw new InvalidPostStatusTransitionException(this.status, s);
         }
+    }
+
+    public void delete() {
+        extracted(PostStatus.DELETED, "삭제");
 
         PostStatus previousStatus = this.status;
         this.status = PostStatus.DELETED;
