@@ -1,8 +1,10 @@
 package dooya.see.application.post.required;
 
-import dooya.see.domain.post.*;
+import dooya.see.domain.post.Post;
+import dooya.see.domain.post.PostCategory;
+import dooya.see.domain.post.PostSearchRequest;
+import dooya.see.domain.post.PostStatus;
 import jakarta.persistence.EntityManager;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
@@ -10,14 +12,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static dooya.see.domain.post.PostFixture.*;
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 record PostRepositoryTest(PostRepository postRepository, EntityManager entityManager) {
-    
-    @DisplayName("게시물 생성 시 ID가 자동 생성되고 영속화 후 조회가 가능하다")
     @Test
-    void createPost() {
+    void 게시물_생성_시_ID가_자동_생성되고_영속화_후_조회가_가능하다() {
         Post post = Post.create(createPostRequest(), 1L);
 
         assertThat(post.getId()).isNull();
@@ -35,9 +35,8 @@ record PostRepositoryTest(PostRepository postRepository, EntityManager entityMan
         assertThat(found.getMetaData().createdAt()).isNotNull();
     }
 
-    @DisplayName("특정 회원이 작성한 게시물들을 모두 조회할 수 있다")
     @Test
-    void findByMemberId() {
+    void 특정_회원이_작성한_게시물들을_모두_조회할_수_있다() {
         Post post1 = createAndSavePost(1L);
         Post post2 = createAndSavePost(1L);
         Post post3 = createAndSavePost(2L);
@@ -53,17 +52,15 @@ record PostRepositoryTest(PostRepository postRepository, EntityManager entityMan
         assertThat(found).allMatch(post -> post.getMemberId().equals(1L));
     }
 
-    @DisplayName("존재하지 않는 회원 ID로 조회 시 빈 리스트를 반환한다")
     @Test
-    void findByNonExistentMemberId() {
+    void 존재하지_않는_회원_ID로_조회_시_빈_리스트를_반환한다() {
         List<Post> found = postRepository.findByMemberId(999L);
 
         assertThat(found).isEmpty();
     }
 
-    @DisplayName("특정 카테고리의 게시물들을 모두 조회할 수 있다")
     @Test
-    void findByCategory() {
+    void 특정_카테고리의_게시물들을_모두_조회할_수_있다() {
         Post post1 = createAndSavePostWithCategory(1L, PostCategory.TECH);
         Post post2 = createAndSavePostWithCategory(2L, PostCategory.TECH);
         Post post3 = createAndSavePostWithCategory(3L, PostCategory.QNA);
@@ -79,9 +76,8 @@ record PostRepositoryTest(PostRepository postRepository, EntityManager entityMan
         assertThat(found).allMatch(post -> post.getCategory() == PostCategory.TECH);
     }
 
-    @DisplayName("특정 상태의 게시물들을 모두 조회할 수 있다")
     @Test
-    void findByStatus() {
+    void 특정_상태의_게시물들을_모두_조회할_수_있다() {
         Post post1 = createAndSavePost(1L);
         Post post2 = createAndSavePost(2L);
         post2.publish();
@@ -100,9 +96,8 @@ record PostRepositoryTest(PostRepository postRepository, EntityManager entityMan
         assertThat(publishedPosts.get(0).getId()).isEqualTo(post2.getId());
     }
 
-    @DisplayName("카테고리와 상태 조건을 모두 만족하는 게시물들을 조회할 수 있다")
     @Test
-    void findByCategoryAndStatus() {
+    void 카테고리와_상태_조건을_모두_만족하는_게시물들을_조회할_수_있다() {
         // DRAFT 상태로 생성
         Post post1 = createAndSavePostWithCategoryDraft(1L, PostCategory.TECH);
         Post post2 = createAndSavePostWithCategoryDraft(2L, PostCategory.TECH);
@@ -125,9 +120,8 @@ record PostRepositoryTest(PostRepository postRepository, EntityManager entityMan
         assertThat(found.get(0).getStatus()).isEqualTo(PostStatus.PUBLISHED);
     }
 
-    @DisplayName("키워드로 제목과 내용을 통합 검색할 수 있다")
     @Test
-    void searchByKeyword() {
+    void 키워드로_제목과_내용을_통합_검색할_수_있다() {
         Post post1 = createAndSavePostWithTitleAndBody(1L, "Spring Boot 튜토리얼", "Spring 내용");
         Post post2 = createAndSavePostWithTitleAndBody(2L, "Java 기초", "Spring Security 가이드");
         Post post3 = createAndSavePostWithTitleAndBody(3L, "Python 입문", "Django 프레임워크");
@@ -146,9 +140,8 @@ record PostRepositoryTest(PostRepository postRepository, EntityManager entityMan
             .containsExactlyInAnyOrder(post1.getId(), post2.getId());
     }
 
-    @DisplayName("제목 키워드로만 검색할 수 있다")
     @Test
-    void searchByTitleKeyword() {
+    void 제목_키워드로만_검색할_수_있다() {
         Post post1 = createAndSavePostWithTitleAndBody(1L, "Spring Boot 튜토리얼", "내용1");
         Post post2 = createAndSavePostWithTitleAndBody(2L, "Java 기초", "Spring 내용");
 
@@ -165,9 +158,8 @@ record PostRepositoryTest(PostRepository postRepository, EntityManager entityMan
         assertThat(found.get(0).getId()).isEqualTo(post1.getId());
     }
 
-    @DisplayName("내용 키워드로만 검색할 수 있다")
     @Test
-    void searchByContentKeyword() {
+    void 내용_키워드로만_검색할_수_있다() {
         Post post1 = createAndSavePostWithTitleAndBody(1L, "제목1", "Spring Boot 내용");
         Post post2 = createAndSavePostWithTitleAndBody(2L, "Spring 제목", "Java 내용");
 
@@ -184,9 +176,8 @@ record PostRepositoryTest(PostRepository postRepository, EntityManager entityMan
         assertThat(found.get(0).getId()).isEqualTo(post1.getId());
     }
 
-    @DisplayName("카테고리 조건으로 검색할 수 있다")
     @Test
-    void searchByCategory() {
+    void 카테고리_조건으로_검색할_수_있다() {
         Post post1 = createAndSavePostWithCategory(1L, PostCategory.TECH);
         Post post2 = createAndSavePostWithCategory(2L, PostCategory.QNA);
 
@@ -203,9 +194,8 @@ record PostRepositoryTest(PostRepository postRepository, EntityManager entityMan
         assertThat(found.get(0).getId()).isEqualTo(post1.getId());
     }
 
-    @DisplayName("작성자 ID로 검색할 수 있다")
     @Test
-    void searchByMemberId() {
+    void 작성자_ID로_검색할_수_있다() {
         Post post1 = createAndSavePost(1L);
         Post post2 = createAndSavePost(2L);
 
@@ -222,9 +212,8 @@ record PostRepositoryTest(PostRepository postRepository, EntityManager entityMan
         assertThat(found.get(0).getId()).isEqualTo(post1.getId());
     }
 
-    @DisplayName("상태 조건으로 검색할 수 있다")
     @Test
-    void searchByStatus() {
+    void 상태_조건으로_검색할_수_있다() {
         Post post1 = createAndSavePost(1L);
         Post post2 = createAndSavePost(2L);
         post2.publish();
@@ -243,9 +232,8 @@ record PostRepositoryTest(PostRepository postRepository, EntityManager entityMan
         assertThat(found.get(0).getId()).isEqualTo(post2.getId());
     }
 
-    @DisplayName("날짜 범위로 검색할 수 있다")
     @Test
-    void searchByDateRange() {
+    void 날짜_범위로_검색할_수_있다() {
         LocalDateTime baseTime = LocalDateTime.now().minusDays(10);
         
         Post post1 = createAndSavePost(1L);
@@ -264,9 +252,8 @@ record PostRepositoryTest(PostRepository postRepository, EntityManager entityMan
         assertThat(found).hasSize(2);
     }
 
-    @DisplayName("복합 조건으로 검색할 수 있다")
     @Test
-    void searchWithMultipleConditions() {
+    void 복합_조건으로_검색할_수_있다() {
         Post post1 = createAndSavePostWithTitleAndCategory(1L, "Spring 튜토리얼", PostCategory.TECH);
         Post post2 = createAndSavePostWithTitleAndCategory(1L, "Spring 가이드", PostCategory.QNA);
         Post post3 = createAndSavePostWithTitleAndCategory(2L, "Spring 기초", PostCategory.TECH);
@@ -286,9 +273,8 @@ record PostRepositoryTest(PostRepository postRepository, EntityManager entityMan
         assertThat(found.get(0).getId()).isEqualTo(post1.getId());
     }
 
-    @DisplayName("검색 조건이 모두 비어있으면 전체 게시물을 반환한다")
     @Test
-    void searchWithEmptyConditions() {
+    void 검색_조건이_모두_비어있으면_전체_게시물을_반환한다() {
         Post post1 = createAndSavePost(1L);
         Post post2 = createAndSavePost(2L);
 
@@ -302,9 +288,8 @@ record PostRepositoryTest(PostRepository postRepository, EntityManager entityMan
         assertThat(found).hasSize(2);
     }
 
-    @DisplayName("검색 조건에 맞는 게시물이 없으면 빈 리스트를 반환한다")
     @Test
-    void searchWithNoResults() {
+    void 검색_조건에_맞는_게시물이_없으면_빈_리스트를_반환한다() {
         Post post1 = createAndSavePost(1L);
 
         entityManager.flush();
