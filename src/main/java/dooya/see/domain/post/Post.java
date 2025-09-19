@@ -29,23 +29,13 @@ public class Post extends AbstractAggregateRoot {
     @Embedded
     private PostMetaData metaData;
 
-    @Transient
-    private PostCreationContext creationContext;
-
-    private record PostCreationContext(boolean publishImmediately) {}
-
     public static Post create(PostCreateRequest request, Long memberId) {
         Post post = new Post();
 
         post.initializeBasicFields(request, memberId);
         post.determineInitialStatus(request);
-        post.setupCreationContext(request);
 
         return post;
-    }
-
-    public void publishCreationEventIfNeeded() {
-        publishCreationEvent();
     }
 
     public void update(PostUpdateRequest request) {
@@ -102,6 +92,17 @@ public class Post extends AbstractAggregateRoot {
         return this.memberId.equals(memberId);
     }
 
+    // JPA 생명주기 콜백 - 생성 이벤트 발행
+    @PostPersist
+    private void publishCreationEvent() {
+        this.addDomainEvent(new PostCreated(
+                getId(),
+                memberId,
+                category,
+                status == PostStatus.PUBLISHED
+        ));
+    }
+
     // Create 관련 메서드
     private void initializeBasicFields(PostCreateRequest request, Long memberId) {
         requireNonNull(request, "PostCreateRequest는 필수입니다");
@@ -116,27 +117,6 @@ public class Post extends AbstractAggregateRoot {
     private void determineInitialStatus(PostCreateRequest request) {
         this.status = request.publishImmediately() ? PostStatus.PUBLISHED : PostStatus.DRAFT;
         this.metaData = request.publishImmediately() ? PostMetaData.createPublished() : PostMetaData.create();
-    }
-
-    private void setupCreationContext(PostCreateRequest request) {
-        this.creationContext = new PostCreationContext(request.publishImmediately());
-    }
-
-    // Creation Event 관련 메서드 - 중복 방지 로직 강화
-    private void publishCreationEvent() {
-        if (creationContext != null && getId() != null) {
-            // 이미 발행된 PostCreated 이벤트가 있는지 확인
-            boolean alreadyPublished = getDomainEvents().stream()
-                    .anyMatch(event -> event instanceof PostCreated created &&
-                            created.postId().equals(getId()));
-
-            if (!alreadyPublished) {
-                addDomainEvent(new PostCreated(
-                        getId(), memberId, category, creationContext.publishImmediately()
-                ));
-            }
-            creationContext = null;
-        }
     }
 
     // Update 관련 메서드
