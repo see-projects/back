@@ -107,11 +107,6 @@ public class Comment extends AbstractAggregateRoot {
         return Objects.equals(this.memberId, memberId);
     }
 
-    @PostPersist
-    private void onPostPersist() {
-        publishCreationEvent();
-    }
-
     // Create 관련 메서드
     private void initializeComment(CommentCreateRequest request, Long postId, Long memberId) {
         this.content = new CommentContent(request.body());
