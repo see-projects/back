@@ -12,6 +12,7 @@ import dooya.see.domain.post.CommentStatus;
 import dooya.see.domain.post.CommentUpdateRequest;
 import dooya.see.domain.post.PostCreateRequest;
 import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -24,11 +25,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.UnsupportedEncodingException;
 
-import static dooya.see.domain.member.MemberFixture.createMemberAuthRequest;
-import static dooya.see.domain.member.MemberFixture.createMemberRegisterRequest;
+import static dooya.see.domain.member.MemberFixture.*;
 import static dooya.see.domain.post.PostFixture.createPostRequest;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -39,95 +38,86 @@ class CommentApiTest {
     final MockMvcTester mvcTester;
     final MemberRegister memberRegister;
 
+    private static final String VALID_TOKEN_PREFIX = "Bearer ";
+    private static final String SAMPLE_COMMENT_TEXT = "좋은 게시글이네요!";
+    private static final String UPDATED_COMMENT_TEXT = "수정된 댓글";
+    private static final String PARENT_COMMENT_TEXT = "원본 댓글";
+    private static final String REPLY_TEXT = "답글입니다";
+    private static final Long NON_EXISTENT_ID = 999L;
+
+    private String authorToken;
+    private String readerToken;
+
+    @BeforeEach
+    void setUp() throws JsonProcessingException, UnsupportedEncodingException {
+        authorToken = createMemberAndGetToken();
+        readerToken = createSecondMemberAndGetToken();
+    }
+
     @Nested
     class 댓글_생성 {
         @Test
         void 로그인한_사용자가_게시글에_댓글을_작성할_수_있다() throws JsonProcessingException, UnsupportedEncodingException {
-            String token = createMemberAndGetToken();
-            Long postId = createAndPublishPost(token);
+            Long postId = createTestPublishedPost();
+            CommentCreateRequest request = new CommentCreateRequest(SAMPLE_COMMENT_TEXT);
 
-            CommentCreateRequest request = new CommentCreateRequest("좋은 게시글이네요!");
-            String requestJson = objectMapper.writeValueAsString(request);
+            MvcTestResult result = performCommentCreate(postId, request, authorToken);
 
-            MvcTestResult result = mvcTester.post().uri("/api/posts/{postId}/comments", postId)
-                    .header("Authorization", "Bearer " + token)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(requestJson)
-                    .exchange();
+            assertThatCommentCreated(result, postId, SAMPLE_COMMENT_TEXT);
+        }
 
+        @Test
+        void 답글을_작성할_수_있다() throws JsonProcessingException, UnsupportedEncodingException {
+            Long postId = createTestPublishedPost();
+            Long parentCommentId = createTestComment(postId, PARENT_COMMENT_TEXT);
+            CommentCreateRequest request = new CommentCreateRequest(REPLY_TEXT, parentCommentId);
+
+            MvcTestResult result = performCommentCreate(postId, request, authorToken);
+
+            assertThatReplyCreated(result, postId, parentCommentId, REPLY_TEXT);
+        }
+
+        @Test
+        void 토큰_없이_댓글_작성_시_401_Unauthorized가_발생한다() throws JsonProcessingException, UnsupportedEncodingException {
+            Long postId = createTestPublishedPost();
+            CommentCreateRequest request = new CommentCreateRequest("댓글 내용");
+
+            MvcTestResult result = performCommentCreateWithoutAuth(postId, request);
+
+            assertThat(result).hasStatus(HttpStatus.UNAUTHORIZED);
+        }
+
+        @Test
+        void 존재하지_않는_게시글에_댓글_작성_시_404_Not_Found가_발생한다() throws JsonProcessingException {
+            CommentCreateRequest request = new CommentCreateRequest("댓글 내용");
+
+            MvcTestResult result = performCommentCreate(NON_EXISTENT_ID, request, authorToken);
+
+            assertThat(result).hasStatus(HttpStatus.NOT_FOUND);
+        }
+
+        private void assertThatCommentCreated(MvcTestResult result, Long expectedPostId, String expectedContent)
+                throws UnsupportedEncodingException, JsonProcessingException {
             assertThat(result).hasStatusOk();
 
-            CommentCreateResponse response = objectMapper.readValue(
-                    result.getResponse().getContentAsString(), CommentCreateResponse.class);
-
+            CommentCreateResponse response = parseResponse(result, CommentCreateResponse.class);
             assertThat(response.commentId()).isNotNull();
-            assertThat(response.postId()).isEqualTo(postId);
-            assertThat(response.body()).isEqualTo("좋은 게시글이네요!");
+            assertThat(response.postId()).isEqualTo(expectedPostId);
+            assertThat(response.body()).isEqualTo(expectedContent);
             assertThat(response.status()).isEqualTo(CommentStatus.ACTIVE);
             assertThat(response.parentCommentId()).isNull();
             assertThat(response.createdAt()).isNotNull();
         }
 
-        @Test
-        void 답글을_작성할_수_있다() throws JsonProcessingException, UnsupportedEncodingException {
-            String token = createMemberAndGetToken();
-            Long postId = createAndPublishPost(token);
-            Long parentCommentId = createCommentHelper(token, postId, "원본 댓글");
-
-            CommentCreateRequest request = new CommentCreateRequest("답글입니다", parentCommentId);
-            String requestJson = objectMapper.writeValueAsString(request);
-
-            MvcTestResult result = mvcTester.post().uri("/api/posts/{postId}/comments", postId)
-                    .header("Authorization", "Bearer " + token)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(requestJson)
-                    .exchange();
-
+        private void assertThatReplyCreated(MvcTestResult result, Long expectedPostId, Long expectedParentId, String expectedContent)
+                throws UnsupportedEncodingException, JsonProcessingException {
             assertThat(result).hasStatusOk();
 
-            CommentCreateResponse response = objectMapper.readValue(
-                    result.getResponse().getContentAsString(), CommentCreateResponse.class);
-
+            CommentCreateResponse response = parseResponse(result, CommentCreateResponse.class);
             assertThat(response.commentId()).isNotNull();
-            assertThat(response.postId()).isEqualTo(postId);
-            assertThat(response.parentCommentId()).isEqualTo(parentCommentId);
-            assertThat(response.body()).isEqualTo("답글입니다");
-        }
-
-        @Test
-        void 토큰_없이_댓글_작성_요청_시_401_Unauthorized가_발생한다() throws JsonProcessingException, UnsupportedEncodingException {
-            String token = createMemberAndGetToken();
-            Long postId = createAndPublishPost(token);
-
-            CommentCreateRequest request = new CommentCreateRequest("댓글 내용");
-            String requestJson = objectMapper.writeValueAsString(request);
-
-            MvcTestResult result = mvcTester.post().uri("/api/posts/{postId}/comments", postId)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(requestJson)
-                    .exchange();
-
-            assertThat(result)
-                    .apply(print())
-                    .hasStatus(HttpStatus.UNAUTHORIZED);
-        }
-
-        @Test
-        void 존재하지_않는_게시글에_댓글을_작성하려고_하면_404_Not_Found가_발생한다() throws JsonProcessingException, UnsupportedEncodingException {
-            String token = createMemberAndGetToken();
-
-            CommentCreateRequest request = new CommentCreateRequest("댓글 내용");
-            String requestJson = objectMapper.writeValueAsString(request);
-
-            MvcTestResult result = mvcTester.post().uri("/api/posts/{postId}/comments", 999L)
-                    .header("Authorization", "Bearer " + token)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(requestJson)
-                    .exchange();
-
-            assertThat(result)
-                    .apply(print())
-                    .hasStatus(HttpStatus.NOT_FOUND);
+            assertThat(response.postId()).isEqualTo(expectedPostId);
+            assertThat(response.parentCommentId()).isEqualTo(expectedParentId);
+            assertThat(response.body()).isEqualTo(expectedContent);
         }
     }
 
@@ -135,139 +125,121 @@ class CommentApiTest {
     class 댓글_조회 {
         @Test
         void 게시글의_댓글_목록을_조회할_수_있다() throws JsonProcessingException, UnsupportedEncodingException {
-            String token = createMemberAndGetToken();
-            Long postId = createAndPublishPost(token);
+            Long postId = createTestPublishedPost();
+            createTestComment(postId, "첫 번째 댓글");
+            createTestComment(postId, "두 번째 댓글");
 
-            createCommentHelper(token, postId, "첫 번째 댓글");
-            createCommentHelper(token, postId, "두 번째 댓글");
+            MvcTestResult result = performPostCommentsList(postId);
 
-            MvcTestResult result = mvcTester.get().uri("/api/posts/{postId}/comments", postId)
-                    .exchange();
-
-            assertThat(result).hasStatusOk();
-
-            String responseContent = result.getResponse().getContentAsString();
-            CommentDetailResponse[] comments = objectMapper.readValue(responseContent, CommentDetailResponse[].class);
-
-            assertThat(comments).hasSize(2);
-            assertThat(comments[0].postId()).isEqualTo(postId);
-            assertThat(comments[1].postId()).isEqualTo(postId);
-            assertThat(comments[0].body()).contains("댓글");
-            assertThat(comments[1].body()).contains("댓글");
+            assertThatPostCommentsListed(result, postId, 2);
         }
 
         @Test
         void 특정_댓글을_조회할_수_있다() throws JsonProcessingException, UnsupportedEncodingException {
-            String token = createMemberAndGetToken();
-            Long postId = createAndPublishPost(token);
-            Long commentId = createCommentHelper(token, postId, "조회할 댓글");
+            Long postId = createTestPublishedPost();
+            Long commentId = createTestComment(postId, "조회할 댓글");
 
-            MvcTestResult result = mvcTester.get().uri("/api/comments/{commentId}", commentId)
-                    .exchange();
+            MvcTestResult result = performCommentGet(commentId);
 
-            assertThat(result).hasStatusOk();
-
-            CommentDetailResponse response = objectMapper.readValue(
-                    result.getResponse().getContentAsString(), CommentDetailResponse.class);
-
-            assertThat(response.commentId()).isEqualTo(commentId);
-            assertThat(response.postId()).isEqualTo(postId);
-            assertThat(response.body()).isEqualTo("조회할 댓글");
-            assertThat(response.isReply()).isFalse();
+            assertThatCommentRetrieved(result, commentId, postId, "조회할 댓글");
         }
 
         @Test
         void 특정_댓글의_답글_목록을_조회할_수_있다() throws JsonProcessingException, UnsupportedEncodingException {
-            String token = createMemberAndGetToken();
-            Long postId = createAndPublishPost(token);
-            Long parentCommentId = createCommentHelper(token, postId, "원본 댓글");
+            Long postId = createTestPublishedPost();
+            Long parentCommentId = createTestComment(postId, PARENT_COMMENT_TEXT);
+            createTestReply(postId, parentCommentId, "첫 번째 답글");
+            createTestReply(postId, parentCommentId, "두 번째 답글");
 
-            createReply(token, postId, "첫 번째 답글", parentCommentId);
-            createReply(token, postId, "두 번째 답글", parentCommentId);
+            MvcTestResult result = performCommentRepliesList(parentCommentId);
 
-            MvcTestResult result = mvcTester.get().uri("/api/comments/{parentCommentId}/replies", parentCommentId)
-                    .exchange();
-
-            assertThat(result).hasStatusOk();
-
-            String responseContent = result.getResponse().getContentAsString();
-            CommentDetailResponse[] replies = objectMapper.readValue(responseContent, CommentDetailResponse[].class);
-
-            assertThat(replies).hasSize(2);
-            assertThat(replies[0].parentCommentId()).isEqualTo(parentCommentId);
-            assertThat(replies[1].parentCommentId()).isEqualTo(parentCommentId);
-            assertThat(replies[0].isReply()).isTrue();
-            assertThat(replies[1].isReply()).isTrue();
+            assertThatCommentRepliesListed(result, parentCommentId, 2);
         }
 
         @Test
-        void 존재하지_않는_댓글을_조회하려고_하면_404_Not_Found가_발생한다() {
-            MvcTestResult result = mvcTester.get().uri("/api/comments/{commentId}", 999L)
-                    .exchange();
+        void 존재하지_않는_댓글_조회_시_404_Not_Found가_발생한다() {
+            MvcTestResult result = performCommentGet(NON_EXISTENT_ID);
 
-            assertThat(result)
-                    .apply(print())
-                    .hasStatus(HttpStatus.NOT_FOUND);
+            assertThat(result).hasStatus(HttpStatus.NOT_FOUND);
+        }
+
+        private void assertThatPostCommentsListed(MvcTestResult result, Long expectedPostId, int expectedSize)
+                throws UnsupportedEncodingException, JsonProcessingException {
+            assertThat(result).hasStatusOk();
+
+            CommentDetailResponse[] comments = parseResponseArray(result, CommentDetailResponse[].class);
+            assertThat(comments).hasSize(expectedSize);
+            assertThat(comments).allMatch(comment -> comment.postId().equals(expectedPostId));
+            assertThat(comments).allMatch(comment -> comment.body().contains("댓글"));
+        }
+
+        private void assertThatCommentRetrieved(MvcTestResult result, Long expectedCommentId, Long expectedPostId, String expectedContent)
+                throws UnsupportedEncodingException, JsonProcessingException {
+            assertThat(result).hasStatusOk();
+
+            CommentDetailResponse response = parseResponse(result, CommentDetailResponse.class);
+            assertThat(response.commentId()).isEqualTo(expectedCommentId);
+            assertThat(response.postId()).isEqualTo(expectedPostId);
+            assertThat(response.body()).isEqualTo(expectedContent);
+            assertThat(response.isReply()).isFalse();
+        }
+
+        private void assertThatCommentRepliesListed(MvcTestResult result, Long expectedParentId, int expectedSize)
+                throws UnsupportedEncodingException, JsonProcessingException {
+            assertThat(result).hasStatusOk();
+
+            CommentDetailResponse[] replies = parseResponseArray(result, CommentDetailResponse[].class);
+            assertThat(replies).hasSize(expectedSize);
+            assertThat(replies).allMatch(reply -> reply.parentCommentId().equals(expectedParentId));
+            assertThat(replies).allMatch(CommentDetailResponse::isReply);
         }
     }
 
     @Nested
     class 회원별_댓글_조회 {
         @Test
-        void 본인의_댓글_목록을_조회하면_모든_상태의_댓글이_반환된다() throws JsonProcessingException, UnsupportedEncodingException {
-            String token = createMemberAndGetToken();
-            Long postId = createAndPublishPost(token);
+        void 본인의_댓글_목록_조회_시_모든_상태가_반환된다() throws JsonProcessingException, UnsupportedEncodingException {
+            Long postId = createTestPublishedPost();
+            Long memberId = getCurrentMemberId(authorToken);
 
-            Long memberId = extractCurrentMemberId(token);
+            createTestComment(postId, "활성 댓글");
+            Long commentId = createTestComment(postId, "삭제할 댓글");
+            performCommentDelete(commentId, authorToken);
 
-            createCommentHelper(token, postId, "활성 댓글");
-            Long commentId = createCommentHelper(token, postId, "삭제할 댓글");
+            MvcTestResult result = performMemberCommentsList(memberId, authorToken);
 
-            // 댓글 삭제
-            mvcTester.delete().uri("/api/comments/{commentId}/delete", commentId)
-                    .header("Authorization", "Bearer " + token)
-                    .exchange();
-
-            MvcTestResult result = mvcTester.get().uri("/api/members/{memberId}/comments", memberId)
-                    .header("Authorization", "Bearer " + token)
-                    .exchange();
-
-            assertThat(result).hasStatusOk();
-
-            String responseContent = result.getResponse().getContentAsString();
-            CommentDetailResponse[] comments = objectMapper.readValue(responseContent, CommentDetailResponse[].class);
-
-            assertThat(comments).hasSize(2); // ACTIVE + DELETED 모두 반환
+            assertThatMemberCommentsListed(result, 2);
         }
 
         @Test
-        void 다른_사용자의_댓글_목록을_조회하면_활성_상태만_반환된다() throws JsonProcessingException, UnsupportedEncodingException {
-            String authorToken = createMemberAndGetToken();
-            Long postId = createAndPublishPost(authorToken);
+        void 다른_사용자의_댓글_목록_조회_시_활성_상태만_반환된다() throws JsonProcessingException, UnsupportedEncodingException {
+            Long postId = createTestPublishedPost();
+            Long authorMemberId = getCurrentMemberId(authorToken);
 
-            Long authorMemberId = extractCurrentMemberId(authorToken);
+            createTestComment(postId, "활성 댓글");
+            Long commentId = createTestComment(postId, "삭제할 댓글");
+            performCommentDelete(commentId, authorToken);
 
-            createCommentHelper(authorToken, postId, "활성 댓글");
-            Long commentId = createCommentHelper(authorToken, postId, "삭제할 댓글");
+            MvcTestResult result = performMemberCommentsList(authorMemberId, readerToken);
 
-            // 댓글 삭제
-            mvcTester.delete().uri("/api/comments/{commentId}/delete", commentId)
-                    .header("Authorization", "Bearer " + authorToken)
-                    .exchange();
+            assertThatPublicMemberCommentsListed(result, 1);
+        }
 
-            String readerToken = createSecondMemberAndGetToken();
-
-            MvcTestResult result = mvcTester.get().uri("/api/members/{memberId}/comments", authorMemberId)
-                    .header("Authorization", "Bearer " + readerToken)
-                    .exchange();
-
+        private void assertThatMemberCommentsListed(MvcTestResult result, int expectedSize)
+                throws UnsupportedEncodingException, JsonProcessingException {
             assertThat(result).hasStatusOk();
 
-            String responseContent = result.getResponse().getContentAsString();
-            CommentDetailResponse[] comments = objectMapper.readValue(responseContent, CommentDetailResponse[].class);
+            CommentDetailResponse[] comments = parseResponseArray(result, CommentDetailResponse[].class);
+            assertThat(comments).hasSize(expectedSize);
+        }
 
-            assertThat(comments).hasSize(1); // ACTIVE 상태만 반환
-            assertThat(comments[0].status()).isEqualTo(CommentStatus.ACTIVE);
+        private void assertThatPublicMemberCommentsListed(MvcTestResult result, int expectedSize)
+                throws UnsupportedEncodingException, JsonProcessingException {
+            assertThat(result).hasStatusOk();
+
+            CommentDetailResponse[] comments = parseResponseArray(result, CommentDetailResponse[].class);
+            assertThat(comments).hasSize(expectedSize);
+            assertThat(comments).allMatch(comment -> comment.status() == CommentStatus.ACTIVE);
         }
     }
 
@@ -275,67 +247,44 @@ class CommentApiTest {
     class 댓글_수정 {
         @Test
         void 작성자가_댓글을_수정할_수_있다() throws JsonProcessingException, UnsupportedEncodingException {
-            String token = createMemberAndGetToken();
-            Long postId = createAndPublishPost(token);
-            Long commentId = createCommentHelper(token, postId, "원본 댓글");
+            Long postId = createTestPublishedPost();
+            Long commentId = createTestComment(postId, PARENT_COMMENT_TEXT);
+            CommentUpdateRequest request = new CommentUpdateRequest(UPDATED_COMMENT_TEXT);
 
-            CommentUpdateRequest request = new CommentUpdateRequest("수정된 댓글");
-            String requestJson = objectMapper.writeValueAsString(request);
+            MvcTestResult result = performCommentUpdate(commentId, request, authorToken);
 
-            MvcTestResult result = mvcTester.put().uri("/api/comments/{commentId}", commentId)
-                    .header("Authorization", "Bearer " + token)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(requestJson)
-                    .exchange();
-
-            assertThat(result).hasStatusOk();
-
-            CommentDetailResponse response = objectMapper.readValue(
-                    result.getResponse().getContentAsString(), CommentDetailResponse.class);
-
-            assertThat(response.body()).isEqualTo("수정된 댓글");
-            assertThat(response.modifiedAt()).isNotNull();
+            assertThatCommentUpdated(result, UPDATED_COMMENT_TEXT);
         }
 
         @Test
-        void 토큰_없이_댓글_수정_요청_시_401_Unauthorized가_발생한다() throws JsonProcessingException, UnsupportedEncodingException {
-            String token = createMemberAndGetToken();
-            Long postId = createAndPublishPost(token);
-            Long commentId = createCommentHelper(token, postId, "원본 댓글");
+        void 토큰_없이_댓글_수정_시_401_Unauthorized가_발생한다() throws JsonProcessingException, UnsupportedEncodingException {
+            Long postId = createTestPublishedPost();
+            Long commentId = createTestComment(postId, PARENT_COMMENT_TEXT);
+            CommentUpdateRequest request = new CommentUpdateRequest(UPDATED_COMMENT_TEXT);
 
-            CommentUpdateRequest request = new CommentUpdateRequest("수정된 댓글");
-            String requestJson = objectMapper.writeValueAsString(request);
+            MvcTestResult result = performCommentUpdateWithoutAuth(commentId, request);
 
-            MvcTestResult result = mvcTester.put().uri("/api/comments/{commentId}", commentId)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(requestJson)
-                    .exchange();
-
-            assertThat(result)
-                    .apply(print())
-                    .hasStatus(HttpStatus.UNAUTHORIZED);
+            assertThat(result).hasStatus(HttpStatus.UNAUTHORIZED);
         }
 
         @Test
         void 작성자가_아닌_사용자가_댓글_수정_시_403_Forbidden이_발생한다() throws JsonProcessingException, UnsupportedEncodingException {
-            String authorToken = createMemberAndGetToken();
-            Long postId = createAndPublishPost(authorToken);
-            Long commentId = createCommentHelper(authorToken, postId, "원본 댓글");
+            Long postId = createTestPublishedPost();
+            Long commentId = createTestComment(postId, PARENT_COMMENT_TEXT);
+            CommentUpdateRequest request = new CommentUpdateRequest(UPDATED_COMMENT_TEXT);
 
-            String readerToken = createSecondMemberAndGetToken();
+            MvcTestResult result = performCommentUpdate(commentId, request, readerToken);
 
-            CommentUpdateRequest request = new CommentUpdateRequest("수정된 댓글");
-            String requestJson = objectMapper.writeValueAsString(request);
+            assertThat(result).hasStatus(HttpStatus.FORBIDDEN);
+        }
 
-            MvcTestResult result = mvcTester.put().uri("/api/comments/{commentId}", commentId)
-                    .header("Authorization", "Bearer " + readerToken)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(requestJson)
-                    .exchange();
+        private void assertThatCommentUpdated(MvcTestResult result, String expectedContent)
+                throws UnsupportedEncodingException, JsonProcessingException {
+            assertThat(result).hasStatusOk();
 
-            assertThat(result)
-                    .apply(print())
-                    .hasStatus(HttpStatus.FORBIDDEN);
+            CommentDetailResponse response = parseResponse(result, CommentDetailResponse.class);
+            assertThat(response.body()).isEqualTo(expectedContent);
+            assertThat(response.modifiedAt()).isNotNull();
         }
     }
 
@@ -343,72 +292,51 @@ class CommentApiTest {
     class 댓글_삭제 {
         @Test
         void 작성자가_댓글을_삭제할_수_있다() throws JsonProcessingException, UnsupportedEncodingException {
-            String token = createMemberAndGetToken();
-            Long postId = createAndPublishPost(token);
-            Long commentId = createCommentHelper(token, postId, "삭제할 댓글");
+            Long postId = createTestPublishedPost();
+            Long commentId = createTestComment(postId, "삭제할 댓글");
 
-            MvcTestResult result = mvcTester.delete().uri("/api/comments/{commentId}/delete", commentId)
-                    .header("Authorization", "Bearer " + token)
-                    .exchange();
+            MvcTestResult result = performCommentDelete(commentId, authorToken);
 
-            assertThat(result).hasStatusOk();
-
-            CommentDetailResponse response = objectMapper.readValue(
-                    result.getResponse().getContentAsString(), CommentDetailResponse.class);
-
-            assertThat(response.status()).isEqualTo(CommentStatus.DELETED);
+            assertThatCommentDeleted(result);
         }
 
         @Test
-        void 토큰_없이_댓글_삭제_요청_시_401_Unauthorized가_발생한다() throws JsonProcessingException, UnsupportedEncodingException {
-            String token = createMemberAndGetToken();
-            Long postId = createAndPublishPost(token);
-            Long commentId = createCommentHelper(token, postId, "삭제할 댓글");
+        void 토큰_없이_댓글_삭제_시_401_Unauthorized가_발생한다() throws JsonProcessingException, UnsupportedEncodingException {
+            Long postId = createTestPublishedPost();
+            Long commentId = createTestComment(postId, "삭제할 댓글");
 
-            MvcTestResult result = mvcTester.delete().uri("/api/comments/{commentId}/delete", commentId)
-                    .exchange();
+            MvcTestResult result = performCommentDeleteWithoutAuth(commentId);
 
-            assertThat(result)
-                    .apply(print())
-                    .hasStatus(HttpStatus.UNAUTHORIZED);
+            assertThat(result).hasStatus(HttpStatus.UNAUTHORIZED);
         }
 
         @Test
         void 작성자가_아닌_사용자가_댓글_삭제_시_403_Forbidden이_발생한다() throws JsonProcessingException, UnsupportedEncodingException {
-            String authorToken = createMemberAndGetToken();
-            Long postId = createAndPublishPost(authorToken);
-            Long commentId = createCommentHelper(authorToken, postId, "삭제할 댓글");
+            Long postId = createTestPublishedPost();
+            Long commentId = createTestComment(postId, "삭제할 댓글");
 
-            String readerToken = createSecondMemberAndGetToken();
+            MvcTestResult result = performCommentDelete(commentId, readerToken);
 
-            MvcTestResult result = mvcTester.delete().uri("/api/comments/{commentId}/delete", commentId)
-                    .header("Authorization", "Bearer " + readerToken)
-                    .exchange();
-
-            assertThat(result)
-                    .apply(print())
-                    .hasStatus(HttpStatus.FORBIDDEN);
+            assertThat(result).hasStatus(HttpStatus.FORBIDDEN);
         }
 
         @Test
-        void 이미_삭제된_댓글을_다시_삭제하려고_하면_409_Conflict가_발생한다() throws JsonProcessingException, UnsupportedEncodingException {
-            String token = createMemberAndGetToken();
-            Long postId = createAndPublishPost(token);
-            Long commentId = createCommentHelper(token, postId, "삭제할 댓글");
+        void 이미_삭제된_댓글_재삭제_시_409_Conflict가_발생한다() throws JsonProcessingException, UnsupportedEncodingException {
+            Long postId = createTestPublishedPost();
+            Long commentId = createTestComment(postId, "삭제할 댓글");
+            performCommentDelete(commentId, authorToken);
 
-            // 첫 번째 삭제
-            mvcTester.delete().uri("/api/comments/{commentId}/delete", commentId)
-                    .header("Authorization", "Bearer " + token)
-                    .exchange();
+            MvcTestResult result = performCommentDelete(commentId, authorToken);
 
-            // 두 번째 삭제 시도
-            MvcTestResult result = mvcTester.delete().uri("/api/comments/{commentId}/delete", commentId)
-                    .header("Authorization", "Bearer " + token)
-                    .exchange();
+            assertThat(result).hasStatus(HttpStatus.CONFLICT);
+        }
 
-            assertThat(result)
-                    .apply(print())
-                    .hasStatus(HttpStatus.CONFLICT);
+        private void assertThatCommentDeleted(MvcTestResult result)
+                throws UnsupportedEncodingException, JsonProcessingException {
+            assertThat(result).hasStatusOk();
+
+            CommentDetailResponse response = parseResponse(result, CommentDetailResponse.class);
+            assertThat(response.status()).isEqualTo(CommentStatus.DELETED);
         }
     }
 
@@ -416,97 +344,66 @@ class CommentApiTest {
     class 댓글_숨김 {
         @Test
         void 작성자가_댓글을_숨김_처리할_수_있다() throws JsonProcessingException, UnsupportedEncodingException {
-            String token = createMemberAndGetToken();
-            Long postId = createAndPublishPost(token);
-            Long commentId = createCommentHelper(token, postId, "숨길 댓글");
+            Long postId = createTestPublishedPost();
+            Long commentId = createTestComment(postId, "숨길 댓글");
 
-            MvcTestResult result = mvcTester.patch().uri("/api/comments/{commentId}/hide", commentId)
-                    .header("Authorization", "Bearer " + token)
-                    .exchange();
+            MvcTestResult result = performCommentHide(commentId, authorToken);
 
-            assertThat(result).hasStatusOk();
-
-            CommentDetailResponse response = objectMapper.readValue(
-                    result.getResponse().getContentAsString(), CommentDetailResponse.class);
-
-            assertThat(response.status()).isEqualTo(CommentStatus.HIDDEN);
+            assertThatCommentHidden(result);
         }
 
         @Test
-        void 토큰_없이_댓글_숨김_요청_시_401_Unauthorized가_발생한다() throws JsonProcessingException, UnsupportedEncodingException {
-            String token = createMemberAndGetToken();
-            Long postId = createAndPublishPost(token);
-            Long commentId = createCommentHelper(token, postId, "숨길 댓글");
+        void 토큰_없이_댓글_숨김_시_401_Unauthorized가_발생한다() throws JsonProcessingException, UnsupportedEncodingException {
+            Long postId = createTestPublishedPost();
+            Long commentId = createTestComment(postId, "숨길 댓글");
 
-            MvcTestResult result = mvcTester.patch().uri("/api/comments/{commentId}/hide", commentId)
-                    .exchange();
+            MvcTestResult result = performCommentHideWithoutAuth(commentId);
 
-            assertThat(result)
-                    .apply(print())
-                    .hasStatus(HttpStatus.UNAUTHORIZED);
+            assertThat(result).hasStatus(HttpStatus.UNAUTHORIZED);
         }
 
         @Test
         void 작성자가_아닌_사용자가_댓글_숨김_시_403_Forbidden이_발생한다() throws JsonProcessingException, UnsupportedEncodingException {
-            String authorToken = createMemberAndGetToken();
-            Long postId = createAndPublishPost(authorToken);
-            Long commentId = createCommentHelper(authorToken, postId, "숨길 댓글");
+            Long postId = createTestPublishedPost();
+            Long commentId = createTestComment(postId, "숨길 댓글");
 
-            String readerToken = createSecondMemberAndGetToken();
+            MvcTestResult result = performCommentHide(commentId, readerToken);
 
-            MvcTestResult result = mvcTester.patch().uri("/api/comments/{commentId}/hide", commentId)
-                    .header("Authorization", "Bearer " + readerToken)
-                    .exchange();
-
-            assertThat(result)
-                    .apply(print())
-                    .hasStatus(HttpStatus.FORBIDDEN);
+            assertThat(result).hasStatus(HttpStatus.FORBIDDEN);
         }
 
         @Test
-        void 이미_숨김_처리된_댓글을_다시_숨기려고_하면_409_Conflict가_발생한다() throws JsonProcessingException, UnsupportedEncodingException {
-            String token = createMemberAndGetToken();
-            Long postId = createAndPublishPost(token);
-            Long commentId = createCommentHelper(token, postId, "숨길 댓글");
+        void 이미_숨김_처리된_댓글_재숨김_시_409_Conflict가_발생한다() throws JsonProcessingException, UnsupportedEncodingException {
+            Long postId = createTestPublishedPost();
+            Long commentId = createTestComment(postId, "숨길 댓글");
+            performCommentHide(commentId, authorToken);
 
-            // 첫 번째 숨김
-            mvcTester.patch().uri("/api/comments/{commentId}/hide", commentId)
-                    .header("Authorization", "Bearer " + token)
-                    .exchange();
+            MvcTestResult result = performCommentHide(commentId, authorToken);
 
-            // 두 번째 숨김 시도
-            MvcTestResult result = mvcTester.patch().uri("/api/comments/{commentId}/hide", commentId)
-                    .header("Authorization", "Bearer " + token)
-                    .exchange();
-
-            assertThat(result)
-                    .apply(print())
-                    .hasStatus(HttpStatus.CONFLICT);
+            assertThat(result).hasStatus(HttpStatus.CONFLICT);
         }
 
         @Test
-        void 삭제된_댓글을_숨기려고_하면_409_Conflict가_발생한다() throws JsonProcessingException, UnsupportedEncodingException {
-            String token = createMemberAndGetToken();
-            Long postId = createAndPublishPost(token);
-            Long commentId = createCommentHelper(token, postId, "댓글");
+        void 삭제된_댓글_숨김_시_409_Conflict가_발생한다() throws JsonProcessingException, UnsupportedEncodingException {
+            Long postId = createTestPublishedPost();
+            Long commentId = createTestComment(postId, "댓글");
+            performCommentDelete(commentId, authorToken);
 
-            // 댓글 삭제
-            mvcTester.delete().uri("/api/comments/{commentId}/delete", commentId)
-                    .header("Authorization", "Bearer " + token)
-                    .exchange();
+            MvcTestResult result = performCommentHide(commentId, authorToken);
 
-            // 삭제된 댓글 숨김 시도
-            MvcTestResult result = mvcTester.patch().uri("/api/comments/{commentId}/hide", commentId)
-                    .header("Authorization", "Bearer " + token)
-                    .exchange();
+            assertThat(result).hasStatus(HttpStatus.CONFLICT);
+        }
 
-            assertThat(result)
-                    .apply(print())
-                    .hasStatus(HttpStatus.CONFLICT);
+        private void assertThatCommentHidden(MvcTestResult result)
+                throws UnsupportedEncodingException, JsonProcessingException {
+            assertThat(result).hasStatusOk();
+
+            CommentDetailResponse response = parseResponse(result, CommentDetailResponse.class);
+            assertThat(response.status()).isEqualTo(CommentStatus.HIDDEN);
         }
     }
 
-    // Helper Methods
+    // 헬퍼 메서드들
     private String createMemberAndGetToken() throws JsonProcessingException, UnsupportedEncodingException {
         memberRegister.register(createMemberRegisterRequest());
 
@@ -517,9 +414,7 @@ class CommentApiTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson).exchange();
 
-        MemberAuthResponse authResponse = objectMapper.readValue(
-                loginResult.getResponse().getContentAsString(), MemberAuthResponse.class);
-
+        MemberAuthResponse authResponse = parseResponse(loginResult, MemberAuthResponse.class);
         return authResponse.accessToken();
     }
 
@@ -534,67 +429,131 @@ class CommentApiTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson).exchange();
 
-        MemberAuthResponse authResponse = objectMapper.readValue(
-                loginResult.getResponse().getContentAsString(), MemberAuthResponse.class);
-
+        MemberAuthResponse authResponse = parseResponse(loginResult, MemberAuthResponse.class);
         return authResponse.accessToken();
     }
 
-    private Long createAndPublishPost(String token) throws JsonProcessingException, UnsupportedEncodingException {
+    private Long createTestPublishedPost() throws JsonProcessingException, UnsupportedEncodingException {
         PostCreateRequest createRequest = createPostRequest(true);
         String requestJson = objectMapper.writeValueAsString(createRequest);
 
         MvcTestResult createResult = mvcTester.post().uri("/api/posts")
-                .header("Authorization", "Bearer " + token)
+                .header("Authorization", VALID_TOKEN_PREFIX + authorToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson).exchange();
 
-        PostCreateResponse createResponse = objectMapper.readValue(
-                createResult.getResponse().getContentAsString(), PostCreateResponse.class);
-
+        PostCreateResponse createResponse = parseResponse(createResult, PostCreateResponse.class);
         return createResponse.postId();
     }
 
-    private Long createCommentHelper(String token, Long postId, String content) throws JsonProcessingException, UnsupportedEncodingException {
+    private Long createTestComment(Long postId, String content) throws JsonProcessingException, UnsupportedEncodingException {
         CommentCreateRequest request = new CommentCreateRequest(content);
-        String requestJson = objectMapper.writeValueAsString(request);
-
-        MvcTestResult result = mvcTester.post().uri("/api/posts/{postId}/comments", postId)
-                .header("Authorization", "Bearer " + token)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestJson)
-                .exchange();
-
-        CommentCreateResponse response = objectMapper.readValue(
-                result.getResponse().getContentAsString(), CommentCreateResponse.class);
-
+        MvcTestResult result = performCommentCreate(postId, request, authorToken);
+        CommentCreateResponse response = parseResponse(result, CommentCreateResponse.class);
         return response.commentId();
     }
 
-    private Long createReply(String token, Long postId, String content, Long parentCommentId) throws JsonProcessingException, UnsupportedEncodingException {
+    private Long createTestReply(Long postId, Long parentCommentId, String content) throws JsonProcessingException, UnsupportedEncodingException {
         CommentCreateRequest request = new CommentCreateRequest(content, parentCommentId);
-        String requestJson = objectMapper.writeValueAsString(request);
-
-        MvcTestResult result = mvcTester.post().uri("/api/posts/{postId}/comments", postId)
-                .header("Authorization", "Bearer " + token)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestJson)
-                .exchange();
-
-        CommentCreateResponse response = objectMapper.readValue(
-                result.getResponse().getContentAsString(), CommentCreateResponse.class);
-
+        MvcTestResult result = performCommentCreate(postId, request, authorToken);
+        CommentCreateResponse response = parseResponse(result, CommentCreateResponse.class);
         return response.commentId();
     }
 
-    private Long extractCurrentMemberId(String token) throws JsonProcessingException, UnsupportedEncodingException {
-        MvcTestResult result = mvcTester.get().uri("/api/members/my")
-                .header("Authorization", "Bearer " + token)
+    private Long getCurrentMemberId(String token) throws JsonProcessingException, UnsupportedEncodingException {
+        MvcTestResult result = mvcTester.get().uri("/api/members/me")
+                .header("Authorization", VALID_TOKEN_PREFIX + token)
                 .exchange();
 
-        MemberProfileResponse response = objectMapper.readValue(
-                result.getResponse().getContentAsString(), MemberProfileResponse.class);
-
+        MemberProfileResponse response = parseResponse(result, MemberProfileResponse.class);
         return response.memberId();
+    }
+
+    // API 호출 헬퍼 메서드들
+    private MvcTestResult performCommentCreate(Long postId, CommentCreateRequest request, String token)
+            throws JsonProcessingException {
+        String requestJson = objectMapper.writeValueAsString(request);
+        return mvcTester.post().uri("/api/posts/{postId}/comments", postId)
+                .header("Authorization", VALID_TOKEN_PREFIX + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson)
+                .exchange();
+    }
+
+    private MvcTestResult performCommentCreateWithoutAuth(Long postId, CommentCreateRequest request)
+            throws JsonProcessingException {
+        String requestJson = objectMapper.writeValueAsString(request);
+        return mvcTester.post().uri("/api/posts/{postId}/comments", postId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson)
+                .exchange();
+    }
+
+    private MvcTestResult performPostCommentsList(Long postId) {
+        return mvcTester.get().uri("/api/posts/{postId}/comments", postId).exchange();
+    }
+
+    private MvcTestResult performCommentGet(Long commentId) {
+        return mvcTester.get().uri("/api/comments/{commentId}", commentId).exchange();
+    }
+
+    private MvcTestResult performCommentRepliesList(Long parentCommentId) {
+        return mvcTester.get().uri("/api/comments/{parentCommentId}/replies", parentCommentId).exchange();
+    }
+
+    private MvcTestResult performMemberCommentsList(Long memberId, String token) {
+        return mvcTester.get().uri("/api/members/{memberId}/comments", memberId)
+                .header("Authorization", VALID_TOKEN_PREFIX + token)
+                .exchange();
+    }
+
+    private MvcTestResult performCommentUpdate(Long commentId, CommentUpdateRequest request, String token)
+            throws JsonProcessingException {
+        String requestJson = objectMapper.writeValueAsString(request);
+        return mvcTester.put().uri("/api/comments/{commentId}", commentId)
+                .header("Authorization", VALID_TOKEN_PREFIX + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson)
+                .exchange();
+    }
+
+    private MvcTestResult performCommentUpdateWithoutAuth(Long commentId, CommentUpdateRequest request)
+            throws JsonProcessingException {
+        String requestJson = objectMapper.writeValueAsString(request);
+        return mvcTester.put().uri("/api/comments/{commentId}", commentId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson)
+                .exchange();
+    }
+
+    private MvcTestResult performCommentDelete(Long commentId, String token) {
+        return mvcTester.delete().uri("/api/comments/{commentId}/delete", commentId)
+                .header("Authorization", VALID_TOKEN_PREFIX + token)
+                .exchange();
+    }
+
+    private MvcTestResult performCommentDeleteWithoutAuth(Long commentId) {
+        return mvcTester.delete().uri("/api/comments/{commentId}/delete", commentId).exchange();
+    }
+
+    private MvcTestResult performCommentHide(Long commentId, String token) {
+        return mvcTester.patch().uri("/api/comments/{commentId}/hide", commentId)
+                .header("Authorization", VALID_TOKEN_PREFIX + token)
+                .exchange();
+    }
+
+    private MvcTestResult performCommentHideWithoutAuth(Long commentId) {
+        return mvcTester.patch().uri("/api/comments/{commentId}/hide", commentId).exchange();
+    }
+
+    // 응답 파싱 헬퍼 메서드들
+    private <T> T parseResponse(MvcTestResult result, Class<T> responseType)
+            throws UnsupportedEncodingException, JsonProcessingException {
+        return objectMapper.readValue(result.getResponse().getContentAsString(), responseType);
+    }
+
+    private <T> T parseResponseArray(MvcTestResult result, Class<T> responseType)
+            throws UnsupportedEncodingException, JsonProcessingException {
+        return objectMapper.readValue(result.getResponse().getContentAsString(), responseType);
     }
 }
