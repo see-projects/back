@@ -90,9 +90,10 @@ class MemberTest {
 
         @Test
         void 비활성화된_회원의_정보_수정_시_예외가_발생한다() {
+            var updateRequest = createMemberInfoUpdateRequest();
             member.deactivate();
 
-            assertThatThrownBy(() -> member.deactivate())
+            assertThatThrownBy(() -> member.updateInfo(updateRequest))
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
