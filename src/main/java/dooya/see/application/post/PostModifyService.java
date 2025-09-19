@@ -25,7 +25,7 @@ public class PostModifyService implements PostManager {
         Post post = createPost(request, memberId);
         Post savedPost = savedPost(post);
 
-        publishCreationAndDomainEvents(savedPost);
+        publishDomainEvents(savedPost);
 
         return savedPost;
     }
@@ -147,11 +147,6 @@ public class PostModifyService implements PostManager {
 
     private void publishUnlikeEvent(Post post, Long memberId) {
         post.unlike(memberId);
-        publishDomainEvents(post);
-    }
-
-    // Event Publishing 관련 메서드
-    private void publishCreationAndDomainEvents(Post post) {
         publishDomainEvents(post);
     }
 
