@@ -68,6 +68,7 @@ public class MemberModifyService implements MemberRegister {
         Email email = createEmail(registerRequest.email());
         checkEmailNotExists(email, registerRequest.email());
     }
+
     private Email createEmail(String emailAddress) {
         return new Email(emailAddress);
     }
@@ -89,7 +90,7 @@ public class MemberModifyService implements MemberRegister {
     }
 
     private boolean shouldSkipProfileValidation(String profileAddress) {
-        return profileAddress.isEmpty();
+        return profileAddress == null || profileAddress.isEmpty();
     }
 
     private boolean isCurrentProfile(Member member, String profileAddress) {
