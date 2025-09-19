@@ -55,10 +55,10 @@ public class Member extends AbstractEntity {
     }
 
     public void updateInfo(MemberInfoUpdateRequest updateRequest) {
+        validateCanUpdateInfo();
         updateBasicInfo(updateRequest);
         updateMemberDetail(updateRequest);
     }
-
 
     // Registration 관련 메서드
     private void initializeBasicInfo(MemberRegisterRequest registerRequest) {
@@ -71,6 +71,12 @@ public class Member extends AbstractEntity {
     }
 
     // Update 관련 메서드
+    private void validateCanUpdateInfo() {
+        if (this.status != MemberStatus.ACTIVE) {
+            throw new IllegalArgumentException("활성화된 회원만 정보를 수정할 수 있습니다");
+        }
+    }
+
     private void activateMember() {
         this.status = MemberStatus.ACTIVE;
     }
