@@ -36,10 +36,8 @@ class PostTest {
         }
 
         @Test
-        void 생성_후_ID_할당하고_이벤트_발행하면_PostCreated_이벤트가_발생한다() {
-            clearDomainEventsAndSetId(POST_ID);
-
-            post.publishCreationEventIfNeeded();
+        void ID_할당_후_PostPersist_콜백으로_PostCreated_이벤트가_발생한다() {
+            setIdAndSimulatePostPersist(POST_ID);
 
             assertThatPostCreatedEventOccurred(POST_ID, AUTHOR_ID, false);
         }
@@ -47,12 +45,16 @@ class PostTest {
         @Test
         void 즉시_발행으로_생성_시_PostCreated_이벤트의_publishImmediately가_true다() {
             Post immediatePost = Post.create(createPostRequest(true), AUTHOR_ID);
-            clearDomainEventsAndSetId(immediatePost, POST_ID);
-
-            immediatePost.publishCreationEventIfNeeded();
+            setIdAndSimulatePostPersist(immediatePost, POST_ID);
 
             PostCreated event = getFirstDomainEvent(immediatePost, PostCreated.class);
             assertThat(event.publishImmediately()).isTrue();
+        }
+
+        @Test
+        void 생성만_하고_저장하지_않으면_아직_이벤트가_발생하지_않는다() {
+            // Post.create()만 호출한 상태에서는 이벤트가 없어야 함
+            assertThat(post.hasDomainEvents()).isFalse();
         }
 
         private void assertThatPostCreatedWithCorrectState() {
@@ -378,7 +380,7 @@ class PostTest {
     class 도메인_이벤트_관리 {
         @Test
         void 이벤트를_클리어하면_이벤트_목록이_비워진다() {
-            setIdAndPublishCreationEvent(POST_ID);
+            setIdAndSimulatePostPersist(POST_ID);
             assertThat(post.hasDomainEvents()).isTrue();
 
             post.clearDomainEvents();
@@ -388,19 +390,10 @@ class PostTest {
         }
     }
 
-    // 헬퍼 메서드들
+    // 헬퍼 메서드들 - @PostPersist 방식에 맞게 수정
 
     private void clearDomainEvents() {
         post.clearDomainEvents();
-    }
-
-    private void clearDomainEventsAndSetId(Long id) {
-        clearDomainEventsAndSetId(post, id);
-    }
-
-    private void clearDomainEventsAndSetId(Post targetPost, Long id) {
-        targetPost.clearDomainEvents();
-        setPostId(targetPost, id);
     }
 
     private void setIdAndClearEvents(Long id) {
@@ -408,9 +401,18 @@ class PostTest {
         clearDomainEvents();
     }
 
-    private void setIdAndPublishCreationEvent(Long id) {
-        setPostId(post, id);
-        post.publishCreationEventIfNeeded();
+    /**
+     * ID 설정 후 @PostPersist 콜백을 시뮬레이션
+     * JPA 저장 시 일어나는 상황을 테스트에서 재현
+     */
+    private void setIdAndSimulatePostPersist(Long id) {
+        setIdAndSimulatePostPersist(post, id);
+    }
+
+    private void setIdAndSimulatePostPersist(Post targetPost, Long id) {
+        setPostId(targetPost, id);
+        // @PostPersist 메서드를 직접 호출하여 시뮬레이션
+        ReflectionTestUtils.invokeMethod(targetPost, "publishCreationEvent");
     }
 
     private <T extends DomainEvent> T getFirstDomainEvent(Post targetPost, Class<T> eventType) {
