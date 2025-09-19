@@ -152,7 +152,6 @@ public class PostModifyService implements PostManager {
 
     // Event Publishing 관련 메서드
     private void publishCreationAndDomainEvents(Post post) {
-        post.publishCreationEventIfNeeded();
         publishDomainEvents(post);
     }
 
