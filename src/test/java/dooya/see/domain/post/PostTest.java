@@ -2,6 +2,7 @@ package dooya.see.domain.post;
 
 import dooya.see.domain.post.event.*;
 import dooya.see.domain.post.exception.InvalidPostStatusTransitionException;
+import dooya.see.domain.post.exception.UnauthorizedPostAccessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -327,6 +328,7 @@ class PostTest {
 
         @Test
         void 좋아요_시_PostLiked_이벤트가_발생한다() {
+            post.publish();
             setIdAndClearEvents(POST_ID);
 
             post.like(LIKER_ID);
@@ -336,11 +338,24 @@ class PostTest {
 
         @Test
         void 좋아요_취소_시_PostUnliked_이벤트가_발생한다() {
+            post.publish();
             setIdAndClearEvents(POST_ID);
 
             post.unlike(LIKER_ID);
 
             assertThatPostUnlikedEventOccurred(POST_ID, LIKER_ID);
+        }
+
+        @Test
+        void 작성자는_비공개_게시글에도_좋아요할_수_있다() {
+            post.like(AUTHOR_ID);
+        }
+
+        @Test
+        void 비공개_게시글에_타인이_좋아요하면_예외가_발생한다() {
+            assertThatThrownBy(() -> post.like(LIKER_ID))
+                .isInstanceOf(UnauthorizedPostAccessException.class)
+                    .hasMessageContaining("공개된 게시글만 상호작용할 수 있습니다");
         }
 
         @Test
@@ -391,7 +406,6 @@ class PostTest {
     }
 
     // 헬퍼 메서드들 - @PostPersist 방식에 맞게 수정
-
     private void clearDomainEvents() {
         post.clearDomainEvents();
     }
