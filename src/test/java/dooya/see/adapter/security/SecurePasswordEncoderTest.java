@@ -1,14 +1,12 @@
 package dooya.see.adapter.security;
 
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class SecurePasswordEncoderTest {
-    @DisplayName("비밀번호 암호화 후 올바른 비밀번호는 검증 성공하고 잘못된 비밀번호는 검증 실패한다")
     @Test
-    void securePasswordEncoder() {
+    void 비밀번호_암호화_후_올바른_비밀번호는_검증_성공하고_잘못된_비밀번호는_검증_실패한다() {
         SecurePasswordEncoder securePasswordEncoder = new SecurePasswordEncoder();
 
         String passwordHash = securePasswordEncoder.encode("secret");

@@ -2,209 +2,219 @@ package dooya.see.application.post.required;
 
 import dooya.see.domain.post.PostLike;
 import jakarta.persistence.EntityManager;
-import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.dao.DataIntegrityViolationException;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 
 @DataJpaTest
 record PostLikeRepositoryTest(PostLikeRepository postLikeRepository, EntityManager entityManager) {
-    
-    @DisplayName("게시물 좋아요를 생성하면 ID가 자동 생성되고 영속화된다")
-    @Test
-    void createPostLike() {
-        PostLike postLike = PostLike.create(1L, 100L);
+    private static final Long POST_ID = 1L;
+    private static final Long ANOTHER_POST_ID = 2L;
+    private static final Long MEMBER_ID = 100L;
+    private static final Long ANOTHER_MEMBER_ID = 200L;
+    private static final Long THIRD_MEMBER_ID = 300L;
 
+    @BeforeEach
+    void setUp() {
+        entityManager.clear();
+    }
+
+    @Nested
+    class 좋아요_생성_및_조회 {
+        @Test
+        void 좋아요_생성이_성공한다() {
+            PostLike postLike = createTestPostLike(POST_ID, MEMBER_ID);
+
+            assertThatPostLikeCreated(postLike, POST_ID, MEMBER_ID);
+        }
+
+        @Test
+        void 좋아요_존재_여부를_확인할_수_있다() {
+            createAndSavePostLike(POST_ID, MEMBER_ID);
+
+            boolean exists = postLikeRepository.existsByPostIdAndMemberId(POST_ID, MEMBER_ID);
+            boolean notExists = postLikeRepository.existsByPostIdAndMemberId(POST_ID, ANOTHER_MEMBER_ID);
+
+            assertThat(exists).isTrue();
+            assertThat(notExists).isFalse();
+        }
+
+        @Test
+        void 게시물별_좋아요_개수를_조회할_수_있다() {
+            createAndSavePostLike(POST_ID, MEMBER_ID);
+            createAndSavePostLike(POST_ID, ANOTHER_MEMBER_ID);
+            createAndSavePostLike(ANOTHER_POST_ID, MEMBER_ID);
+
+            long firstPostCount = postLikeRepository.countByPostId(POST_ID);
+            long secondPostCount = postLikeRepository.countByPostId(ANOTHER_POST_ID);
+            long nonExistentPostCount = postLikeRepository.countByPostId(999L);
+
+            assertThatLikeCountsMatch(firstPostCount, 2, secondPostCount, 1, nonExistentPostCount, 0);
+        }
+
+        private void assertThatPostLikeCreated(PostLike postLike, Long expectedPostId, Long expectedMemberId) {
+            assertThat(postLike.getId()).isNotNull();
+
+            flushAndClearContext();
+            PostLike found = entityManager.find(PostLike.class, postLike.getId());
+
+            assertThat(found.getPostId()).isEqualTo(expectedPostId);
+            assertThat(found.getMemberId()).isEqualTo(expectedMemberId);
+            assertThat(found.getLikedAt()).isNotNull();
+        }
+
+        private void assertThatLikeCountsMatch(long firstPostCount, int expectedFirst,
+                                               long secondPostCount, int expectedSecond,
+                                               long nonExistentPostCount, int expectedNonExistent) {
+            assertThat(firstPostCount).isEqualTo(expectedFirst);
+            assertThat(secondPostCount).isEqualTo(expectedSecond);
+            assertThat(nonExistentPostCount).isEqualTo(expectedNonExistent);
+        }
+    }
+
+    @Nested
+    class 좋아요_삭제 {
+        @Test
+        void 좋아요_삭제가_성공한다() {
+            createAndSavePostLike(POST_ID, MEMBER_ID);
+            createAndSavePostLike(POST_ID, ANOTHER_MEMBER_ID);
+            createAndSavePostLike(ANOTHER_POST_ID, MEMBER_ID);
+
+            postLikeRepository.deleteByPostIdAndMemberId(POST_ID, MEMBER_ID);
+            flushAndClearContext();
+
+            assertThatSpecificLikeDeleted(POST_ID, MEMBER_ID);
+            assertThatOtherLikesRemain(POST_ID, ANOTHER_MEMBER_ID, ANOTHER_POST_ID, MEMBER_ID);
+        }
+
+        @Test
+        void 존재하지_않는_좋아요_삭제_시_예외가_발생하지_않는다() {
+            assertThatNoException()
+                    .isThrownBy(() -> postLikeRepository.deleteByPostIdAndMemberId(999L, 999L));
+        }
+
+        @Test
+        void 좋아요_삭제_후_재생성이_가능하다() {
+            createAndSavePostLike(POST_ID, MEMBER_ID);
+
+            postLikeRepository.deleteByPostIdAndMemberId(POST_ID, MEMBER_ID);
+            flushAndClearContext();
+
+            assertThat(postLikeRepository.existsByPostIdAndMemberId(POST_ID, MEMBER_ID)).isFalse();
+
+            createAndSavePostLike(POST_ID, MEMBER_ID);
+
+            assertThatLikeRecreated(POST_ID, MEMBER_ID);
+        }
+
+        private void assertThatSpecificLikeDeleted(Long postId, Long memberId) {
+            assertThat(postLikeRepository.existsByPostIdAndMemberId(postId, memberId)).isFalse();
+        }
+
+        private void assertThatOtherLikesRemain(Long postId, Long remainingMemberId,
+                                                Long anotherPostId, Long anotherMemberId) {
+            assertThat(postLikeRepository.existsByPostIdAndMemberId(postId, remainingMemberId)).isTrue();
+            assertThat(postLikeRepository.existsByPostIdAndMemberId(anotherPostId, anotherMemberId)).isTrue();
+        }
+
+        private void assertThatLikeRecreated(Long postId, Long memberId) {
+            assertThat(postLikeRepository.existsByPostIdAndMemberId(postId, memberId)).isTrue();
+            assertThat(postLikeRepository.countByPostId(postId)).isEqualTo(1);
+        }
+    }
+
+    @Nested
+    class 좋아요_중복_처리 {
+        @Test
+        void 동일_게시물에_동일_회원의_중복_좋아요가_허용된다() {
+            createAndSavePostLike(POST_ID, MEMBER_ID);
+            createAndSavePostLike(POST_ID, MEMBER_ID);
+
+            long count = postLikeRepository.countByPostId(POST_ID);
+
+            assertThat(count).isEqualTo(2);
+        }
+
+        @Test
+        void 여러_회원이_동일_게시물에_좋아요를_누를_수_있다() {
+            createAndSavePostLike(POST_ID, MEMBER_ID);
+            createAndSavePostLike(POST_ID, ANOTHER_MEMBER_ID);
+            createAndSavePostLike(POST_ID, THIRD_MEMBER_ID);
+
+            assertThatMultipleMembersLikedSamePost(POST_ID, MEMBER_ID, ANOTHER_MEMBER_ID, THIRD_MEMBER_ID);
+        }
+
+        @Test
+        void 동일_회원이_여러_게시물에_좋아요를_누를_수_있다() {
+            Long thirdPostId = 3L;
+            createAndSavePostLike(POST_ID, MEMBER_ID);
+            createAndSavePostLike(ANOTHER_POST_ID, MEMBER_ID);
+            createAndSavePostLike(thirdPostId, MEMBER_ID);
+
+            assertThatSameMemberLikedMultiplePosts(MEMBER_ID, POST_ID, ANOTHER_POST_ID, thirdPostId);
+        }
+
+        private void assertThatMultipleMembersLikedSamePost(Long postId, Long... memberIds) {
+            assertThat(postLikeRepository.countByPostId(postId)).isEqualTo(memberIds.length);
+
+            for (Long memberId : memberIds) {
+                assertThat(postLikeRepository.existsByPostIdAndMemberId(postId, memberId)).isTrue();
+            }
+        }
+
+        private void assertThatSameMemberLikedMultiplePosts(Long memberId, Long... postIds) {
+            for (Long postId : postIds) {
+                assertThat(postLikeRepository.existsByPostIdAndMemberId(postId, memberId)).isTrue();
+            }
+        }
+    }
+
+    @Nested
+    class 대량_데이터_처리 {
+        @Test
+        void 대량의_좋아요_데이터_처리가_가능하다() {
+            int likeCount = 100;
+
+            createMultipleLikes(POST_ID, likeCount);
+
+            long count = postLikeRepository.countByPostId(POST_ID);
+
+            assertThat(count).isEqualTo(likeCount);
+        }
+
+        private void createMultipleLikes(Long postId, int count) {
+            for (int i = 1; i <= count; i++) {
+                PostLike like = PostLike.create(postId, (long) i);
+                postLikeRepository.save(like);
+            }
+            flushAndClearContext();
+        }
+    }
+
+    // 헬퍼 메서드들
+    private PostLike createTestPostLike(Long postId, Long memberId) {
+        PostLike postLike = PostLike.create(postId, memberId);
         assertThat(postLike.getId()).isNull();
 
         postLikeRepository.save(postLike);
-
         assertThat(postLike.getId()).isNotNull();
 
-        entityManager.flush();
-        entityManager.clear();
-
-        PostLike found = entityManager.find(PostLike.class, postLike.getId());
-        assertThat(found.getPostId()).isEqualTo(1L);
-        assertThat(found.getMemberId()).isEqualTo(100L);
-        assertThat(found.getLikedAt()).isNotNull();
+        return postLike;
     }
 
-    @DisplayName("특정 게시물에 특정 회원이 좋아요를 눌렀는지 확인할 수 있다")
-    @Test
-    void existsByPostIdAndMemberId() {
-        PostLike postLike = PostLike.create(1L, 100L);
+    private PostLike createAndSavePostLike(Long postId, Long memberId) {
+        PostLike postLike = PostLike.create(postId, memberId);
         postLikeRepository.save(postLike);
-
-        entityManager.flush();
-        entityManager.clear();
-
-        boolean exists = postLikeRepository.existsByPostIdAndMemberId(1L, 100L);
-        boolean notExists = postLikeRepository.existsByPostIdAndMemberId(1L, 200L);
-
-        assertThat(exists).isTrue();
-        assertThat(notExists).isFalse();
+        flushAndClearContext();
+        return postLike;
     }
 
-    @DisplayName("특정 게시물의 좋아요 개수를 조회할 수 있다")
-    @Test
-    void countByPostId() {
-        PostLike like1 = PostLike.create(1L, 100L);
-        PostLike like2 = PostLike.create(1L, 200L);
-        PostLike like3 = PostLike.create(2L, 100L);
-
-        postLikeRepository.save(like1);
-        postLikeRepository.save(like2);
-        postLikeRepository.save(like3);
-
+    private void flushAndClearContext() {
         entityManager.flush();
         entityManager.clear();
-
-        long count1 = postLikeRepository.countByPostId(1L);
-        long count2 = postLikeRepository.countByPostId(2L);
-        long count3 = postLikeRepository.countByPostId(999L);
-
-        assertThat(count1).isEqualTo(2);
-        assertThat(count2).isEqualTo(1);
-        assertThat(count3).isEqualTo(0);
-    }
-
-    @DisplayName("특정 게시물과 회원의 좋아요를 삭제할 수 있다")
-    @Test
-    void deleteByPostIdAndMemberId() {
-        PostLike like1 = PostLike.create(1L, 100L);
-        PostLike like2 = PostLike.create(1L, 200L);
-        PostLike like3 = PostLike.create(2L, 100L);
-
-        postLikeRepository.save(like1);
-        postLikeRepository.save(like2);
-        postLikeRepository.save(like3);
-
-        entityManager.flush();
-        entityManager.clear();
-
-        postLikeRepository.deleteByPostIdAndMemberId(1L, 100L);
-
-        entityManager.flush();
-        entityManager.clear();
-
-        boolean deletedExists = postLikeRepository.existsByPostIdAndMemberId(1L, 100L);
-        boolean otherExists = postLikeRepository.existsByPostIdAndMemberId(1L, 200L);
-        boolean anotherPostExists = postLikeRepository.existsByPostIdAndMemberId(2L, 100L);
-
-        assertThat(deletedExists).isFalse();
-        assertThat(otherExists).isTrue();
-        assertThat(anotherPostExists).isTrue();
-    }
-
-    @DisplayName("존재하지 않는 좋아요를 삭제해도 오류가 발생하지 않는다")
-    @Test
-    void deleteNonExistentLike() {
-        assertThatNoException()
-            .isThrownBy(() -> postLikeRepository.deleteByPostIdAndMemberId(999L, 999L));
-    }
-
-    @DisplayName("동일한 게시물에 동일한 회원이 중복 좋아요를 누르는 것을 허용한다")
-    @Test
-    void allowDuplicateLike() {
-        PostLike like1 = PostLike.create(1L, 100L);
-        PostLike like2 = PostLike.create(1L, 100L);
-
-        postLikeRepository.save(like1);
-        postLikeRepository.save(like2);
-
-        entityManager.flush();
-        entityManager.clear();
-
-        long count = postLikeRepository.countByPostId(1L);
-        assertThat(count).isEqualTo(2);
-    }
-
-    @DisplayName("서로 다른 회원이 같은 게시물에 좋아요를 누를 수 있다")
-    @Test
-    void multipleMembersCanLikeSamePost() {
-        PostLike like1 = PostLike.create(1L, 100L);
-        PostLike like2 = PostLike.create(1L, 200L);
-        PostLike like3 = PostLike.create(1L, 300L);
-
-        postLikeRepository.save(like1);
-        postLikeRepository.save(like2);
-        postLikeRepository.save(like3);
-
-        entityManager.flush();
-        entityManager.clear();
-
-        long count = postLikeRepository.countByPostId(1L);
-
-        assertThat(count).isEqualTo(3);
-        assertThat(postLikeRepository.existsByPostIdAndMemberId(1L, 100L)).isTrue();
-        assertThat(postLikeRepository.existsByPostIdAndMemberId(1L, 200L)).isTrue();
-        assertThat(postLikeRepository.existsByPostIdAndMemberId(1L, 300L)).isTrue();
-    }
-
-    @DisplayName("한 회원이 서로 다른 게시물에 좋아요를 누를 수 있다")
-    @Test
-    void sameMemberCanLikeMultiplePosts() {
-        PostLike like1 = PostLike.create(1L, 100L);
-        PostLike like2 = PostLike.create(2L, 100L);
-        PostLike like3 = PostLike.create(3L, 100L);
-
-        postLikeRepository.save(like1);
-        postLikeRepository.save(like2);
-        postLikeRepository.save(like3);
-
-        entityManager.flush();
-        entityManager.clear();
-
-        assertThat(postLikeRepository.existsByPostIdAndMemberId(1L, 100L)).isTrue();
-        assertThat(postLikeRepository.existsByPostIdAndMemberId(2L, 100L)).isTrue();
-        assertThat(postLikeRepository.existsByPostIdAndMemberId(3L, 100L)).isTrue();
-    }
-
-    @DisplayName("좋아요 삭제 후 다시 좋아요를 누를 수 있다")
-    @Test
-    void likeAfterUnlike() {
-        PostLike originalLike = PostLike.create(1L, 100L);
-        postLikeRepository.save(originalLike);
-
-        entityManager.flush();
-        entityManager.clear();
-
-        // 좋아요 삭제
-        postLikeRepository.deleteByPostIdAndMemberId(1L, 100L);
-        
-        entityManager.flush();
-        entityManager.clear();
-
-        assertThat(postLikeRepository.existsByPostIdAndMemberId(1L, 100L)).isFalse();
-
-        // 다시 좋아요
-        PostLike newLike = PostLike.create(1L, 100L);
-        postLikeRepository.save(newLike);
-
-        entityManager.flush();
-        entityManager.clear();
-
-        assertThat(postLikeRepository.existsByPostIdAndMemberId(1L, 100L)).isTrue();
-        assertThat(postLikeRepository.countByPostId(1L)).isEqualTo(1);
-    }
-
-    @DisplayName("대량의 좋아요 데이터 처리가 가능하다")
-    @Test
-    void handleMassiveLikes() {
-        // 100개의 좋아요 생성
-        for (int i = 1; i <= 100; i++) {
-            PostLike like = PostLike.create(1L, (long) i);
-            postLikeRepository.save(like);
-        }
-
-        entityManager.flush();
-        entityManager.clear();
-
-        long count = postLikeRepository.countByPostId(1L);
-
-        assertThat(count).isEqualTo(100);
     }
 }

@@ -3,7 +3,6 @@ package dooya.see.domain.post;
 import dooya.see.domain.post.event.*;
 import dooya.see.domain.post.exception.EmptyCommentUpdateException;
 import dooya.see.domain.post.exception.InvalidCommentStatusException;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -13,18 +12,58 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class CommentTest {
     private static final Long POST_ID = 1L;
     private static final Long MEMBER_ID = 1L;
+    private static final Long PARENT_COMMENT_ID = 10L;
+    private static final String VALID_CONTENT = "좋은 글이네요!";
+    private static final String REPLY_CONTENT = "답글입니다!";
+    private static final String UPDATED_CONTENT = "수정된 댓글입니다!";
+    private static final String LONG_CONTENT = "a".repeat(1001);
 
     @Nested
-    @DisplayName("댓글 생성")
-    class CreateComment {
-        @DisplayName("일반 댓글 생성 시 댓글 정보가 올바르게 설정된다")
+    class 댓글_생성 {
         @Test
-        void createTopLevelComment () {
-            CommentCreateRequest request = new CommentCreateRequest("좋은 글이네요!");
+        void 일반_댓글_생성_시_모든_필드가_올바르게_설정된다() {
+            CommentCreateRequest request = new CommentCreateRequest(VALID_CONTENT);
 
             Comment comment = Comment.create(request, POST_ID, MEMBER_ID);
 
-            assertThat(comment.getContent().text()).isEqualTo(request.body());
+            assertThatTopLevelCommentCreated(comment);
+        }
+
+        @Test
+        void 답글_생성_시_부모_댓글_ID가_올바르게_설정된다() {
+            CommentCreateRequest request = new CommentCreateRequest(REPLY_CONTENT, PARENT_COMMENT_ID);
+
+            Comment reply = Comment.create(request, POST_ID, MEMBER_ID);
+
+            assertThatReplyCommentCreated(reply);
+        }
+
+        @Test
+        void null_내용으로_댓글_생성_시_예외가_발생한다() {
+            CommentCreateRequest request = new CommentCreateRequest(null);
+
+            assertThatThrownBy(() -> Comment.create(request, POST_ID, MEMBER_ID))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        void 빈_내용으로_댓글_생성_시_예외가_발생한다() {
+            CommentCreateRequest request = new CommentCreateRequest("  ");
+
+            assertThatThrownBy(() -> Comment.create(request, POST_ID, MEMBER_ID))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        void 길이_제한_초과_내용으로_댓글_생성_시_예외가_발생한다() {
+            CommentCreateRequest request = new CommentCreateRequest(LONG_CONTENT);
+
+            assertThatThrownBy(() -> Comment.create(request, POST_ID, MEMBER_ID))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        private void assertThatTopLevelCommentCreated(Comment comment) {
+            assertThat(comment.getContent().text()).isEqualTo(VALID_CONTENT);
             assertThat(comment.getPostId()).isEqualTo(POST_ID);
             assertThat(comment.getMemberId()).isEqualTo(MEMBER_ID);
             assertThat(comment.getParentCommentId()).isNull();
@@ -35,226 +74,206 @@ class CommentTest {
             assertThat(comment.isTopLevel()).isTrue();
         }
 
-        @DisplayName("답글 댓글 생성 시 부모 댓글 ID가 올바르게 설정된다")
-        @Test
-        void createReplyComment() {
-            Long parentCommentId = 1L;
-            CommentCreateRequest request = new CommentCreateRequest("답글입니다!", parentCommentId);
-
-            Comment reply = Comment.create(request, POST_ID, MEMBER_ID);
-
-            assertThat(reply.getContent().text()).isEqualTo("답글입니다!");
+        private void assertThatReplyCommentCreated(Comment reply) {
+            assertThat(reply.getContent().text()).isEqualTo(REPLY_CONTENT);
             assertThat(reply.getPostId()).isEqualTo(POST_ID);
             assertThat(reply.getMemberId()).isEqualTo(MEMBER_ID);
-            assertThat(reply.getParentCommentId()).isEqualTo(parentCommentId);
+            assertThat(reply.getParentCommentId()).isEqualTo(PARENT_COMMENT_ID);
             assertThat(reply.getStatus()).isEqualTo(CommentStatus.ACTIVE);
             assertThat(reply.isReply()).isTrue();
             assertThat(reply.isTopLevel()).isFalse();
         }
-
-        @DisplayName("null 내용으로 댓글 생성 시 예외가 발생한다")
-        @Test
-        void createCommentWithNullContent() {
-            CommentCreateRequest request = new CommentCreateRequest(null);
-
-            assertThatThrownBy(() -> Comment.create(request, POST_ID, MEMBER_ID))
-                    .isInstanceOf(IllegalArgumentException.class);
-        }
-
-        @DisplayName("빈 내용으로 댓글 생성 시 예외가 발생한다")
-        @Test
-        void createCommentWithEmptyContent() {
-            CommentCreateRequest request = new CommentCreateRequest("  ");
-
-            assertThatThrownBy(() -> Comment.create(request, POST_ID, MEMBER_ID))
-                    .isInstanceOf(IllegalArgumentException.class);
-
-        }
-
-        @DisplayName("길이 제한을 초과한 내용으로 댓글 생성 시 예외가 발생한다")
-        @Test
-        void createCommentWithWhiteTooLongContent() {
-            String longContent = "a".repeat(1001);
-            CommentCreateRequest request = new CommentCreateRequest(longContent);
-
-            assertThatThrownBy(() -> Comment.create(request, POST_ID, MEMBER_ID))
-                    .isInstanceOf(IllegalArgumentException.class);
-        }
     }
 
     @Nested
-    @DisplayName("댓글 수정")
-    class UpdateComment {
-        @DisplayName("댓글 수정 시 내용과 수정일시가 변경된다")
+    class 댓글_수정 {
         @Test
-        void updateComment() {
-            CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
-            Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
-            CommentUpdateRequest request = new CommentUpdateRequest("수정된 댓글입니다!");
+        void 댓글_수정_시_내용과_수정일시가_변경되고_이벤트가_발생한다() {
+            Comment comment = createActiveComment();
+            CommentUpdateRequest request = new CommentUpdateRequest(UPDATED_CONTENT);
 
             comment.update(request);
 
-            assertThat(comment.getContent().text()).isEqualTo("수정된 댓글입니다!");
-            assertThat(comment.getMetaData().modifiedAt()).isNotNull();
+            assertThatCommentUpdated(comment);
+            assertThatCommentUpdatedEventOccurred(comment);
+        }
 
+        @Test
+        void 삭제된_댓글은_수정할_수_없다() {
+            Comment comment = createDeletedComment();
+            CommentUpdateRequest request = new CommentUpdateRequest(UPDATED_CONTENT);
+
+            assertThatThrownBy(() -> comment.update(request))
+                    .isInstanceOf(InvalidCommentStatusException.class);
+        }
+
+        @Test
+        void null_내용으로_댓글_수정_시_예외가_발생한다() {
+            Comment comment = createActiveComment();
+            CommentUpdateRequest request = new CommentUpdateRequest(null);
+
+            assertThatThrownBy(() -> comment.update(request))
+                    .isInstanceOf(EmptyCommentUpdateException.class);
+        }
+
+        private void assertThatCommentUpdated(Comment comment) {
+            assertThat(comment.getContent().text()).isEqualTo(UPDATED_CONTENT);
+            assertThat(comment.getMetaData().modifiedAt()).isNotNull();
+        }
+
+        private void assertThatCommentUpdatedEventOccurred(Comment comment) {
             assertThat(comment.hasDomainEvents()).isTrue();
             assertThat(comment.getDomainEvents()).hasSize(1);
             assertThat(comment.getDomainEvents().get(0)).isInstanceOf(CommentUpdated.class);
         }
-
-        @DisplayName("삭제된 댓글은 수정할 수 없다")
-        @Test
-        void cannotUpdateDeleteComment() {
-            CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
-            Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
-            comment.delete();
-            CommentUpdateRequest request = new CommentUpdateRequest("수정된 댓글입니다!");
-
-            assertThatThrownBy(() -> comment.update(request))
-                .isInstanceOf(InvalidCommentStatusException.class);
-        }
-
-        @DisplayName("null 내용으로 댓글 수정 시 예외가 발생한다")
-        @Test
-        void updateCommentWithNoContent() {
-            CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
-            Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
-            CommentUpdateRequest request = new CommentUpdateRequest(null);
-
-            assertThatThrownBy(() -> comment.update(request))
-                .isInstanceOf(EmptyCommentUpdateException.class);
-        }
     }
 
     @Nested
-    @DisplayName("댓글 삭제")
-    class DeleteComment {
-        @DisplayName("댓글 삭제 시 상태가 DELETED로 변경되고 수정일시가 설정된다")
+    class 댓글_삭제 {
         @Test
-        void deleteComment() {
-            CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
-            Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
+        void 댓글_삭제_시_상태_변경과_이벤트가_발생한다() {
+            Comment comment = createActiveComment();
 
             comment.delete();
 
+            assertThatCommentDeleted(comment);
+            assertThatCommentDeletedEventOccurred(comment);
+        }
+
+        @Test
+        void 이미_삭제된_댓글을_다시_삭제할_수_없다() {
+            Comment comment = createDeletedComment();
+
+            assertThatThrownBy(comment::delete)
+                    .isInstanceOf(InvalidCommentStatusException.class);
+        }
+
+        private void assertThatCommentDeleted(Comment comment) {
             assertThat(comment.getStatus()).isEqualTo(CommentStatus.DELETED);
             assertThat(comment.getMetaData().modifiedAt()).isNotNull();
             assertThat(comment.isDeleted()).isTrue();
+        }
 
+        private void assertThatCommentDeletedEventOccurred(Comment comment) {
             assertThat(comment.hasDomainEvents()).isTrue();
             assertThat(comment.getDomainEvents()).hasSize(1);
             assertThat(comment.getDomainEvents().get(0)).isInstanceOf(CommentDeleted.class);
         }
-
-        @DisplayName("이미 삭제된 댓글을 다시 삭제할 수 없다")
-        @Test
-        void cannotDeleteAlreadyDeleteComment() {
-            CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
-            Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
-            comment.delete();
-
-            assertThatThrownBy(comment::delete)
-                .isInstanceOf(InvalidCommentStatusException.class);
-        }
     }
 
     @Nested
-    @DisplayName("댓글 숨김")
-    class HideComment {
-        @DisplayName("댓글 숨김 시 상태가 HIDDEN으로 변경되고 수정일시가 설정된다")
+    class 댓글_숨김 {
         @Test
-        void hideComment() {
-            CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
-            Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
+        void 댓글_숨김_시_상태_변경과_이벤트가_발생한다() {
+            Comment comment = createActiveComment();
 
             comment.hide();
 
-            assertThat(comment.getStatus()).isEqualTo(CommentStatus.HIDDEN);
-            assertThat(comment.getMetaData().modifiedAt()).isNotNull();
-            assertThat(comment.isHidden()).isTrue();
-
-            assertThat(comment.hasDomainEvents()).isTrue();
-            assertThat(comment.getDomainEvents()).hasSize(1);
-            assertThat(comment.getDomainEvents().get(0)).isInstanceOf(CommentHidden.class);
+            assertThatCommentHidden(comment);
+            assertThatCommentHiddenEventOccurred(comment);
         }
 
-        @DisplayName("이미 숨김 처리된 댓글을 다시 숨길 수 없다")
         @Test
-        void cannotHideDeletedComment() {
-            CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
-            Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
-            comment.hide();
-
-            assertThatThrownBy(comment::hide)
-                .isInstanceOf(InvalidCommentStatusException.class);
-        }
-
-        @DisplayName("삭제된 댓글은 숨김 처리할 수 없다")
-        @Test
-        void cannotHideDeleteComment() {
-            CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
-            Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
-            comment.delete();
+        void 이미_숨김_처리된_댓글을_다시_숨길_수_없다() {
+            Comment comment = createHiddenComment();
 
             assertThatThrownBy(comment::hide)
                     .isInstanceOf(InvalidCommentStatusException.class);
         }
-    }
-    
-    @Nested
-    @DisplayName("권한 검증")
-    class Authorization {
-        @DisplayName("작성자 ID와 일치하는 회원이 작성자인지 확인한다")
+
         @Test
-        void isWrittenByOwner() {
-            CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
-            Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
-            
-            assertThat(comment.isWrittenBy(MEMBER_ID)).isTrue();
+        void 삭제된_댓글은_숨김_처리할_수_없다() {
+            Comment comment = createDeletedComment();
+
+            assertThatThrownBy(comment::hide)
+                    .isInstanceOf(InvalidCommentStatusException.class);
         }
-        
-        @DisplayName("활성 상태의 댓글은 수정 가능하다")
+
+        private void assertThatCommentHidden(Comment comment) {
+            assertThat(comment.getStatus()).isEqualTo(CommentStatus.HIDDEN);
+            assertThat(comment.getMetaData().modifiedAt()).isNotNull();
+            assertThat(comment.isHidden()).isTrue();
+        }
+
+        private void assertThatCommentHiddenEventOccurred(Comment comment) {
+            assertThat(comment.hasDomainEvents()).isTrue();
+            assertThat(comment.getDomainEvents()).hasSize(1);
+            assertThat(comment.getDomainEvents().get(0)).isInstanceOf(CommentHidden.class);
+        }
+    }
+
+    @Nested
+    class 권한_검증 {
         @Test
-        void canBeModifiedWhenActive() {
-            CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
-            Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
+        void 작성자_확인이_올바르게_동작한다() {
+            Comment comment = createActiveComment();
+
+            assertThat(comment.isWrittenBy(MEMBER_ID)).isTrue();
+            assertThat(comment.isWrittenBy(MEMBER_ID + 1)).isFalse();
+        }
+
+        @Test
+        void 활성_댓글은_수정_가능하다() {
+            Comment comment = createActiveComment();
 
             assertThat(comment.canBeModified()).isTrue();
         }
 
-        @DisplayName("삭제된 댓글은 수정할 수 없다")
         @Test
-        void cannotBeModifiedWhenDelete() {
-            CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
-            Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
-            comment.delete();
+        void 삭제된_댓글은_수정할_수_없다() {
+            Comment comment = createDeletedComment();
+
+            assertThat(comment.canBeModified()).isFalse();
+        }
+
+        @Test
+        void 숨겨진_댓글도_수정할_수_없다() {
+            Comment comment = createHiddenComment();
 
             assertThat(comment.canBeModified()).isFalse();
         }
     }
 
     @Nested
-    @DisplayName("대댓글 관련")
-    class ReplyComments {
-        @DisplayName("일반 댓글은 답글이 아니고 최상위 댓글이다")
+    class 대댓글_관련 {
         @Test
-        void isReplyForTopLevelComment() {
-            CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!");
-            Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
+        void 일반_댓글은_최상위_댓글이다() {
+            Comment comment = createActiveComment();
 
             assertThat(comment.isReply()).isFalse();
             assertThat(comment.isTopLevel()).isTrue();
         }
 
-        @DisplayName("부모 댓글 ID가 있는 댓글은 답글이고 최상위 댓글이 아니다")
         @Test
-        void isReplyForReplyComment() {
-            Long parentCommentId = 10L;
-            CommentCreateRequest createRequest = new CommentCreateRequest("좋은 글이네요!", parentCommentId);
-            Comment comment = Comment.create(createRequest, POST_ID, MEMBER_ID);
+        void 부모_댓글_ID가_있는_댓글은_답글이다() {
+            CommentCreateRequest request = new CommentCreateRequest(VALID_CONTENT, PARENT_COMMENT_ID);
+            Comment reply = Comment.create(request, POST_ID, MEMBER_ID);
 
-            assertThat(comment.isReply()).isTrue();
-            assertThat(comment.isTopLevel()).isFalse();
+            assertThat(reply.isReply()).isTrue();
+            assertThat(reply.isTopLevel()).isFalse();
         }
+    }
+
+    // 헬퍼 메서드들
+    private Comment createActiveComment() {
+        CommentCreateRequest request = new CommentCreateRequest(VALID_CONTENT);
+        Comment comment = Comment.create(request, POST_ID, MEMBER_ID);
+        comment.clearDomainEvents();
+
+        return comment;
+    }
+
+    private Comment createDeletedComment() {
+        Comment comment = createActiveComment();
+        comment.delete();
+        comment.clearDomainEvents(); // 이벤트 클리어로 테스트 격리
+        return comment;
+    }
+
+    private Comment createHiddenComment() {
+        Comment comment = createActiveComment();
+        comment.hide();
+        comment.clearDomainEvents(); // 이벤트 클리어로 테스트 격리
+        return comment;
     }
 }

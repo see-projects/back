@@ -1,6 +1,6 @@
 package dooya.see.domain.post;
 
-import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -8,70 +8,92 @@ import org.junit.jupiter.params.provider.ValueSource;
 import static org.assertj.core.api.Assertions.*;
 
 class CommentContentTest {
+    private static final String VALID_TEXT = "좋은 글이네요!";
+    private static final String TEXT_WITH_WHITESPACE = " 좋은 글이네요! ";
+    private static final String SINGLE_CHAR = "a";
+    private static final String MAX_LENGTH_TEXT = "a".repeat(1000);
+    private static final String TOO_LONG_TEXT = "a".repeat(1001);
 
-    @DisplayName("유효한 댓글 내용으로 CommentContent 객체가 정상 생성된다")
-    @Test
-    void createValidCommentContent() {
-        String validText = "좋은 글이네요!";
+    @Nested
+    class 댓글_내용_생성 {
+        @Test
+        void 유효한_내용으로_생성할_수_있다() {
+            CommentContent content = new CommentContent(VALID_TEXT);
 
-        CommentContent content = new CommentContent(validText);
+            assertThat(content.text()).isEqualTo(VALID_TEXT);
+        }
 
-        assertThat(content.text()).isEqualTo(validText);
+        @Test
+        void 한_글자_내용으로_생성할_수_있다() {
+            CommentContent content = new CommentContent(SINGLE_CHAR);
+
+            assertThat(content.text()).isEqualTo(SINGLE_CHAR);
+        }
+
+        @Test
+        void 최대_길이_내용으로_생성할_수_있다() {
+            assertThatCode(() -> new CommentContent(MAX_LENGTH_TEXT))
+                    .doesNotThrowAnyException();
+        }
+
+        @Test
+        void 앞뒤_공백이_자동으로_제거된다() {
+            CommentContent content = new CommentContent(TEXT_WITH_WHITESPACE);
+
+            assertThat(content.text()).isEqualTo(VALID_TEXT);
+        }
     }
 
-    @DisplayName("댓글 내용의 앞뒤 공백이 자동으로 제거된다")
-    @Test
-    void trimWhitespaceFromContent() {
-        String textWithWhitespace = " 좋은 글이네요! ";
+    @Nested
+    class 댓글_내용_생성_실패 {
+        @Test
+        void null_내용으로_생성_시_예외가_발생한다() {
+            assertThatThrownBy(() -> new CommentContent(null))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("댓글 내용은 필수 입니다");
+        }
 
-        CommentContent content = new CommentContent(textWithWhitespace);
+        @ParameterizedTest
+        @ValueSource(strings = {"", "   ", "\t", "\n", " \n\t "})
+        void 공백만_있는_내용으로_생성_시_예외가_발생한다(String emptyText) {
+            assertThatThrownBy(() -> new CommentContent(emptyText))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("댓글 내용은 1자 이상이어야 합니다");
+        }
 
-        assertThat(content.text()).isEqualTo("좋은 글이네요!");
+        @Test
+        void 길이_초과_내용으로_생성_시_예외가_발생한다() {
+            assertThatThrownBy(() -> new CommentContent(TOO_LONG_TEXT))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("댓글 내용은 1000자를 초과할 수 없습니다");
+        }
     }
 
-    @DisplayName("댓글 내용이 null이면 IllegalArgumentException이 발생한다")
-    @Test
-    void rejectNullContent() {
-        assertThatThrownBy(() -> new CommentContent(null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("댓글 내용은 필수 입니다");
-    }
+    @Nested
+    class 값_객체_특성 {
+        @Test
+        void 동일한_내용을_가진_댓글_내용은_같다() {
+            CommentContent content1 = new CommentContent(VALID_TEXT);
+            CommentContent content2 = new CommentContent(VALID_TEXT);
 
-    @DisplayName("댓글 내용이 공백 문자만 있으면 IllegalArgumentException이 발생한다")
-    @ParameterizedTest
-    @ValueSource(strings = {"", "   ", "\t", "\n", " \n\t "})
-    void rejectWhitespaceOnlyContent(String emptyText) {
-        assertThatThrownBy(() -> new CommentContent(emptyText))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("댓글 내용은 1자 이상이어야 합니다");
-    }
+            assertThat(content1).isEqualTo(content2);
+            assertThat(content1.hashCode()).isEqualTo(content2.hashCode());
+        }
 
-    @DisplayName("댓글 내용이 1000자를 초과하면 IllegalArgumentException이 발생한다")
-    @Test
-    void rejectTooLongContent() {
-        String longText = "a".repeat(1001);
+        @Test
+        void 다른_내용을_가진_댓글_내용은_다르다() {
+            CommentContent content1 = new CommentContent(VALID_TEXT);
+            CommentContent content2 = new CommentContent("다른 내용");
 
-        assertThatThrownBy(() -> new CommentContent(longText))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("댓글 내용은 1000자를 초과할 수 없습니다");
-    }
+            assertThat(content1).isNotEqualTo(content2);
+        }
 
-    @DisplayName("정확히 1000자의 댓글 내용은 정상적으로 허용된다")
-    @Test
-    void acceptExactly1000CharactersContent() {
-        String exactLengthText = "a".repeat(1000);
+        @Test
+        void 공백_처리된_내용과_원본이_같다() {
+            CommentContent trimmedContent = new CommentContent(TEXT_WITH_WHITESPACE);
+            CommentContent originalContent = new CommentContent(VALID_TEXT);
 
-        assertThatCode(() -> new CommentContent(exactLengthText))
-                .doesNotThrowAnyException();
-    }
-
-    @DisplayName("1자의 댓글 내용도 정상적으로 허용된다")
-    @Test
-    void acceptSingleCharacterContent() {
-        String singleChar = "a";
-
-        CommentContent content = new CommentContent(singleChar);
-
-        assertThat(content.text()).isEqualTo("a");
+            assertThat(trimmedContent).isEqualTo(originalContent);
+        }
     }
 }

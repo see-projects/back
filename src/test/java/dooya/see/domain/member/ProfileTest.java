@@ -1,56 +1,66 @@
 package dooya.see.domain.member;
 
-import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ProfileTest {
-    @DisplayName("프로필 주소가 null이면 예외가 발생한다")
-    @Test
-    void createProfile_withNullAddress_throwsException() {
-        assertThatThrownBy(() -> new Profile(null))
-            .isInstanceOf(IllegalArgumentException.class);
+    private static final String VALID_ADDRESS = "user123";
+    private static final String EMPTY_ADDRESS = "";
+    private static final String MAX_LENGTH_ADDRESS = "123456789012345";
+    private static final String TOO_LONG_ADDRESS = "longlonglonglonglonglongprofile";
+    private static final String INVALID_UPPERCASE = "A";
+    private static final String INVALID_KOREAN = "한글프로필";
+
+    @Nested
+    class 프로필_생성 {
+        @Test
+        void 올바른_형식의_주소로_생성할_수_있다() {
+            Profile profile = new Profile(VALID_ADDRESS);
+
+            assertThat(profile.address()).isEqualTo(VALID_ADDRESS);
+        }
+
+        @Test
+        void 빈_문자열로_생성할_수_있다() {
+            Profile profile = new Profile(EMPTY_ADDRESS);
+
+            assertThat(profile.address()).isEqualTo(EMPTY_ADDRESS);
+        }
+
+        @Test
+        void 최대_길이_15자로_생성할_수_있다() {
+            Profile profile = new Profile(MAX_LENGTH_ADDRESS);
+
+            assertThat(profile.address()).isEqualTo(MAX_LENGTH_ADDRESS);
+        }
     }
 
-    @DisplayName("올바른 형식의 프로필 주소로 Profile을 생성할 수 있다")
-    @Test
-    void createProfile_withValidAddress_success() {
-        Profile profile = new Profile("user123");
-        
-        assertThat(profile.address()).isEqualTo("user123");
-    }
+    @Nested
+    class 프로필_생성_실페 {
+        @Test
+        void null_주소는_예외가_발생한다() {
+            assertThatThrownBy(() -> new Profile(null))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
 
-    @DisplayName("빈 문자열로 Profile을 생성할 수 있다")
-    @Test
-    void createProfile_withEmptyString_success() {
-        Profile profile = new Profile("");
-        
-        assertThat(profile.address()).isEqualTo("");
-    }
+        @Test
+        void 주소가_15자를_초과하면_예외가_발생한다() {
+            assertThatThrownBy(() -> new Profile(TOO_LONG_ADDRESS))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
 
-    @DisplayName("프로필 주소가 유효하지 않은 형식이면 예외가 발생한다")
-    @Test
-    void createProfile_withInvalidFormat_throwsException() {
-        assertThatThrownBy(() -> new Profile("A"))
-                .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new Profile("한글 프로필"))
-                .isInstanceOf(IllegalArgumentException.class);
-    }
+        @Test
+        void 잘못된_형식의_주소는_예외가_발생한다() {
+            assertThatInvalidAddressThrowsException(INVALID_UPPERCASE);
+            assertThatInvalidAddressThrowsException(INVALID_KOREAN);
+        }
 
-    @DisplayName("프로필 주소가 15자를 초과하면 예외가 발생한다")
-    @Test
-    void createProfile_withTooLongAddress_throwsException() {
-        assertThatThrownBy(() -> new Profile("longlonglonglonglonglongprofile"))
-                .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @DisplayName("프로필 주소가 정확히 15자일 때 생성할 수 있다")
-    @Test
-    void createProfile_withExactly15Characters_success() {
-        Profile profile = new Profile("123456789012345"); // 정확히 15자
-        
-        assertThat(profile.address()).isEqualTo("123456789012345");
+        private void assertThatInvalidAddressThrowsException(String invalidAddress) {
+            assertThatThrownBy(() -> new Profile(invalidAddress))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
     }
 }

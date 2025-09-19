@@ -33,13 +33,10 @@ public class Member extends AbstractEntity {
     public static Member register(MemberRegisterRequest registerRequest, PasswordEncoder passwordEncoder) {
         Member member = new Member();
 
-        member.email = new Email(requireNonNull(registerRequest.email()));
-        member.nickname = requireNonNull(registerRequest.nickname());
-        member.passwordHash = requireNonNull(passwordEncoder.encode(registerRequest.password()));
-
-        member.status = MemberStatus.ACTIVE;
-
-        member.detail = MemberDetail.create();
+        member.initializeBasicInfo(registerRequest);
+        member.encodePassword(registerRequest.password(), passwordEncoder);
+        member.activateMember();
+        member.createMemberDetail();
 
         return member;
     }
@@ -49,16 +46,59 @@ public class Member extends AbstractEntity {
     }
 
     public void changePassword(String password, PasswordEncoder passwordEncoder) {
-        this.passwordHash = requireNonNull(passwordEncoder.encode(password));
+        encodePassword(password, passwordEncoder);
     }
 
     public void deactivate() {
-        this.status = MemberStatus.DEACTIVATED;
-        this.detail.deactivate();
+        changeStatusToDeactivated();
+        deactivateMemberDetail();
     }
 
     public void updateInfo(MemberInfoUpdateRequest updateRequest) {
+        validateCanUpdateInfo();
+        updateBasicInfo(updateRequest);
+        updateMemberDetail(updateRequest);
+    }
+
+    // Registration 관련 메서드
+    private void initializeBasicInfo(MemberRegisterRequest registerRequest) {
+        this.email = new Email(requireNonNull(registerRequest.email()));
+        this.nickname = requireNonNull(registerRequest.nickname());
+    }
+
+    private void encodePassword(String password, PasswordEncoder passwordEncoder) {
+        this.passwordHash = requireNonNull(passwordEncoder.encode(password));
+    }
+
+    // Update 관련 메서드
+    private void validateCanUpdateInfo() {
+        if (this.status != MemberStatus.ACTIVE) {
+            throw new IllegalArgumentException("활성화된 회원만 정보를 수정할 수 있습니다");
+        }
+    }
+
+    private void activateMember() {
+        this.status = MemberStatus.ACTIVE;
+    }
+
+    private void createMemberDetail() {
+        this.detail = MemberDetail.create();
+    }
+
+    private void updateBasicInfo(MemberInfoUpdateRequest updateRequest) {
         this.nickname = requireNonNull(updateRequest.nickname());
+    }
+
+    private void updateMemberDetail(MemberInfoUpdateRequest updateRequest) {
         this.detail.updateInfo(updateRequest);
+    }
+
+    // Status 관련 메서드
+    private void changeStatusToDeactivated() {
+        this.status = MemberStatus.DEACTIVATED;
+    }
+
+    private void deactivateMemberDetail() {
+        this.detail.deactivate();
     }
 }

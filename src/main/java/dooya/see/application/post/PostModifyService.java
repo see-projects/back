@@ -22,111 +22,122 @@ public class PostModifyService implements PostManager {
 
     @Override
     public Post create(PostCreateRequest request, Long memberId) {
-        Post post = Post.create(request, memberId);
-        Post savedPost = postRepository.save(post);
+        Post post = createPost(request, memberId);
+        Post savedPost = savePost(post);
 
-        savedPost.publishCreationEventIfNeeded();
         publishDomainEvents(savedPost);
 
         return savedPost;
     }
 
+    @Override
+    public Post update(PostUpdateRequest request, Long postId, Long memberId) {
+        return executePostOperation(postId, memberId, "수정",
+                post -> post.update(request));
+    }
+
+    @Override
+    public Post publish(Long postId, Long memberId) {
+        return executePostOperation(postId, memberId, "발행",
+                Post::publish);
+    }
+
+    @Override
+    public Post hide(Long postId, Long memberId) {
+        return executePostOperation(postId, memberId, "숨김 처리",
+                Post::hide);
+    }
+
+    @Override
+    public Post delete(Long postId, Long memberId) {
+        return executePostOperation(postId, memberId, "삭제",
+                Post::delete);
+    }
+
+    @Override
+    public Post likePost(Long postId, Long memberId) {
+        return executeLikeOperation(postId, memberId, this::processLike);
+    }
+
+    @Override
+    public Post unlikePost(Long postId, Long memberId) {
+        return executeLikeOperation(postId, memberId, this::processUnlike);
+    }
+
+    // Post Creation 관련 메서드
+    private static Post createPost(PostCreateRequest request, Long memberId) {
+        return Post.create(request, memberId);
+    }
+
+    private Post savePost(Post post) {
+        return postRepository.save(post);
+    }
+
+    // Post Operation 관련 메서드 (소유권 검증 필요)
+    private Post executePostOperation(Long postId, Long memberId, String action, PostOperation operation) {
+        Post post = findAndValidatePost(postId, memberId, action);
+
+        operation.execute(post);
+        Post savedPost = savePost(post);
+
+        publishDomainEvents(savedPost);
+
+        return savedPost;
+    }
+
+    // Like Operation 관련 메서드 (상호작용 권한 검증 필요)
+    private Post executeLikeOperation(Long postId, Long memberId, LikeOperation operation) {
+        Post post = findPost(postId);
+
+        operation.execute(post, postId, memberId);
+
+        publishDomainEvents(post);
+        return post;
+    }
+
+    private void processLike(Post post, Long postId, Long memberId) {
+        post.like(memberId);
+        ensureLikeExists(postId, memberId);
+    }
+
+    private void processUnlike(Post post, Long postId, Long memberId) {
+        post.unlike(memberId);
+        ensureLikeRemoved(postId, memberId);
+    }
+
+    // Post 조회 관련 메서드
+    private Post findPost(Long postId) {
+        return postFinder.find(postId);
+    }
+
+    private Post findAndValidatePost(Long postId, Long memberId, String action) {
+        Post post = findPost(postId);
+        validatePostOwnership(post, memberId, action);
+        return post;
+    }
+
+    // 검증 관련 메서드
+    private void validatePostOwnership(Post post, Long memberId, String action) {
+        if (!post.isWrittenBy(memberId))
+            throw new UnauthorizedPostAccessException("본인이 작성한 게시글만 " + action + "할 수 있습니다.");
+    }
+
+    // 이벤트 발행 관련 메서드
     private void publishDomainEvents(Post post) {
         post.getDomainEvents().forEach(eventPublisher::publishEvent);
         post.clearDomainEvents();
     }
 
-    @Override
-    public Post update(PostUpdateRequest request, Long postId, Long memberId) {
-        Post post = postFinder.find(postId);
-
-        validatePostOwnership(post, memberId, "수정");
-
-        post.update(request);
-        
-        Post updatedPost = postRepository.save(post);
-
-        publishDomainEvents(updatedPost);
-
-        return updatedPost;
+    // PostLike 관리 관련 메서드
+    private void ensureLikeExists(Long postId, Long memberId) {
+        if (!isAlreadyLiked(postId, memberId)) {
+            createLike(postId, memberId);
+        }
     }
 
-    @Override
-    public Post publish(Long postId, Long memberId) {
-        Post post = postFinder.find(postId);
-
-        validatePostOwnership(post, memberId, "발행");
-
-        post.publish();
-        
-        Post publishedPost = postRepository.save(post);
-
-        publishDomainEvents(publishedPost);
-
-        return publishedPost;
-    }
-
-    @Override
-    public Post hide(Long postId, Long memberId) {
-        Post post = postFinder.find(postId);
-
-        validatePostOwnership(post, memberId, "숨김 처리");
-
-        post.hide();
-        
-        Post hiddenPost = postRepository.save(post);
-
-        publishDomainEvents(hiddenPost);
-
-        return hiddenPost;
-    }
-
-    @Override
-    public Post delete(Long postId, Long memberId) {
-        Post post = postFinder.find(postId);
-
-        validatePostOwnership(post, memberId, "삭제");
-
-        post.delete();
-        
-        Post deletedPost = postRepository.save(post);
-
-        publishDomainEvents(deletedPost);
-
-        return deletedPost;
-    }
-
-    @Override
-    public Post likePost(Long postId, Long memberId) {
-        Post post = postFinder.find(postId);
-
+    private void ensureLikeRemoved(Long postId, Long memberId) {
         if (isAlreadyLiked(postId, memberId)) {
-            return post;
-        }
-
-        createAndSaveLike(postId, memberId);
-        publishLikeEvent(post, memberId);
-        
-        return post;
-    }
-
-    @Override
-    public Post unlikePost(Long postId, Long memberId) {
-        Post post = postFinder.find(postId);
-
-        if (isNotLiked(postId, memberId)) {
-            return post;
-        }
-
-        deleteLike(postId, memberId);
-        publishUnlikeEvent(post, memberId);
-
-        return post;
-    }
-
-    private void validatePostOwnership(Post post, Long memberId, String action) {
-        if (!post.isWrittenBy(memberId)) {
-            throw new UnauthorizedPostAccessException("본인이 작성한 게시글만 " + action + "할 수 있습니다.");
+            removeLike(postId, memberId);
         }
     }
 
@@ -134,26 +145,23 @@ public class PostModifyService implements PostManager {
         return postLikeRepository.existsByPostIdAndMemberId(postId, memberId);
     }
 
-    private boolean isNotLiked(Long postId, Long memberId) {
-        return !postLikeRepository.existsByPostIdAndMemberId(postId, memberId);
-    }
-
-    private void createAndSaveLike(Long postId, Long memberId) {
+    private void createLike(Long postId, Long memberId) {
         PostLike postLike = PostLike.create(postId, memberId);
         postLikeRepository.save(postLike);
     }
 
-    private void deleteLike(Long postId, Long memberId) {
+    private void removeLike(Long postId, Long memberId) {
         postLikeRepository.deleteByPostIdAndMemberId(postId, memberId);
     }
 
-    private void publishLikeEvent(Post post, Long memberId) {
-        post.publishLikeEvent(memberId);
-        publishDomainEvents(post);
+    // Functional Interface 정의
+    @FunctionalInterface
+    private interface PostOperation {
+        void execute(Post post);
     }
 
-    private void publishUnlikeEvent(Post post, Long memberId) {
-        post.publishUnlikeEvent(memberId);
-        publishDomainEvents(post);
+    @FunctionalInterface
+    private interface LikeOperation {
+        void execute(Post post, Long postId, Long memberId);
     }
 }

@@ -4,6 +4,9 @@ import dooya.see.domain.post.Post;
 import dooya.see.domain.post.PostCreateRequest;
 import dooya.see.domain.post.PostUpdateRequest;
 
+/**
+ * 게시물 관리 Primary Port
+ */
 public interface PostManager {
     Post create(PostCreateRequest request, Long memberId);
 

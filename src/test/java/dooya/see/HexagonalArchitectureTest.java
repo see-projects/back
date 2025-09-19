@@ -3,10 +3,8 @@ package dooya.see;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
-import com.tngtech.archunit.lang.syntax.ArchRuleDefinition;
 import com.tngtech.archunit.library.Architectures;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -15,6 +13,23 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
 public class HexagonalArchitectureTest {
+    private static final String DOMAIN_PACKAGE = "..domain..";
+    private static final String APPLICATION_PACKAGE = "..application..";
+    private static final String ADAPTER_PACKAGE = "..adapter..";
+    private static final String PROVIDED_PACKAGE = "..application..provided..";
+    private static final String REQUIRED_PACKAGE = "..application..required..";
+
+    private static final String SPRING_COMPONENT = "org.springframework.stereotype.Component";
+    private static final String SPRING_SERVICE = "org.springframework.stereotype.Service";
+    private static final String SPRING_REPOSITORY = "org.springframework.stereotype.Repository";
+    private static final String SPRING_CONFIGURATION = "org.springframework.context.annotation.Configuration";
+    private static final String SPRING_REST_CONTROLLER = "org.springframework.web.bind.annotation.RestController";
+    private static final String SPRING_TRANSACTIONAL = "org.springframework.transaction.annotation.Transactional";
+    private static final String JAKARTA_TRANSACTIONAL = "jakarta.transaction.Transactional";
+
+    private static final String SPRING_WEB_PACKAGE = "org.springframework.web..";
+    private static final String JAKARTA_SERVLET_PACKAGE = "jakarta.servlet..";
+
     private JavaClasses classes;
 
     @BeforeEach
@@ -24,126 +39,144 @@ public class HexagonalArchitectureTest {
                 .importPackages("dooya.see");
     }
 
-    @DisplayName("계층형 아키텍처 검증")
     @Nested
-    class LayeredArchitectureTest {
-        @DisplayName("헥사고날 아키텍처 계층 의존성 규칙을 준수한다")
+    class 계층형_아키텍처_검증 {
         @Test
-        void a() {
+        void 헥사고날_아키텍처_계층_의존성_규칙을_준수한다() {
             Architectures.layeredArchitecture()
                     .consideringOnlyDependenciesInLayers()
-                    .layer("Domain").definedBy("..domain..")
-                    .layer("Application").definedBy("..application..")
-                    .layer("Adapter").definedBy("..adapter..")
-
+                    .layer("Domain").definedBy(DOMAIN_PACKAGE)
+                    .layer("Application").definedBy(APPLICATION_PACKAGE)
+                    .layer("Adapter").definedBy(ADAPTER_PACKAGE)
                     .whereLayer("Domain").mayOnlyBeAccessedByLayers("Application", "Adapter")
                     .whereLayer("Application").mayOnlyBeAccessedByLayers("Adapter")
                     .whereLayer("Adapter").mayNotBeAccessedByAnyLayer()
-
                     .check(classes);
         }
 
-        @DisplayName("도메인 계층은 외부 의존성이 없어야 한다")
         @Test
-        void b() {
+        void 도메인_계층은_외부_의존성이_없어야_한다() {
+            assertThatDomainHasNoExternalDependencies();
+        }
+
+        @Test
+        void 애플리케이션_계층은_어댑터에_의존하면_안된다() {
+            assertThatApplicationDoesNotDependOnAdapter();
+        }
+
+        private void assertThatDomainHasNoExternalDependencies() {
             noClasses()
-                    .that().resideInAPackage("..domain..")
+                    .that().resideInAPackage(DOMAIN_PACKAGE)
                     .should().dependOnClassesThat()
-                    .resideInAnyPackage("..application..", "..adapter..")
+                    .resideInAnyPackage(APPLICATION_PACKAGE, ADAPTER_PACKAGE)
                     .check(classes);
         }
 
-        @DisplayName("애플리케이션 계층은 어댑터에 의존하면 안된다")
-        @Test
-        void c() {
+        private void assertThatApplicationDoesNotDependOnAdapter() {
             noClasses()
-                    .that().resideInAPackage("..application..")
+                    .that().resideInAPackage(APPLICATION_PACKAGE)
                     .should().dependOnClassesThat()
-                    .resideInAPackage("..adapter..")
+                    .resideInAPackage(ADAPTER_PACKAGE)
                     .check(classes);
         }
     }
 
-    @DisplayName("도메인 비즈니스 로직")
     @Nested
-    class DomainBusinessLogicTest {
-        @DisplayName("도메인은 Spring 컨테이너 애노테이션을 사용하면 안된다")
+    class 도메인_순수성_검증 {
         @Test
-        void d() {
+        void 도메인은_Spring_컨테이너_애노테이션을_사용하면_안된다() {
+            assertThatDomainDoesNotUseSpringAnnotations();
+        }
+
+        @Test
+        void 도메인은_웹_관련_의존성을_사용하면_안된다() {
+            assertThatDomainDoesNotDependOnWeb();
+        }
+
+        @Test
+        void 도메인은_JPA_애노테이션_사용이_허용된다() {
+            // JPA 애노테이션이 도메인 로직에 미치는 영향을 최소화하면서
+            // 매핑을 위한 애노테이션 사용은 허용됨을 문서화
+            assertThatJpaUsageIsDocumented();
+        }
+
+        private void assertThatDomainDoesNotUseSpringAnnotations() {
             noClasses()
-                    .that().resideInAPackage("..domain..")
-                    .should().beAnnotatedWith("org.springframework.stereotype.Component")
-                    .orShould().beAnnotatedWith("org.springframework.stereotype.Service")
-                    .orShould().beAnnotatedWith("org.springframework.stereotype.Repository")
-                    .orShould().beAnnotatedWith("org.springframework.context.annotation.Configuration")
+                    .that().resideInAPackage(DOMAIN_PACKAGE)
+                    .should().beAnnotatedWith(SPRING_COMPONENT)
+                    .orShould().beAnnotatedWith(SPRING_SERVICE)
+                    .orShould().beAnnotatedWith(SPRING_REPOSITORY)
+                    .orShould().beAnnotatedWith(SPRING_CONFIGURATION)
                     .because("도메인은 Spring 컨테이너에 의존하지 않고 순수한 비즈니스 로직에 집중해야 합니다")
                     .check(classes);
         }
 
-        @DisplayName("도메인은 웹 관련 애노테이션을 사용하면 안된다")
-        @Test
-        void e() {
+        private void assertThatDomainDoesNotDependOnWeb() {
             noClasses()
-                    .that().resideInAPackage("..domain..")
+                    .that().resideInAPackage(DOMAIN_PACKAGE)
                     .should().dependOnClassesThat()
-                    .resideInAnyPackage("org.springframework.web..", "jakarta.servlet..")
+                    .resideInAnyPackage(SPRING_WEB_PACKAGE, JAKARTA_SERVLET_PACKAGE)
                     .because("도메인은 웹 계층과 독립적이어야 합니다")
                     .check(classes);
         }
 
-        @DisplayName("도메인은 JPA/Hibernate를 사용할 수 있다")
-        @Test
-        void f() {
-            // JPA 애노테이션이 도메인 로직에 미치는 영향을 최소화하면서, 매핑을 위한 애노테이션 사용은 허용
-            // 이 테스트는 문서화 목적으로 JPA 사용이 허용됨을 명시
+        private void assertThatJpaUsageIsDocumented() {
+            // JPA 애노테이션 사용 허용을 문서화
+            // 실제 검증은 도메인 모델의 JPA 매핑이 올바른지 확인하는 별도 테스트에서 수행
         }
     }
 
     @Nested
-    @DisplayName("포트와 어댑터 패턴")
-    class PortAndAdapterTest {
-        @DisplayName("Primary Port는 application.provided 패키지에 위치한다")
+    class 포트와_어댑터_패턴 {
         @Test
-        void a() {
+        void Primary_Port는_provided_패키지에_위치하고_public이어야_한다() {
+            assertThatPrimaryPortsAreCorrectlyDefined();
+        }
+
+        @Test
+        void Secondary_Port는_required_패키지에_위치하고_public이어야_한다() {
+            assertThatSecondaryPortsAreCorrectlyDefined();
+        }
+
+        @Test
+        void 어댑터_패턴_구현_규칙이_문서화된다() {
+            assertThatAdapterPatternIsDocumented();
+        }
+
+        private void assertThatPrimaryPortsAreCorrectlyDefined() {
             classes()
                     .that().areInterfaces()
-                    .and().resideInAPackage("..application..provided..")
+                    .and().resideInAPackage(PROVIDED_PACKAGE)
                     .should().bePublic()
                     .because("Primary Port는 외부에서 애플리케이션을 호출하는 인터페이스입니다")
                     .check(classes);
         }
 
-        @DisplayName("Secondary Port는 application.required 패키지에 위치한다")
-        @Test
-        void b() {
+        private void assertThatSecondaryPortsAreCorrectlyDefined() {
             classes()
                     .that().areInterfaces()
-                    .and().resideInAPackage("..application..required..")
+                    .and().resideInAPackage(REQUIRED_PACKAGE)
                     .should().bePublic()
                     .because("Secondary Port는 애플리케이션이 외부를 호출하는 인터페이스입니다")
                     .check(classes);
         }
 
-        @DisplayName("어댑터는 포트 인터페이스를 구현해야 한다")
-        @Test
-        void c() {
-            // 이 테스트는 실제로는 복잡한 검증이 필요하므로
-            // 문서화 목적으로 어댑터가 포트 인터페이스를 구현해야 함을 명시
-            // 실제 구현체들은 개별적으로 확인하는 것이 더 실용적임
-
+        private void assertThatAdapterPatternIsDocumented() {
+            // 어댑터가 포트 인터페이스를 구현해야 함을 문서화
             // 예시: 웹 어댑터는 Primary Port를 주입받아 사용
             // 예시: 리포지토리 어댑터는 Secondary Port를 구현
-
-            // 향후 구체적인 어댑터 구현 시 개별 테스트 추가 예정
+            // 실제 구현체들은 개별적으로 확인하는 것이 더 실용적임
         }
     }
 
-    @DisplayName("애그리거트와 경계")
     @Nested
-    class AggregateAndBoundaryTest {
-        @DisplayName("애그리거트 내부 패키지는 순환 의존성이 없어야 한다")
+    class 애그리거트_경계_검증 {
         @Test
-        void a() {
+        void 애그리거트_간에는_순환_의존성이_없어야_한다() {
+            assertThatAggregatesHaveNoCycles();
+        }
+
+        private void assertThatAggregatesHaveNoCycles() {
             slices()
                     .matching("..domain.(*)..")
                     .should().beFreeOfCycles()
@@ -152,56 +185,66 @@ public class HexagonalArchitectureTest {
         }
     }
 
-    @DisplayName("명명 규칙")
     @Nested
-    class NamingConventionTest {
-        @DisplayName("리포지토리 인터페이스는 Repository로 끝나야 한다")
+    class 명명_규칙_검증 {
         @Test
-        void a() {
+        void 리포지토리_인터페이스는_적절한_접미사를_가져야_한다() {
+            assertThatRepositoryInterfacesFollowNamingConvention();
+        }
+
+        @Test
+        void 애플리케이션_서비스는_Service로_끝나야_한다() {
+            assertThatApplicationServicesFollowNamingConvention();
+        }
+
+        private void assertThatRepositoryInterfacesFollowNamingConvention() {
             classes()
                     .that().areInterfaces()
-                    .and().resideInAPackage("..application..required..")
+                    .and().resideInAPackage(REQUIRED_PACKAGE)
                     .should().haveSimpleNameEndingWith("Repository")
                     .orShould().haveSimpleNameEndingWith("Manager")
                     .because("리포지토리는 명확한 명명 규칙을 따라야 합니다")
                     .check(classes);
         }
 
-        @DisplayName("애플리케이션 서비스는 Service로 끝나야 한다")
-        @Test
-        void b() {
+        private void assertThatApplicationServicesFollowNamingConvention() {
             classes()
-                    .that().resideInAPackage("..application..")
-                    .and().areAnnotatedWith("org.springframework.stereotype.Service")
+                    .that().resideInAPackage(APPLICATION_PACKAGE)
+                    .and().areAnnotatedWith(SPRING_SERVICE)
                     .should().haveSimpleNameEndingWith("Service")
                     .because("애플리케이션 서비스는 명확한 명명 규칙을 따라야 합니다")
                     .check(classes);
         }
     }
 
-    @DisplayName("Spring 애노테이션 사용 규칙")
     @Nested
-    class SpringAnnotationTest {
-        @DisplayName("@Component 계열 애노테이션은 어댑터와 애플리케이션 서비스에서 사용된다")
+    class Spring_애노테이션_사용_규칙 {
         @Test
-        void a() {
+        void 도메인은_Spring_애노테이션을_사용하면_안된다() {
+            assertThatDomainDoesNotUseSpringContainerAnnotations();
+        }
+
+        @Test
+        void Transactional은_애플리케이션_계층에서만_사용한다() {
+            assertThatTransactionalIsOnlyUsedInApplicationLayer();
+        }
+
+        private void assertThatDomainDoesNotUseSpringContainerAnnotations() {
             noClasses()
-                    .that().resideInAPackage("..domain..")
-                    .should().beAnnotatedWith("org.springframework.stereotype.Component")
-                    .orShould().beAnnotatedWith("org.springframework.stereotype.Service")
-                    .orShould().beAnnotatedWith("org.springframework.stereotype.Repository")
-                    .orShould().beAnnotatedWith("org.springframework.web.bind.annotation.RestController")
+                    .that().resideInAPackage(DOMAIN_PACKAGE)
+                    .should().beAnnotatedWith(SPRING_COMPONENT)
+                    .orShould().beAnnotatedWith(SPRING_SERVICE)
+                    .orShould().beAnnotatedWith(SPRING_REPOSITORY)
+                    .orShould().beAnnotatedWith(SPRING_REST_CONTROLLER)
                     .because("도메인 계층은 Spring 애노테이션을 사용하지 않아야 합니다")
                     .check(classes);
         }
-        
-        @DisplayName("@Transactional은 애플리케이션 서비스에서만 사용한다")
-        @Test
-        void b() {
+
+        private void assertThatTransactionalIsOnlyUsedInApplicationLayer() {
             classes()
-                    .that().areAnnotatedWith("org.springframework.transaction.annotation.Transactional")
-                    .or().areAnnotatedWith("jakarta.transaction.Transactional")
-                    .should().resideInAPackage("..application..")
+                    .that().areAnnotatedWith(SPRING_TRANSACTIONAL)
+                    .or().areAnnotatedWith(JAKARTA_TRANSACTIONAL)
+                    .should().resideInAPackage(APPLICATION_PACKAGE)
                     .because("트랜잭션 경계는 애플리케이션 서비스에서 관리해야 합니다")
                     .check(classes);
         }

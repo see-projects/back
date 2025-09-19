@@ -2,9 +2,8 @@ package dooya.see.adapter.security;
 
 import dooya.see.application.member.provided.MemberRegister;
 import dooya.see.application.member.required.TokenManager;
-import dooya.see.domain.member.exception.AuthenticateException;
 import dooya.see.domain.member.Member;
-import org.junit.jupiter.api.DisplayName;
+import dooya.see.domain.member.exception.AuthenticateException;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -14,9 +13,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 record JwtTokenManagerTest(MemberRegister memberRegister, TokenManager tokenManager) {
-    @DisplayName("회원 정보로 JWT 토큰 생성 후 파싱하면 동일한 회원 정보를 얻을 수 있다")
     @Test
-    void generateAndParseToken() {
+    void 회원_정보로_JWT_토큰_생성_후_파싱하면_동일한_회원_정보를_얻을_수_있다() {
         Member member = memberRegister.register(createMemberRegisterRequest());
 
         String token = tokenManager.generateToken(member);
@@ -25,9 +23,8 @@ record JwtTokenManagerTest(MemberRegister memberRegister, TokenManager tokenMana
         assertThat(email).isEqualTo(member.getEmail().address());
     }
 
-    @DisplayName("유효하지 않은 JWT 토큰 파싱 시 인증 예외가 발생한다")
     @Test
-    void parseInvalidToken() {
+    void 유효하지_않은_JWT_토큰_파싱_시_인증_예외가_발생한다() {
         String invalidToken = "invalid.jwt.token";
 
         assertThatThrownBy(() -> tokenManager.extractEmailFromToken(invalidToken))

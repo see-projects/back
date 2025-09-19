@@ -31,34 +31,41 @@ public class MemberApi {
         return MemberAuthResponse.from(result);
     }
 
-    @GetMapping("/api/members/my")
+    @GetMapping("/api/members/me")
     public MemberProfileResponse getCurrentMember(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token) {
-        String extractedToken = extractTokenFromHeader(token);
-        Member member = memberAuth.getCurrentMember(extractedToken);
+        Member member = getCurrentMemberFromToken(token);
 
         return MemberProfileResponse.from(member);
     }
 
     @PatchMapping("/api/members/my/deactivate")
     public void deactivate(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token) {
-        String extractedToken = extractTokenFromHeader(token);
-        Member member = memberAuth.getCurrentMember(extractedToken);
+        Member member = getCurrentMemberFromToken(token);
 
         memberRegister.deactivate(member.getId());
     }
 
-    @PutMapping("/api/members/my/updateInfo")
-    public MemberProfileResponse updateInfo(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token,
-                                            @RequestBody @Valid MemberInfoUpdateRequest request) {
-        String extractedToken = extractTokenFromHeader(token);
-        Member currentMember = memberAuth.getCurrentMember(extractedToken);
-
-        Member updatedMember = memberRegister.updateInfo(currentMember.getId(), request);
+    @PutMapping("/api/members/me")
+    public MemberProfileResponse updateProfile(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token,
+                                               @RequestBody @Valid MemberInfoUpdateRequest request) {
+        Long currentMemberId = getCurrentMemberIdFromToken(token);
+        Member updatedMember = memberRegister.updateInfo(currentMemberId, request);
 
         return MemberProfileResponse.from(updatedMember);
     }
 
+    // Authentication 관련 메서드
     private String extractTokenFromHeader(String token) {
         return AuthTokenExtractor.extractToken(token);
+    }
+
+    private Member getCurrentMemberFromToken(String token) {
+        String extractedToken = extractTokenFromHeader(token);
+        return memberAuth.getCurrentMember(extractedToken);
+    }
+
+    private Long getCurrentMemberIdFromToken(String token) {
+        Member currentMember = getCurrentMemberFromToken(token);
+        return currentMember.getId();
     }
 }
