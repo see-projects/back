@@ -238,8 +238,8 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
     @Nested
     class 게시글_좋아요 {
         @Test
-        void 게시글_좋아요가_성공한다() {
-            Post post = createTestPost();
+        void 공개된_게시글_좋아요가_성공한다() {
+            Post post = createAndPublishPost();
 
             Post likedPost = postManager.likePost(post.getId(), ANOTHER_MEMBER_ID);
 
@@ -247,8 +247,26 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
         }
 
         @Test
-        void 동일_회원의_중복_좋아요는_멱등성이_보장된다() {
+        void 작성자는_비공개_게시글에도_좋아요할_수_있다() {
             Post post = createTestPost();
+
+            Post likedPost = postManager.likePost(post.getId(), AUTHOR_ID);
+
+            assertThatPostLiked(likedPost, AUTHOR_ID);
+        }
+
+        @Test
+        void 타인이_비공개_게시글_좋아요_시_예외가_발생한다() {
+            Post post = createTestPost();
+
+            assertThatThrownBy(() -> postManager.likePost(post.getId(), ANOTHER_MEMBER_ID))
+                    .isInstanceOf(UnauthorizedPostAccessException.class)
+                    .hasMessageContaining("공개된 게시글만 상호작용할 수 있습니다");
+        }
+
+        @Test
+        void 동일_회원의_중복_좋아요는_멱등성이_보장된다() {
+            Post post = createAndPublishPost();
             postManager.likePost(post.getId(), ANOTHER_MEMBER_ID);
 
             postManager.likePost(post.getId(), ANOTHER_MEMBER_ID);
@@ -258,7 +276,7 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
 
         @Test
         void 여러_회원의_좋아요가_누적된다() {
-            Post post = createTestPost();
+            Post post = createAndPublishPost();
             Long member1 = 10L;
             Long member2 = 20L;
             Long member3 = 30L;
