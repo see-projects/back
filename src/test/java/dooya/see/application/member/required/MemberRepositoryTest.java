@@ -48,7 +48,10 @@ record MemberRepositoryTest(MemberRepository memberRepository, EntityManager ent
             saveAndClearContext(createMemberForTest());
             Member duplicateMember = createMemberForTest();
 
-            assertThatThrownBy(() -> memberRepository.save(duplicateMember))
+            assertThatThrownBy(() -> {
+                memberRepository.save(duplicateMember);
+                entityManager.flush();
+            })
                     .isInstanceOf(DataIntegrityViolationException.class);
         }
 
