@@ -255,10 +255,12 @@ class CommentTest {
     }
 
     // 헬퍼 메서드들
-
     private Comment createActiveComment() {
         CommentCreateRequest request = new CommentCreateRequest(VALID_CONTENT);
-        return Comment.create(request, POST_ID, MEMBER_ID);
+        Comment comment = Comment.create(request, POST_ID, MEMBER_ID);
+        comment.clearDomainEvents();
+
+        return comment;
     }
 
     private Comment createDeletedComment() {
