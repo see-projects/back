@@ -104,9 +104,13 @@ public class Post extends AbstractAggregateRoot {
 
     // Create 관련 메서드
     private void initializeBasicFields(PostCreateRequest request, Long memberId) {
+        requireNonNull(request, "PostCreateRequest는 필수입니다");
+        requireNonNull(request.title(), "제목은 필수입니다");
+        requireNonNull(request.body(), "본문은 필수입니다");
+
         this.content = new PostContent(request.title(), request.body());
-        this.memberId = requireNonNull(memberId);
-        this.category = requireNonNull(request.category());
+        this.memberId = requireNonNull(memberId, "작성자 ID는 필수입니다");
+        this.category = requireNonNull(request.category(), "카테고리는 필수입니다");
     }
 
     private void determineInitialStatus(PostCreateRequest request) {
@@ -118,12 +122,19 @@ public class Post extends AbstractAggregateRoot {
         this.creationContext = new PostCreationContext(request.publishImmediately());
     }
 
-    // Creation Event 관련 메서드
+    // Creation Event 관련 메서드 - 중복 방지 로직 강화
     private void publishCreationEvent() {
         if (creationContext != null && getId() != null) {
-            addDomainEvent(new PostCreated(
-                    getId(), memberId, category, creationContext.publishImmediately()
-            ));
+            // 이미 발행된 PostCreated 이벤트가 있는지 확인
+            boolean alreadyPublished = getDomainEvents().stream()
+                    .anyMatch(event -> event instanceof PostCreated created &&
+                            created.postId().equals(getId()));
+
+            if (!alreadyPublished) {
+                addDomainEvent(new PostCreated(
+                        getId(), memberId, category, creationContext.publishImmediately()
+                ));
+            }
             creationContext = null;
         }
     }
@@ -165,10 +176,10 @@ public class Post extends AbstractAggregateRoot {
 
     private void publishUpdateEvent(ContentUpdateResult contentResult, boolean categoryChanged) {
         this.addDomainEvent(new PostUpdated(
-            this.getId(),
-            this.memberId,
-            contentResult.titleChanged(),
-            contentResult.bodyChanged(),
+                this.getId(),
+                this.memberId,
+                contentResult.titleChanged(),
+                contentResult.bodyChanged(),
                 categoryChanged
         ));
     }
