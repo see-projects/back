@@ -2,6 +2,7 @@ package dooya.see.domain.post;
 
 import dooya.see.domain.post.event.*;
 import dooya.see.domain.post.exception.InvalidPostStatusTransitionException;
+import dooya.see.domain.post.exception.UnauthorizedPostAccessException;
 import dooya.see.domain.shared.AbstractAggregateRoot;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -78,12 +79,14 @@ public class Post extends AbstractAggregateRoot {
 
     public void like(Long memberId) {
         requireNonNull(memberId, "좋아요를 누를 회원 ID는 필수입니다");
+        validateCanInteract(memberId);
 
         publishLikeEvent(memberId);
     }
 
     public void unlike(Long memberId) {
         requireNonNull(memberId, "좋아요를 취소할 회원 ID는 필수입니다");
+        validateCanInteract(memberId);
 
         publishUnlikeEvent(memberId);
     }
@@ -184,6 +187,11 @@ public class Post extends AbstractAggregateRoot {
         if (this.status == prohibitedStatus) {
             throw new InvalidPostStatusTransitionException(this.status, operation);
         }
+    }
+
+    private void validateCanInteract(Long memberId) {
+        if (!isWrittenBy(memberId) && status != PostStatus.PUBLISHED)
+            throw new UnauthorizedPostAccessException("공개된 게시글만 상호작용할 수 있습니다");
     }
 
     private PostStatus changeStatusToHidden() {
