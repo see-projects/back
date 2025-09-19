@@ -7,6 +7,9 @@ import dooya.see.domain.post.PostStatus;
 
 import java.util.List;
 
+/**
+ * 게시물 조회 Primary Port
+ */
 public interface PostFinder {
     Post find(Long postId);
 

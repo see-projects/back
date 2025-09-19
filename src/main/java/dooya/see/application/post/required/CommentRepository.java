@@ -6,6 +6,9 @@ import org.springframework.data.repository.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * 댓글 저장소 Secondary Port
+ */
 public interface CommentRepository extends Repository<Comment, Long> {
     Comment save(Comment comment);
 

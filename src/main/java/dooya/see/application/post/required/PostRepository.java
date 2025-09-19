@@ -11,6 +11,9 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * 게시물 저장소 Secondary Port
+ */
 public interface PostRepository extends Repository<Post, Long> {
     Post save(Post post);
 

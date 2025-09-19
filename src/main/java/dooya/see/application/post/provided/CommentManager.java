@@ -4,6 +4,9 @@ import dooya.see.domain.post.Comment;
 import dooya.see.domain.post.CommentCreateRequest;
 import dooya.see.domain.post.CommentUpdateRequest;
 
+/**
+ * 댓글 관리 Primary Port
+ */
 public interface CommentManager {
     Comment create(CommentCreateRequest request, Long postId, Long memberId);
 
