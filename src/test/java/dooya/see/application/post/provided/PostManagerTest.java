@@ -317,7 +317,7 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
     class 게시글_좋아요_취소 {
         @Test
         void 게시글_좋아요_취소가_성공한다() {
-            Post post = createTestPost();
+            Post post = createAndPublishPost();
             postManager.likePost(post.getId(), ANOTHER_MEMBER_ID);
 
             Post unlikedPost = postManager.unlikePost(post.getId(), ANOTHER_MEMBER_ID);
@@ -326,23 +326,31 @@ record PostManagerTest(PostManager postManager, EntityManager entityManager, Pos
         }
 
         @Test
-        void 존재하지_않는_좋아요_취소는_멱등성이_보장된다() {
+        void 작성자는_비공개_게시글_좋아요_취소가_가능하다() {
             Post post = createTestPost();
+            postManager.likePost(post.getId(), AUTHOR_ID);
+
+            Post unlikedPost = postManager.unlikePost(post.getId(), AUTHOR_ID);
+
+            assertThatPostUnliked(unlikedPost, AUTHOR_ID);
+        }
+
+        @Test
+        void 타인이_비공개_게시글_좋아요_취소_시_예외가_발생한다() {
+            Post post = createTestPost();
+
+            assertThatThrownBy(() -> postManager.unlikePost(post.getId(), ANOTHER_MEMBER_ID))
+                    .isInstanceOf(UnauthorizedPostAccessException.class)
+                    .hasMessageContaining("공개된 게시글만 상호작용할 수 있습니다");
+        }
+
+        @Test
+        void 존재하지_않는_좋아요_취소는_멱등성이_보장된다() {
+            Post post = createAndPublishPost();
 
             postManager.unlikePost(post.getId(), ANOTHER_MEMBER_ID);
 
             assertThatLikeNotExists(post.getId(), ANOTHER_MEMBER_ID);
-        }
-
-        @Test
-        void 좋아요_취소_후_재좋아요가_가능하다() {
-            Post post = createTestPost();
-            postManager.likePost(post.getId(), ANOTHER_MEMBER_ID);
-            postManager.unlikePost(post.getId(), ANOTHER_MEMBER_ID);
-
-            postManager.likePost(post.getId(), ANOTHER_MEMBER_ID);
-
-            assertThatPostLiked(post, ANOTHER_MEMBER_ID);
         }
 
         @Test
