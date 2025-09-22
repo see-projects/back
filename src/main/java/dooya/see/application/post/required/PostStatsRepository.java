@@ -12,4 +12,6 @@ public interface PostStatsRepository extends Repository<PostStats, Long> {
     PostStats save(PostStats postStats);
 
     Optional<PostStats> findByPostId(Long postId);
+
+    long count();
 }
