@@ -1,11 +1,11 @@
 package dooya.see.application.post;
 
 import dooya.see.SeeTestConfiguration;
+import dooya.see.application.post.provided.PostStatsManager;
 import dooya.see.application.post.required.PostStatsRepository;
 import dooya.see.domain.post.PostStats;
 import dooya.see.domain.post.PostStatus;
 import dooya.see.domain.post.event.*;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 @SpringBootTest
 @Transactional
 @Import(SeeTestConfiguration.class)
-record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, PostStatsRepository postStatsRepository) {
+record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, PostStatsManager postStatsManager, PostStatsRepository postStatsRepository) {
     private static final Long POST_ID = 100L;
     private static final Long MEMBER_ID = 1L;
     private static final Long ANOTHER_MEMBER_ID = 2L;
@@ -49,7 +49,7 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
     class 게시물_조회_이벤트 {
         @Test
         void PostViewed_이벤트_처리_시_조회수가_증가한다() {
-            createTestPostStats(POST_ID);
+            postStatsManager.initializePostStats(POST_ID);
             PostViewed event = new PostViewed(POST_ID, MEMBER_ID);
 
             postStatsEventHandler.handlePostViewed(event);
@@ -59,7 +59,7 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
 
         @Test
         void 익명_사용자의_PostViewed_이벤트도_정상_처리된다() {
-            createTestPostStats(POST_ID);
+            postStatsManager.initializePostStats(POST_ID);
             PostViewed event = new PostViewed(POST_ID, null);
 
             postStatsEventHandler.handlePostViewed(event);
@@ -87,7 +87,7 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
     class 게시물_좋아요_이벤트 {
         @Test
         void PostLiked_이벤트_처리_시_좋아요_수가_증가한다() {
-            createTestPostStats(POST_ID);
+            postStatsManager.initializePostStats(POST_ID);
             PostLiked event = new PostLiked(POST_ID, MEMBER_ID);
 
             postStatsEventHandler.handlePostLiked(event);
@@ -97,8 +97,8 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
 
         @Test
         void PostUnliked_이벤트_처리_시_좋아요_수가_감소한다() {
-            PostStats stats = createTestPostStats(POST_ID);
-            stats.incrementLikeCount();
+            postStatsManager.initializePostStats(POST_ID);
+            postStatsManager.incrementLikeCount(POST_ID);
             PostUnliked event = new PostUnliked(POST_ID, MEMBER_ID);
 
             postStatsEventHandler.handlePostUnliked(event);
@@ -108,7 +108,7 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
 
         @Test
         void 좋아요_수가_0일_때_PostUnliked_이벤트_처리해도_음수가_되지_않는다() {
-            createTestPostStats(POST_ID);
+            postStatsManager.initializePostStats(POST_ID);
             PostUnliked event = new PostUnliked(POST_ID, MEMBER_ID);
 
             postStatsEventHandler.handlePostUnliked(event);
@@ -121,6 +121,16 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
             PostLiked event = new PostLiked(NON_EXISTENT_POST_ID, MEMBER_ID);
 
             assertThatCode(() -> postStatsEventHandler.handlePostLiked(event))
+                    .doesNotThrowAnyException();
+
+            assertThat(postStatsRepository.findByPostId(NON_EXISTENT_POST_ID)).isEmpty();
+        }
+
+        @Test
+        void 존재하지_않는_게시물의_PostUnliked_이벤트는_조용히_무시된다() {
+            PostUnliked event = new PostUnliked(NON_EXISTENT_POST_ID, MEMBER_ID);
+
+            assertThatCode(() -> postStatsEventHandler.handlePostUnliked(event))
                     .doesNotThrowAnyException();
 
             assertThat(postStatsRepository.findByPostId(NON_EXISTENT_POST_ID)).isEmpty();
@@ -148,7 +158,7 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
     class 복합_이벤트_처리 {
         @Test
         void 여러_이벤트를_순차적으로_처리할_수_있다() {
-            createTestPostStats(POST_ID);
+            postStatsManager.initializePostStats(POST_ID);
 
             processMultipleEvents(POST_ID);
 
@@ -229,11 +239,5 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
             postStatsEventHandler.handlePostLiked(likeEvent);
             postStatsEventHandler.handlePostUnliked(unlikeEvent);
         }
-    }
-
-    // 헬퍼 메서드들
-    private PostStats createTestPostStats(Long postId) {
-        PostStats stats = PostStats.create(postId);
-        return postStatsRepository.save(stats);
     }
 }
