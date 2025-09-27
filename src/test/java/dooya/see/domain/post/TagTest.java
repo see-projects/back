@@ -1,9 +1,9 @@
 package dooya.see.domain.post;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -21,43 +21,48 @@ class TagTest {
         void 태그를_생성할_수_있다() {
             Tag tag = new Tag(TAG_NAME);
 
-            assertThat(tag.name()).isEqualTo(TAG_TO_LOWERCASE);
-            assertThat(tag.displayName()).isEqualTo(TAG_DISPLAYNAME);
-            assertThat(tag.urlSafe()).isEqualTo(TAG_TO_LOWERCASE);
+            assertTagNameEqualsExpected(tag.name(), TAG_TO_LOWERCASE);
+            assertTagNameEqualsExpected(tag.displayName(), TAG_DISPLAYNAME);
+            assertTagNameEqualsExpected(tag.urlSafe(), TAG_TO_LOWERCASE);
         }
 
         @Test
         void 한글_태그명으로도_생성할_수_있다() {
             Tag tag = new Tag(TAG_KOREANNAME);
 
-            assertThat(tag.name()).isEqualTo(TAG_KOREANNAME);
-            assertThat(tag.displayName()).isEqualTo(TAG_DISPLAYKOREANNAME);
+            assertTagNameEqualsExpected(tag.name(), TAG_KOREANNAME);
+            assertTagNameEqualsExpected(tag.displayName(), TAG_DISPLAYKOREANNAME);
         }
 
         @Test
         void null_태그명으로_생성_시_예외가_발생한다() {
-            assertThatThrownBy(() -> new Tag(null))
-                .isInstanceOf(IllegalArgumentException.class);
+            assertTagCreationFails(null);
         }
 
         @Test
         void 빈_문자열_태그명으로_생성_시_예외가_발생한다() {
-            assertThatThrownBy(() -> new Tag(""))
-                .isInstanceOf(IllegalArgumentException.class);
+            assertTagCreationFails("");
         }
 
         @Test
         void 초과_태그명으로_생성_시_예외가_발생한다() {
             String longTagName = "a".repeat(21);
-            
-            assertThatThrownBy(() -> new Tag(longTagName))
-                .isInstanceOf(IllegalArgumentException.class);
+
+            assertTagCreationFails(longTagName);
         }
-        
+
         @Test
         void 특수문자_포함_태그명으로_생성_시_예외가_발생한다() {
-            assertThatThrownBy(() -> new Tag(TAG_SpecialCharacters))
-                .isInstanceOf(IllegalArgumentException.class);
+            assertTagCreationFails(TAG_SpecialCharacters);
+        }
+
+        private static void assertTagNameEqualsExpected(String tag, String tagToLowercase) {
+            Assertions.assertThat(tag).isEqualTo(tagToLowercase);
+        }
+
+        private static void assertTagCreationFails(String name) {
+            assertThatThrownBy(() -> new Tag(name))
+                    .isInstanceOf(IllegalArgumentException.class);
         }
     }
 
