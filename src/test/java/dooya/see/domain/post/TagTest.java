@@ -3,6 +3,7 @@ package dooya.see.domain.post;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -57,6 +58,18 @@ class TagTest {
         void 특수문자_포함_태그명으로_생성_시_예외가_발생한다() {
             assertThatThrownBy(() -> new Tag(TAG_SpecialCharacters))
                 .isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
+    @Nested
+    class 태그_동등성 {
+        @Test
+        void 같은_이름의_태그는_동등하다() {
+            Tag tag1 = new Tag(TAG_NAME);
+            Tag tag2 = new Tag(TAG_TO_LOWERCASE);
+
+            assertThat(tag1).isEqualTo(tag2);
+            assertThat(tag1.hashCode()).isEqualTo(tag2.hashCode());
         }
     }
 }
