@@ -128,7 +128,7 @@ public class Post extends AbstractAggregateRoot {
         if (request.tags() != null && !request.tags().isEmpty()) {
             this.tags = request.tags().stream()
                     .map(Tag::new)
-                    .toList();
+                    .collect(Collectors.toCollection(ArrayList::new));
         }
     }
 
