@@ -9,6 +9,10 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import static java.util.Objects.requireNonNull;
 import static org.springframework.util.Assert.state;
 
@@ -30,6 +34,10 @@ public class Post extends AbstractAggregateRoot {
     @Embedded
     private PostMetaData metaData;
 
+    @ElementCollection
+    @CollectionTable(name = "post_tags", joinColumns = @JoinColumn(name = "post_id"))
+    private List<Tag> tags = new ArrayList<>();
+
     public static Post create(PostCreateRequest request, Long memberId) {
         Post post = new Post();
 
@@ -44,10 +52,11 @@ public class Post extends AbstractAggregateRoot {
 
         ContentUpdateResult contentResult = updateContentIfNeeded(request);
         boolean categoryChanged = updateCategoryIfNeeded(request);
+        boolean tagsChanged = updateTagsIfNeeded(request);
 
         updateMetaData();
 
-        publishUpdateEvent(requireNonNull(contentResult), categoryChanged);
+        publishUpdateEvent(requireNonNull(contentResult), categoryChanged, tagsChanged);
     }
 
     public void publish() {
@@ -115,6 +124,12 @@ public class Post extends AbstractAggregateRoot {
         this.content = new PostContent(request.title(), request.body());
         this.memberId = requireNonNull(memberId, "작성자 ID는 필수입니다");
         this.category = requireNonNull(request.category(), "카테고리는 필수입니다");
+
+        if (request.tags() != null && !request.tags().isEmpty()) {
+            this.tags = request.tags().stream()
+                    .map(Tag::new)
+                    .toList();
+        }
     }
 
     private void determineInitialStatus(PostCreateRequest request) {
@@ -153,17 +168,38 @@ public class Post extends AbstractAggregateRoot {
         return !originalCategory.equals(this.category);
     }
 
+    private boolean updateTagsIfNeeded(PostUpdateRequest request) {
+        if (request.tags().isEmpty())
+            return false;
+
+        List<Tag> newTags = request.tags().get().stream()
+                .map(Tag::new)
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        if (!(this.tags instanceof ArrayList))
+            this.tags = new ArrayList<>(this.tags);
+
+        boolean changed = !this.tags.equals(newTags);
+        if (changed) {
+            this.tags.clear();
+            this.tags.addAll(newTags);
+        }
+
+        return changed;
+    }
+
     private void updateMetaData() {
         this.metaData = this.metaData.updateModifiedAt();
     }
 
-    private void publishUpdateEvent(ContentUpdateResult contentResult, boolean categoryChanged) {
+    private void publishUpdateEvent(ContentUpdateResult contentResult, boolean categoryChanged, boolean tagsChanged) {
         this.addDomainEvent(new PostUpdated(
                 this.getId(),
                 this.memberId,
                 contentResult.titleChanged(),
                 contentResult.bodyChanged(),
-                categoryChanged
+                categoryChanged,
+                tagsChanged
         ));
     }
 
