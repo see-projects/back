@@ -191,7 +191,7 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
     class 기타_이벤트_처리 {
         @Test
         void PostUpdated_이벤트는_조용히_처리된다() {
-            PostUpdated event = new PostUpdated(POST_ID, MEMBER_ID, true, false, true);
+            PostUpdated event = new PostUpdated(POST_ID, MEMBER_ID, true, false, true, true);
 
             assertThatCode(() -> postStatsEventHandler.handlePostUpdated(event))
                     .doesNotThrowAnyException();

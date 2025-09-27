@@ -63,6 +63,8 @@ class PostTest {
             assertThat(post.getMemberId()).isEqualTo(AUTHOR_ID);
             assertThat(post.getCategory()).isEqualTo(PostCategory.TECH);
             assertThat(post.getStatus()).isEqualTo(PostStatus.DRAFT);
+            assertThat(post.getTags()).extracting("name")
+                            .containsExactly("spring", "backend", "java");
             assertThatMetaDataInitialized();
         }
 
@@ -90,7 +92,7 @@ class PostTest {
             post.update(request);
 
             assertThatAllFieldsUpdated();
-            assertThatPostUpdatedEventOccurred(true, true, true);
+            assertThatPostUpdatedEventOccurred(true, true, true, true);
         }
 
         @Test
@@ -102,7 +104,7 @@ class PostTest {
             post.update(request);
 
             assertThatOnlyTitleUpdated(originalBody, originalCategory);
-            assertThatPostUpdatedEventOccurred(true, false, false);
+            assertThatPostUpdatedEventOccurred(true, false, false, false);
         }
 
         @Test
@@ -150,6 +152,8 @@ class PostTest {
             assertThat(post.getContent().body()).isEqualTo("수정된 내용");
             assertThat(post.getCategory()).isEqualTo(PostCategory.QNA);
             assertThat(post.getMetaData().modifiedAt()).isNotNull();
+            assertThat(post.getTags()).extracting("name")
+                    .containsExactly("spring", "springboot", "java");
         }
 
         private void assertThatOnlyTitleUpdated(String originalBody, PostCategory originalCategory) {
@@ -180,11 +184,12 @@ class PostTest {
             assertThat(post.getMetaData().modifiedAt()).isNotNull();
         }
 
-        private void assertThatPostUpdatedEventOccurred(boolean titleChanged, boolean bodyChanged, boolean categoryChanged) {
+        private void assertThatPostUpdatedEventOccurred(boolean titleChanged, boolean bodyChanged, boolean categoryChanged, boolean tagsChanged) {
             PostUpdated event = getFirstDomainEvent(post, PostUpdated.class);
             assertThat(event.titleChanged()).isEqualTo(titleChanged);
             assertThat(event.bodyChanged()).isEqualTo(bodyChanged);
             assertThat(event.categoryChanged()).isEqualTo(categoryChanged);
+            assertThat(event.tagsChanged()).isEqualTo(tagsChanged);
         }
     }
 

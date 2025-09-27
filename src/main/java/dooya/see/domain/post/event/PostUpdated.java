@@ -10,5 +10,6 @@ public record PostUpdated(
     Long memberId,
     boolean titleChanged,
     boolean bodyChanged,
-    boolean categoryChanged
+    boolean categoryChanged,
+    boolean tagsChanged
 ) implements DomainEvent {}
