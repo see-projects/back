@@ -1,4 +1,4 @@
-package dooya.see.domain.member;
+package dooya.see.domain.member.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

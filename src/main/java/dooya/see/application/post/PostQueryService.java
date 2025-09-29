@@ -3,6 +3,7 @@ package dooya.see.application.post;
 import dooya.see.application.post.provided.PostFinder;
 import dooya.see.application.post.required.PostRepository;
 import dooya.see.domain.post.*;
+import dooya.see.domain.post.dto.PostSearchRequest;
 import dooya.see.domain.post.exception.PostNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;

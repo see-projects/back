@@ -4,6 +4,8 @@ import dooya.see.application.member.provided.MemberFinder;
 import dooya.see.application.member.provided.MemberRegister;
 import dooya.see.application.member.required.MemberRepository;
 import dooya.see.domain.member.*;
+import dooya.see.domain.member.dto.MemberInfoUpdateRequest;
+import dooya.see.domain.member.dto.MemberRegisterRequest;
 import dooya.see.domain.member.exception.DuplicateEmailException;
 import dooya.see.domain.member.exception.DuplicateProfileException;
 import dooya.see.domain.shared.Email;

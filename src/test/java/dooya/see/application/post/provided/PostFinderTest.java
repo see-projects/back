@@ -3,7 +3,7 @@ package dooya.see.application.post.provided;
 import dooya.see.SeeTestConfiguration;
 import dooya.see.domain.post.Post;
 import dooya.see.domain.post.PostCategory;
-import dooya.see.domain.post.PostSearchRequest;
+import dooya.see.domain.post.dto.PostSearchRequest;
 import dooya.see.domain.post.PostStatus;
 import dooya.see.domain.post.exception.PostNotFoundException;
 import jakarta.persistence.EntityManager;

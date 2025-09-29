@@ -1,4 +1,4 @@
-package dooya.see.domain.post;
+package dooya.see.domain.post.dto;
 
 public record CommentUpdateRequest(
         String body

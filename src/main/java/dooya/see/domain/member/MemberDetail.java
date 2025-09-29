@@ -1,6 +1,7 @@
 package dooya.see.domain.member;
 
 import dooya.see.domain.AbstractEntity;
+import dooya.see.domain.member.dto.MemberInfoUpdateRequest;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import lombok.Getter;

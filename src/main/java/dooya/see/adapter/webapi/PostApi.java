@@ -6,6 +6,9 @@ import dooya.see.application.member.required.TokenManager;
 import dooya.see.application.post.provided.PostFinder;
 import dooya.see.application.post.provided.PostManager;
 import dooya.see.domain.post.*;
+import dooya.see.domain.post.dto.PostCreateRequest;
+import dooya.see.domain.post.dto.PostSearchRequest;
+import dooya.see.domain.post.dto.PostUpdateRequest;
 import dooya.see.domain.post.exception.UnauthorizedPostAccessException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +17,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * 게시글 관리와 관련된 API를 제공하는 컨트롤러 클래스
+ */
 @RestController
 @RequiredArgsConstructor
 public class PostApi {

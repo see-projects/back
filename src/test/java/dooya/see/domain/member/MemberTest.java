@@ -1,5 +1,6 @@
 package dooya.see.domain.member;
 
+import dooya.see.domain.member.dto.MemberInfoUpdateRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

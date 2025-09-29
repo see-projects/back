@@ -1,6 +1,7 @@
 package dooya.see.application.post.required;
 
 import dooya.see.domain.post.*;
+import dooya.see.domain.post.dto.PostSearchRequest;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
