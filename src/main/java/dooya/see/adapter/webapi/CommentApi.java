@@ -15,6 +15,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * 댓글 관련 API를 제공하는 클래스
+ */
 @RestController
 @RequiredArgsConstructor
 public class CommentApi {
