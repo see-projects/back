@@ -1,5 +1,6 @@
-package dooya.see.domain.post;
+package dooya.see.domain.post.dto;
 
+import dooya.see.domain.post.PostCategory;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
