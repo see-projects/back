@@ -1,5 +1,8 @@
 package dooya.see.domain.post;
 
+import dooya.see.domain.post.dto.PostCreateRequest;
+import dooya.see.domain.post.dto.PostUpdateRequest;
+
 import java.util.List;
 import java.util.Optional;
 

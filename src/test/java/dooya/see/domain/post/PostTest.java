@@ -1,5 +1,6 @@
 package dooya.see.domain.post;
 
+import dooya.see.domain.post.dto.PostUpdateRequest;
 import dooya.see.domain.post.event.*;
 import dooya.see.domain.post.exception.InvalidPostStatusTransitionException;
 import dooya.see.domain.post.exception.UnauthorizedPostAccessException;

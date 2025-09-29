@@ -1,5 +1,7 @@
 package dooya.see.domain.post;
 
+import dooya.see.domain.post.dto.CommentCreateRequest;
+import dooya.see.domain.post.dto.CommentUpdateRequest;
 import dooya.see.domain.post.event.*;
 import dooya.see.domain.post.exception.EmptyCommentUpdateException;
 import dooya.see.domain.post.exception.InvalidCommentStatusException;

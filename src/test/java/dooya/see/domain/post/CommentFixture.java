@@ -1,5 +1,8 @@
 package dooya.see.domain.post;
 
+import dooya.see.domain.post.dto.CommentCreateRequest;
+import dooya.see.domain.post.dto.CommentUpdateRequest;
+
 public class CommentFixture {
 
     public static CommentCreateRequest createCommentRequest() {

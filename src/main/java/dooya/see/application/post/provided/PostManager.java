@@ -1,8 +1,8 @@
 package dooya.see.application.post.provided;
 
 import dooya.see.domain.post.Post;
-import dooya.see.domain.post.PostCreateRequest;
-import dooya.see.domain.post.PostUpdateRequest;
+import dooya.see.domain.post.dto.PostCreateRequest;
+import dooya.see.domain.post.dto.PostUpdateRequest;
 
 /**
  * 게시물 관리 Primary Port

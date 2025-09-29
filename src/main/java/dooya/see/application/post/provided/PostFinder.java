@@ -2,7 +2,7 @@ package dooya.see.application.post.provided;
 
 import dooya.see.domain.post.Post;
 import dooya.see.domain.post.PostCategory;
-import dooya.see.domain.post.PostSearchRequest;
+import dooya.see.domain.post.dto.PostSearchRequest;
 import dooya.see.domain.post.PostStatus;
 
 import java.util.List;

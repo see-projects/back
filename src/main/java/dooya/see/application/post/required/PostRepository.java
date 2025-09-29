@@ -2,7 +2,7 @@ package dooya.see.application.post.required;
 
 import dooya.see.domain.post.Post;
 import dooya.see.domain.post.PostCategory;
-import dooya.see.domain.post.PostSearchRequest;
+import dooya.see.domain.post.dto.PostSearchRequest;
 import dooya.see.domain.post.PostStatus;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;

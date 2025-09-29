@@ -5,6 +5,8 @@ import dooya.see.application.post.provided.CommentManager;
 import dooya.see.application.post.provided.PostFinder;
 import dooya.see.application.post.required.CommentRepository;
 import dooya.see.domain.post.*;
+import dooya.see.domain.post.dto.CommentCreateRequest;
+import dooya.see.domain.post.dto.CommentUpdateRequest;
 import dooya.see.domain.post.exception.UnauthorizedCommentAccessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;

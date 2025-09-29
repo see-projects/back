@@ -1,8 +1,8 @@
 package dooya.see.application.post.provided;
 
 import dooya.see.domain.post.Comment;
-import dooya.see.domain.post.CommentCreateRequest;
-import dooya.see.domain.post.CommentUpdateRequest;
+import dooya.see.domain.post.dto.CommentCreateRequest;
+import dooya.see.domain.post.dto.CommentUpdateRequest;
 
 /**
  * 댓글 관리 Primary Port

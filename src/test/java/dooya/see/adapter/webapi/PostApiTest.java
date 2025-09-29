@@ -9,6 +9,8 @@ import dooya.see.application.member.provided.MemberRegister;
 import dooya.see.domain.member.dto.MemberAuthRequest;
 import dooya.see.domain.member.dto.MemberRegisterRequest;
 import dooya.see.domain.post.*;
+import dooya.see.domain.post.dto.PostCreateRequest;
+import dooya.see.domain.post.dto.PostUpdateRequest;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
