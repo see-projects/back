@@ -12,21 +12,64 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * 게시물 저장소 Secondary Port
+ * 게시물 관련 데이터 액세스를 담당하는 레포지토리 인터페이스
  */
 public interface PostRepository extends Repository<Post, Long> {
+    /**
+     * 게시물을 저장합니다.
+     *
+     * @param post 저장할 게시물 객체
+     * @return 저장된 게시물 객체
+     */
     Post save(Post post);
 
+    /**
+     * ID로 게시물을 조회합니다.
+     *
+     * @param postId 조회할 게시물의 ID
+     * @return 지정된 ID를 가진 게시물의 Optional 객체. 게시물이 존재하지 않을 경우 빈 Optional 반환
+     */
     Optional<Post> findById(Long postId);
 
+    /**
+     * 주어진 회원 ID로 게시물을 조회합니다.
+     *
+     * @param memberId 조회할 회원의 ID
+     * @return 지정된 회원 ID를 가진 게시물 목록
+     */
     List<Post> findByMemberId(Long memberId);
 
+    /**
+     * 지정된 카테고리에 속하는 게시물 목록을 조회합니다.
+     *
+     * @param category 조회할 게시물의 카테고리
+     * @return 지정된 카테고리에 속하는 게시물 목록
+     */
     List<Post> findByCategory(PostCategory category);
 
+    /**
+     * 지정된 상태를 가진 게시물 목록을 조회합니다.
+     *
+     * @param status 조회할 게시물의 상태
+     * @return 지정된 상태를 가진 게시물 목록
+     */
     List<Post> findByStatus(PostStatus status);
 
+    /**
+     * 지정된 카테고리와 상태를 가진 게시물 목록을 조회합니다.
+     *
+     * @param category 조회할 게시물의 카테고리
+     * @param status 조회할 게시물의 상태
+     * @return 지정된 카테고리와 상태를 가진 게시물 목록
+     */
     List<Post> findByCategoryAndStatus(PostCategory category, PostStatus status);
 
+    /**
+     * 검색 조건에 따라 게시물 목록을 조회합니다.
+     *
+     * @param request 검색 조건이 포함된 요청 객체
+     * @return 조건에 맞는 게시물 목록
+     */
     @Query("""
         SELECT p FROM Post p 
         WHERE (:#{#request.keyword} IS NULL OR 
