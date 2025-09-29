@@ -1,5 +1,9 @@
 package dooya.see.domain.member;
 
+import dooya.see.domain.member.dto.MemberAuthRequest;
+import dooya.see.domain.member.dto.MemberInfoUpdateRequest;
+import dooya.see.domain.member.dto.MemberRegisterRequest;
+
 public class MemberFixture {
     public static MemberRegisterRequest createMemberRegisterRequest(String email) {
         return new MemberRegisterRequest(email, "dooya", "longSecret");

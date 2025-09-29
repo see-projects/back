@@ -1,6 +1,8 @@
 package dooya.see.domain.member;
 
 import dooya.see.domain.AbstractEntity;
+import dooya.see.domain.member.dto.MemberInfoUpdateRequest;
+import dooya.see.domain.member.dto.MemberRegisterRequest;
 import dooya.see.domain.shared.Email;
 import jakarta.persistence.*;
 import lombok.AccessLevel;

@@ -1,8 +1,8 @@
 package dooya.see.application.member.provided;
 
 import dooya.see.domain.member.Member;
-import dooya.see.domain.member.MemberInfoUpdateRequest;
-import dooya.see.domain.member.MemberRegisterRequest;
+import dooya.see.domain.member.dto.MemberInfoUpdateRequest;
+import dooya.see.domain.member.dto.MemberRegisterRequest;
 
 /**
  * 회원 등록 및 관리 Primary Port
