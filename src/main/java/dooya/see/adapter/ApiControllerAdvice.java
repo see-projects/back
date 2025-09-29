@@ -13,6 +13,10 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import java.time.LocalDateTime;
 
+/**
+ * 모든 컨트롤러에서 발생하는 예외를 처리하는 클래스.
+ * 예외 유형에 따라 적절한 HTTP 응답 상태와 문제 세부 정보를 반환합니다.
+ */
 @ControllerAdvice
 public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
     @ExceptionHandler(Exception.class)
