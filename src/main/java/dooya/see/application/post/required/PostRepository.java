@@ -4,6 +4,8 @@ import dooya.see.domain.post.Post;
 import dooya.see.domain.post.PostCategory;
 import dooya.see.domain.post.dto.PostSearchRequest;
 import dooya.see.domain.post.PostStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.Param;
@@ -65,30 +67,6 @@ public interface PostRepository extends Repository<Post, Long> {
     List<Post> findByCategoryAndStatus(PostCategory category, PostStatus status);
 
     /**
-     * 검색 조건에 따라 게시물 목록을 조회합니다.
-     *
-     * @param request 검색 조건이 포함된 요청 객체
-     * @return 조건에 맞는 게시물 목록
-     */
-    @Query("""
-        SELECT p FROM Post p 
-        WHERE (:#{#request.keyword} IS NULL OR 
-               (LOWER(p.content.title) LIKE LOWER(CONCAT('%', :#{#request.keyword}, '%')) OR 
-                LOWER(p.content.body) LIKE LOWER(CONCAT('%', :#{#request.keyword}, '%'))))
-        AND (:#{#request.titleKeyword} IS NULL OR 
-             LOWER(p.content.title) LIKE LOWER(CONCAT('%', :#{#request.titleKeyword}, '%')))
-        AND (:#{#request.contentKeyword} IS NULL OR 
-             LOWER(p.content.body) LIKE LOWER(CONCAT('%', :#{#request.contentKeyword}, '%')))
-        AND (:#{#request.category} IS NULL OR p.category = :#{#request.category})
-        AND (:#{#request.memberId} IS NULL OR p.memberId = :#{#request.memberId})
-        AND (:#{#request.status} IS NULL OR p.status = :#{#request.status})
-        AND (:#{#request.fromDate} IS NULL OR p.metaData.createdAt >= :#{#request.fromDate})
-        AND (:#{#request.toDate} IS NULL OR p.metaData.createdAt <= :#{#request.toDate})
-        ORDER BY p.metaData.createdAt DESC
-        """)
-    List<Post> search(@Param("request") PostSearchRequest request);
-
-    /**
      * 전체 게시물 수를 조회합니다.
      *
      * @return 전체 게시물 수
@@ -122,4 +100,59 @@ public interface PostRepository extends Repository<Post, Long> {
      */
     @Query("SELECT COUNT(p) FROM Post p WHERE p.memberId = :memberId")
     long countByMemberId(@Param("memberId") Long memberId);
+
+    /**
+     * == 원본 ==
+     * 검색 조건에 따라 게시물 목록을 조회합니다.
+     *
+     * @param request 검색 조건이 포함된 요청 객체
+     * @return 조건에 맞는 게시물 목록
+     */
+    @Query("""
+        SELECT p FROM Post p 
+        WHERE (:#{#request.keyword} IS NULL OR 
+               (LOWER(p.content.title) LIKE LOWER(CONCAT('%', :#{#request.keyword}, '%')) OR 
+                LOWER(p.content.body) LIKE LOWER(CONCAT('%', :#{#request.keyword}, '%'))))
+        AND (:#{#request.titleKeyword} IS NULL OR 
+             LOWER(p.content.title) LIKE LOWER(CONCAT('%', :#{#request.titleKeyword}, '%')))
+        AND (:#{#request.contentKeyword} IS NULL OR 
+             LOWER(p.content.body) LIKE LOWER(CONCAT('%', :#{#request.contentKeyword}, '%')))
+        AND (:#{#request.category} IS NULL OR p.category = :#{#request.category})
+        AND (:#{#request.memberId} IS NULL OR p.memberId = :#{#request.memberId})
+        AND (:#{#request.status} IS NULL OR p.status = :#{#request.status})
+        AND (:#{#request.fromDate} IS NULL OR p.metaData.createdAt >= :#{#request.fromDate})
+        AND (:#{#request.toDate} IS NULL OR p.metaData.createdAt <= :#{#request.toDate})
+        ORDER BY p.metaData.createdAt DESC
+        """)
+    List<Post> search(@Param("request") PostSearchRequest request);
+
+    /**
+     * == 1단계 ==
+     * 주어진 검색 조건과 페이지 정보를 기반으로 게시물을 검색하고 페이징 처리된 결과를 반환합니다.
+     *
+     * @param request 검색 조건을 담고 있는 PostSearchRequest 객체
+     * @param pageable 페이지 요청 정보를 담고 있는 Pageable 객체
+     * @return 조건에 맞는 게시물 리스트와 페이징 정보를 포함하는 Page 객체
+     * @throws IllegalArgumentException null이 아닌 필수 파라미터가 누락된 경우
+     */
+    @Query("""
+        SELECT p FROM Post p 
+        WHERE (:#{#request.keyword} IS NULL OR 
+               (LOWER(p.content.title) LIKE LOWER(CONCAT('%', :#{#request.keyword}, '%')) OR 
+                LOWER(p.content.body) LIKE LOWER(CONCAT('%', :#{#request.keyword}, '%'))))
+        AND (:#{#request.titleKeyword} IS NULL OR 
+             LOWER(p.content.title) LIKE LOWER(CONCAT('%', :#{#request.titleKeyword}, '%')))
+        AND (:#{#request.contentKeyword} IS NULL OR 
+             LOWER(p.content.body) LIKE LOWER(CONCAT('%', :#{#request.contentKeyword}, '%')))
+        AND (:#{#request.category} IS NULL OR p.category = :#{#request.category})
+        AND (:#{#request.memberId} IS NULL OR p.memberId = :#{#request.memberId})
+        AND (:#{#request.status} IS NULL OR p.status = :#{#request.status})
+        AND (:#{#request.fromDate} IS NULL OR p.metaData.createdAt >= :#{#request.fromDate})
+        AND (:#{#request.toDate} IS NULL OR p.metaData.createdAt <= :#{#request.toDate})
+        ORDER BY p.metaData.createdAt DESC
+        """)
+    Page<Post> searchWithPagination(
+            @Param("request") PostSearchRequest request,
+            Pageable pageable
+    );
 }

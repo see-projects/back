@@ -1,6 +1,10 @@
-package dooya.see.domain.post;
+package dooya.see.domain.post.search;
 
 import dooya.see.application.post.required.PostRepository;
+import dooya.see.domain.post.Post;
+import dooya.see.domain.post.PostCategory;
+import dooya.see.domain.post.PostStatus;
+import dooya.see.domain.post.PostTestDataGenerator;
 import dooya.see.domain.post.dto.PostSearchRequest;
 import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
