@@ -87,4 +87,39 @@ public interface PostRepository extends Repository<Post, Long> {
         ORDER BY p.metaData.createdAt DESC
         """)
     List<Post> search(@Param("request") PostSearchRequest request);
+
+    /**
+     * 전체 게시물 수를 조회합니다.
+     *
+     * @return 전체 게시물 수
+     */
+    @Query("SELECT COUNT(p) FROM Post p")
+    long count();
+
+    /**
+     * 특정 카테고리의 게시물 수를 조회합니다.
+     *
+     * @param category 카테고리
+     * @return 해당 카테고리의 게시물 수
+     */
+    @Query("SELECT COUNT(p) FROM Post p WHERE p.category = :category")
+    long countByCategory(@Param("category") PostCategory category);
+
+    /**
+     * 특정 상태의 게시물 수를 조회합니다.
+     *
+     * @param status 게시물 상태
+     * @return 해당 상태의 게시물 수
+     */
+    @Query("SELECT COUNT(p) FROM Post p WHERE p.status = :status")
+    long countByStatus(@Param("status") PostStatus status);
+
+    /**
+     * 특정 작성자의 게시물 수를 조회합니다.
+     *
+     * @param memberId 작성자 ID
+     * @return 해당 작성자의 게시물 수
+     */
+    @Query("SELECT COUNT(p) FROM Post p WHERE p.memberId = :memberId")
+    long countByMemberId(@Param("memberId") Long memberId);
 }
