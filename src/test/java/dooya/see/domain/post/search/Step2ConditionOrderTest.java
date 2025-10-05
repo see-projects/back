@@ -30,13 +30,12 @@ record Step2ConditionOrderTest(PostRepository postRepository, PostTestDataGenera
 
     @BeforeAll
     void initTestData() {
-        long currentCount = postRepository.count();
-
-        if (currentCount < 100_000) {
-            log.info("테스트 데이터를 생성합니다...");
-            dataGenerator.generateRecommendedTestData();
+        long count = postRepository.count();
+        if (count < 1_000_000) {
+            log.info("📦 현재 데이터: {}건 → 100만 건으로 생성 시작", count);
+            dataGenerator.generateMillionTestData();
         } else {
-            log.info("기존 테스트 데이터 사용: {} 건", currentCount);
+            log.info("✅ 기존 데이터 사용: {}건", count);
         }
     }
 
