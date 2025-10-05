@@ -19,6 +19,24 @@ services:
       retries: 10
     restart: unless-stopped
 
+  mysql-test:
+    image: mysql:8.0
+    container_name: see-test-mysql
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: see_test
+      MYSQL_USER: see_user
+      MYSQL_PASSWORD: see_password
+    volumes:
+      - mysql_test_data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    restart: unless-stopped
+
 volumes:
   mysql_data:
     driver: local
+  mysql_test_data:
+

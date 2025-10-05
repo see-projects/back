@@ -1,15 +1,17 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:testdb;MODE=MySQL;DATABASE_TO_LOWER=TRUE
-    driver-class-name: org.h2.Driver
+    url: jdbc:mysql://localhost:3306/see_test?serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true
+    username: see_user
+    password: see_password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
   jpa:
     hibernate:
-      ddl-auto: create-drop  # 테스트마다 스키마 재생성
+      ddl-auto: none
     properties:
       hibernate:
-        format_sql: true
-        show_sql: false  # 너무 많은 로그 방지
-        dialect: org.hibernate.dialect.H2Dialect
+        dialect: org.hibernate.dialect.MySQL8Dialect  # ✅ 이 한 줄 추가!
+    show-sql: true  # SQL 출력 원하면 추가
 
 logging:
   level:
