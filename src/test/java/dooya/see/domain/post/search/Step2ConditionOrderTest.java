@@ -73,7 +73,7 @@ record Step2ConditionOrderTest(PostRepository postRepository, PostTestDataGenera
         System.gc();
 
         long afterStart = System.currentTimeMillis();
-        Page<Post> afterPage = postRepository.searchWithPagination(
+        Page<Post> afterPage = postRepository.searchWithOptimizedConditions(
                 // 내부적으로 WHERE 절 순서를 변경한 버전으로 수정되었다고 가정
                 request,
                 PageRequest.of(0, 20, Sort.by("metaData.createdAt").descending())
