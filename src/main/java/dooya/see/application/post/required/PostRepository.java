@@ -185,4 +185,34 @@ public interface PostRepository extends Repository<Post, Long> {
             @Param("request") PostSearchRequest request,
             Pageable pageable
     );
+
+    /**
+     * == 3단계 ==
+     * LIKE 최적화를 적용하여 게시물을 검색합니다.
+     *
+     * @param request 검색 조건을 포함한 요청 객체
+     * @param pageable 페이징 정보를 포함한 객체
+     * @return 검색 조건에 맞는 게시물의 페이지
+     */
+    @Query("""
+    SELECT p FROM Post p
+    WHERE 
+        (:#{#request.status} IS NULL OR p.status = :#{#request.status})
+        AND (:#{#request.category} IS NULL OR p.category = :#{#request.category})
+        AND (:#{#request.memberId} IS NULL OR p.memberId = :#{#request.memberId})
+        AND (:#{#request.fromDate} IS NULL OR p.metaData.createdAt >= :#{#request.fromDate})
+        AND (:#{#request.toDate} IS NULL OR p.metaData.createdAt <= :#{#request.toDate})
+        AND (:#{#request.keyword} IS NULL OR 
+             (LOWER(p.content.title) LIKE LOWER(CONCAT(:#{#request.keyword}, '%')) OR 
+              LOWER(p.content.body) LIKE LOWER(CONCAT(:#{#request.keyword}, '%'))))
+        AND (:#{#request.titleKeyword} IS NULL OR 
+             LOWER(p.content.title) LIKE LOWER(CONCAT(:#{#request.titleKeyword}, '%')))
+        AND (:#{#request.contentKeyword} IS NULL OR 
+             LOWER(p.content.body) LIKE LOWER(CONCAT(:#{#request.contentKeyword}, '%')))
+        ORDER BY p.metaData.createdAt DESC
+        """)
+    Page<Post> searchWithLikeOptimization(
+            @Param("request") PostSearchRequest request,
+            Pageable pageable
+    );
 }
