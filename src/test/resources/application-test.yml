@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DATABASE_TO_LOWER=TRUE
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # 테스트마다 스키마 재생성
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: false  # 너무 많은 로그 방지
+        dialect: org.hibernate.dialect.H2Dialect
+
+logging:
+  level:
+    dooya.see: INFO
+    org.hibernate.SQL: DEBUG
