@@ -11,6 +11,10 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect  # ✅ 이 한 줄 추가!
+        jdbc:
+          batch_size: 1000
+        order_updates: true
+        order_inserts: true
     show-sql: true  # SQL 출력 원하면 추가
 
 logging:
