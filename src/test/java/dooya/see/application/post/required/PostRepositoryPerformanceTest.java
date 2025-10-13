@@ -27,6 +27,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PostRepositoryPerformanceTest {
     private static final Logger log = LoggerFactory.getLogger(PostRepositoryPerformanceTest.class);
+    private static final Locale LOCALE = Locale.US;
+
     private static final int DATASET_SIZE = 100_000;
     private static final int ITERATIONS = 3;
     private static final double PERFORMANCE_THRESHOLD = 1.5;
@@ -108,13 +110,15 @@ class PostRepositoryPerformanceTest {
                     .isEqualTo(paginated.resultSize());
         }
 
+        // 개별 성능 로그 출력
         metrics.forEach(metric ->
-                log.info("[perf] collected '{}' metric: avg {} ms (rows: {})",
+                log.info("[perf] collected '{}' metric: avg {} ms | rows={}",
                         metric.label(),
                         formatMillis(metric.duration()),
                         metric.resultSize())
         );
 
+        // 요약 출력
         logSummary(metrics);
     }
 
@@ -132,7 +136,8 @@ class PostRepositoryPerformanceTest {
             long iterationNanos = System.nanoTime() - start;
             totalNanos += iterationNanos;
             lastSize = extractSize(result);
-            log.info("[perf] '{}' iteration {} took {} ms (rows: {})",
+
+            log.info("[perf] '{}' iteration {} took {} ms | rows={}",
                     label, i + 1, formatMillis(iterationNanos), lastSize);
         }
 
@@ -141,7 +146,7 @@ class PostRepositoryPerformanceTest {
                 .as("Query '%s' should return at least one row", label)
                 .isPositive();
 
-        log.info("[perf] '{}' 평균 {} ms over {} runs (rows: {})",
+        log.info("[perf] '{}' 평균 {} ms over {} runs | rows={}",
                 label, formatMillis(averageNanos), ITERATIONS, lastSize);
 
         return new PerformanceMetric(label, Duration.ofNanos(averageNanos), lastSize);
@@ -154,14 +159,14 @@ class PostRepositoryPerformanceTest {
         if (result instanceof List<?> list) {
             return list.size();
         }
-        throw new IllegalArgumentException("지원하지 않는 반환 타입: " + result.getClass());
+        throw new IllegalArgumentException("지원하지 않는 반환 타입: " + result.getClass().getName());
     }
 
     private boolean supportsMySqlFullText() {
         Object dialect = entityManager.getEntityManagerFactory()
                 .getProperties()
                 .get("hibernate.dialect");
-        return dialect != null && dialect.toString().toLowerCase(Locale.ROOT).contains("mysql");
+        return dialect != null && dialect.toString().toLowerCase(LOCALE).contains("mysql");
     }
 
     private long nanosToMillis(long nanos) {
@@ -169,7 +174,7 @@ class PostRepositoryPerformanceTest {
     }
 
     private String formatMillis(long nanos) {
-        return String.format(Locale.US, "%.2f", nanos / 1_000_000.0);
+        return String.format(LOCALE, "%.2f", nanos / 1_000_000.0);
     }
 
     private String formatMillis(Duration duration) {
@@ -177,29 +182,31 @@ class PostRepositoryPerformanceTest {
     }
 
     private void logSummary(List<PerformanceMetric> metrics) {
-        if (metrics.isEmpty())
-            return;
+        if (metrics.isEmpty()) return;
 
         Duration baselineDuration = metrics.get(0).duration();
         log.info("[perf][summary] ----------------------------------------------------");
+
         metrics.forEach(metric -> {
             double ratio = computeRelativeRatio(baselineDuration, metric.duration());
-            log.info("[perf][summary] %-20s | avg %8s ms | rel %5.2fx | rows %6d",
-                    metric.label(),
-                    formatMillis(metric.duration()),
-                    ratio,
-                    metric.resultSize());
+            String avgStr = formatMillis(metric.duration());
+            String ratioStr = String.format(LOCALE, "%.2fx", ratio);
+
+            // 👉 String.format으로 정렬 미리 처리 후, SLF4J에는 {}만 전달
+            String formattedLine = String.format(LOCALE,
+                    "%-20s | avg %8s ms | rel %6s | rows %6d",
+                    metric.label(), avgStr, ratioStr, metric.resultSize());
+
+            log.info("[perf][summary] {}", formattedLine);
         });
+
         log.info("[perf][summary] baseline: '{}' 기준", metrics.get(0).label());
     }
 
     private double computeRelativeRatio(Duration baseline, Duration current) {
-        if (baseline.isZero()) {
-            return 1.0;
-        }
+        if (baseline.isZero()) return 1.0;
         return (double) current.toNanos() / baseline.toNanos();
     }
 
-    private record PerformanceMetric(String label, Duration duration, int resultSize) {
-    }
+    private record PerformanceMetric(String label, Duration duration, int resultSize) {}
 }

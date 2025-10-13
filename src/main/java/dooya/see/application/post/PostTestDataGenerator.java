@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 
 /**
@@ -249,8 +250,10 @@ public class PostTestDataGenerator {
 
         long elapsed = System.currentTimeMillis() - startTime;
         double rate = (double) processedCount / elapsed * 1000;
-        log.info("📊 진행률: {}/{} ({:.1f}%) | {:.0f}건/초",
-                processedCount, totalCount, (processedCount * 100.0 / totalCount), rate);
+        double percent = processedCount * 100.0 / totalCount;
+        String percentStr = String.format(Locale.US, "%.1f", percent);
+        String rateStr = String.format(Locale.US, "%.0f", rate);
+        log.info("📊 진행률: {}/{} ({}%) | {}건/초", processedCount, totalCount, percentStr, rateStr);
     }
 
     private void completeBatch(long startTime, int totalCount) {
