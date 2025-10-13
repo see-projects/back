@@ -6,6 +6,7 @@ import dooya.see.domain.post.dto.PostSearchRequest;
 import dooya.see.infrastructure.database.PostSearchIndexInitializer;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.slf4j.Logger;
@@ -26,6 +27,7 @@ import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Disabled("CI 환경에서는 DB 연결이 필요하지 않음")
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("test")
