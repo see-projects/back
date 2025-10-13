@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,6 +18,38 @@ import java.util.Optional;
  * 게시물 관련 데이터 액세스를 담당하는 레포지토리 인터페이스
  */
 public interface PostRepository extends Repository<Post, Long> {
+    String BASELINE_WHERE_CLAUSE = """
+            (:#{#request.keyword} IS NULL OR 
+             (LOWER(p.content.title) LIKE LOWER(CONCAT('%', :#{#request.keyword}, '%')) OR 
+              LOWER(p.content.body) LIKE LOWER(CONCAT('%', :#{#request.keyword}, '%'))))
+            AND (:#{#request.titleKeyword} IS NULL OR 
+                 LOWER(p.content.title) LIKE LOWER(CONCAT('%', :#{#request.titleKeyword}, '%')))
+            AND (:#{#request.contentKeyword} IS NULL OR 
+                 LOWER(p.content.body) LIKE LOWER(CONCAT('%', :#{#request.contentKeyword}, '%')))
+            AND (:#{#request.category} IS NULL OR p.category = :#{#request.category})
+            AND (:#{#request.memberId} IS NULL OR p.memberId = :#{#request.memberId})
+            AND (:#{#request.status} IS NULL OR p.status = :#{#request.status})
+            AND (:#{#request.fromDate} IS NULL OR p.metaData.createdAt >= :#{#request.fromDate})
+            AND (:#{#request.toDate} IS NULL OR p.metaData.createdAt <= :#{#request.toDate})
+            """;
+
+    String OPTIMIZED_WHERE_CLAUSE = """
+            (:#{#request.status} IS NULL OR p.status = :#{#request.status})
+            AND (:#{#request.category} IS NULL OR p.category = :#{#request.category})
+            AND (:#{#request.memberId} IS NULL OR p.memberId = :#{#request.memberId})
+            AND (:#{#request.fromDate} IS NULL OR p.metaData.createdAt >= :#{#request.fromDate})
+            AND (:#{#request.toDate} IS NULL OR p.metaData.createdAt <= :#{#request.toDate})
+            AND (:#{#request.keyword} IS NULL OR 
+                 (LOWER(p.content.title) LIKE LOWER(CONCAT('%', :#{#request.keyword}, '%')) OR 
+                  LOWER(p.content.body) LIKE LOWER(CONCAT('%', :#{#request.keyword}, '%'))))
+            AND (:#{#request.titleKeyword} IS NULL OR 
+                 LOWER(p.content.title) LIKE LOWER(CONCAT('%', :#{#request.titleKeyword}, '%')))
+            AND (:#{#request.contentKeyword} IS NULL OR 
+                 LOWER(p.content.body) LIKE LOWER(CONCAT('%', :#{#request.contentKeyword}, '%')))
+            """;
+
+    String ORDER_BY_CREATED_DESC = " ORDER BY p.metaData.createdAt DESC";
+
     /**
      * 게시물을 저장합니다.
      *
@@ -39,7 +72,7 @@ public interface PostRepository extends Repository<Post, Long> {
      * @param memberId 조회할 회원의 ID
      * @return 지정된 회원 ID를 가진 게시물 목록
      */
-    List<Post> findByMemberId(Long memberId);
+    Page<Post> findByMemberId(Long memberId, Pageable pageable);
 
     /**
      * 지정된 카테고리에 속하는 게시물 목록을 조회합니다.
@@ -47,7 +80,7 @@ public interface PostRepository extends Repository<Post, Long> {
      * @param category 조회할 게시물의 카테고리
      * @return 지정된 카테고리에 속하는 게시물 목록
      */
-    List<Post> findByCategory(PostCategory category);
+    Page<Post> findByCategory(PostCategory category, Pageable pageable);
 
     /**
      * 지정된 상태를 가진 게시물 목록을 조회합니다.
@@ -55,7 +88,7 @@ public interface PostRepository extends Repository<Post, Long> {
      * @param status 조회할 게시물의 상태
      * @return 지정된 상태를 가진 게시물 목록
      */
-    List<Post> findByStatus(PostStatus status);
+    Page<Post> findByStatus(PostStatus status, Pageable pageable);
 
     /**
      * 지정된 카테고리와 상태를 가진 게시물 목록을 조회합니다.
@@ -64,7 +97,7 @@ public interface PostRepository extends Repository<Post, Long> {
      * @param status 조회할 게시물의 상태
      * @return 지정된 카테고리와 상태를 가진 게시물 목록
      */
-    List<Post> findByCategoryAndStatus(PostCategory category, PostStatus status);
+    Page<Post> findByCategoryAndStatus(PostCategory category, PostStatus status, Pageable pageable);
 
     /**
      * 전체 게시물 수를 조회합니다.
@@ -102,117 +135,74 @@ public interface PostRepository extends Repository<Post, Long> {
     long countByMemberId(@Param("memberId") Long memberId);
 
     /**
-     * == 원본 ==
-     * 검색 조건에 따라 게시물 목록을 조회합니다.
-     *
-     * @param request 검색 조건이 포함된 요청 객체
-     * @return 조건에 맞는 게시물 목록
+     * == STEP 0: Baseline ==
+     * 전체 조건을 그대로 적용해 결과 목록을 반환합니다.
+     * - LIKE 기반 키워드 검색과 모든 보조 조건을 한 번에 평가합니다.
      */
     @Query("""
         SELECT p FROM Post p 
-        WHERE (:#{#request.keyword} IS NULL OR 
-               (LOWER(p.content.title) LIKE LOWER(CONCAT('%', :#{#request.keyword}, '%')) OR 
-                LOWER(p.content.body) LIKE LOWER(CONCAT('%', :#{#request.keyword}, '%'))))
-        AND (:#{#request.titleKeyword} IS NULL OR 
-             LOWER(p.content.title) LIKE LOWER(CONCAT('%', :#{#request.titleKeyword}, '%')))
-        AND (:#{#request.contentKeyword} IS NULL OR 
-             LOWER(p.content.body) LIKE LOWER(CONCAT('%', :#{#request.contentKeyword}, '%')))
-        AND (:#{#request.category} IS NULL OR p.category = :#{#request.category})
-        AND (:#{#request.memberId} IS NULL OR p.memberId = :#{#request.memberId})
-        AND (:#{#request.status} IS NULL OR p.status = :#{#request.status})
-        AND (:#{#request.fromDate} IS NULL OR p.metaData.createdAt >= :#{#request.fromDate})
-        AND (:#{#request.toDate} IS NULL OR p.metaData.createdAt <= :#{#request.toDate})
-        ORDER BY p.metaData.createdAt DESC
-        """)
+        WHERE """ + BASELINE_WHERE_CLAUSE + ORDER_BY_CREATED_DESC)
     List<Post> search(@Param("request") PostSearchRequest request);
 
     /**
-     * == 1단계 ==
-     * 주어진 검색 조건과 페이지 정보를 기반으로 게시물을 검색하고 페이징 처리된 결과를 반환합니다.
-     *
-     * @param request 검색 조건을 담고 있는 PostSearchRequest 객체
-     * @param pageable 페이지 요청 정보를 담고 있는 Pageable 객체
-     * @return 조건에 맞는 게시물 리스트와 페이징 정보를 포함하는 Page 객체
-     * @throws IllegalArgumentException null이 아닌 필수 파라미터가 누락된 경우
+     * == STEP 1: Baseline + Pagination ==
+     * STEP 0과 동일한 조건이지만 Page를 반환해 데이터 전송량을 줄입니다.
      */
     @Query("""
         SELECT p FROM Post p 
-        WHERE (:#{#request.keyword} IS NULL OR 
-               (LOWER(p.content.title) LIKE LOWER(CONCAT('%', :#{#request.keyword}, '%')) OR 
-                LOWER(p.content.body) LIKE LOWER(CONCAT('%', :#{#request.keyword}, '%'))))
-        AND (:#{#request.titleKeyword} IS NULL OR 
-             LOWER(p.content.title) LIKE LOWER(CONCAT('%', :#{#request.titleKeyword}, '%')))
-        AND (:#{#request.contentKeyword} IS NULL OR 
-             LOWER(p.content.body) LIKE LOWER(CONCAT('%', :#{#request.contentKeyword}, '%')))
-        AND (:#{#request.category} IS NULL OR p.category = :#{#request.category})
-        AND (:#{#request.memberId} IS NULL OR p.memberId = :#{#request.memberId})
-        AND (:#{#request.status} IS NULL OR p.status = :#{#request.status})
-        AND (:#{#request.fromDate} IS NULL OR p.metaData.createdAt >= :#{#request.fromDate})
-        AND (:#{#request.toDate} IS NULL OR p.metaData.createdAt <= :#{#request.toDate})
-        ORDER BY p.metaData.createdAt DESC
-        """)
+        WHERE """ + BASELINE_WHERE_CLAUSE + ORDER_BY_CREATED_DESC)
     Page<Post> searchWithPagination(
             @Param("request") PostSearchRequest request,
             Pageable pageable
     );
 
     /**
-     * == 2단계 ==
-     * 게시물 목록을 최적화된 조건으로 검색합니다.
-     *
-     * @param request 게시물 검색 조건을 포함한 요청 객체
-     * @param pageable 페이지네이션 정보를 포함한 객체
-     * @return 검색 조건에 맞는 게시물의 페이지 데이터
+     * == STEP 2: Optimized Predicate Ordering ==
+     * 인덱스를 활용할 수 있는 '=' 비교를 우선으로 평가한 뒤, 비용이 큰 LIKE 조건을 실행합니다.
      */
     @Query("""
         SELECT p FROM Post p 
-        WHERE 
-            (:#{#request.status} IS NULL OR p.status = :#{#request.status})
-            AND (:#{#request.category} IS NULL OR p.category = :#{#request.category})
-            AND (:#{#request.memberId} IS NULL OR p.memberId = :#{#request.memberId})
-            AND (:#{#request.fromDate} IS NULL OR p.metaData.createdAt >= :#{#request.fromDate})
-            AND (:#{#request.toDate} IS NULL OR p.metaData.createdAt <= :#{#request.toDate})
-            AND (:#{#request.keyword} IS NULL OR 
-                 (LOWER(p.content.title) LIKE LOWER(CONCAT('%', :#{#request.keyword}, '%')) OR 
-                  LOWER(p.content.body) LIKE LOWER(CONCAT('%', :#{#request.keyword}, '%'))))
-            AND (:#{#request.titleKeyword} IS NULL OR 
-                 LOWER(p.content.title) LIKE LOWER(CONCAT('%', :#{#request.titleKeyword}, '%')))
-            AND (:#{#request.contentKeyword} IS NULL OR 
-                 LOWER(p.content.body) LIKE LOWER(CONCAT('%', :#{#request.contentKeyword}, '%')))
-        ORDER BY p.metaData.createdAt DESC
-        """)
+        WHERE """ + OPTIMIZED_WHERE_CLAUSE + ORDER_BY_CREATED_DESC)
     Page<Post> searchWithOptimizedConditions(
             @Param("request") PostSearchRequest request,
             Pageable pageable
     );
 
     /**
-     * == 3단계 ==
-     * LIKE 최적화를 적용하여 게시물을 검색합니다.
-     *
-     * @param request 검색 조건을 포함한 요청 객체
-     * @param pageable 페이징 정보를 포함한 객체
-     * @return 검색 조건에 맞는 게시물의 페이지
+     * == STEP 3: MySQL Full-text ==
+     * MATCH … AGAINST 절을 활용해 MySQL의 전체 텍스트 인덱스를 사용합니다.
+     * - MySQL 환경에서만 사용 가능합니다.
      */
-    @Query("""
-    SELECT p FROM Post p
+    @Query(value = """
+SELECT * FROM post p
+WHERE 
+    (:status IS NULL OR p.status = :status)
+    AND (:category IS NULL OR p.category = :category)
+    AND (:memberId IS NULL OR p.member_id = :memberId)
+    AND (:fromDate IS NULL OR p.created_at >= :fromDate)
+    AND (:toDate IS NULL OR p.created_at <= :toDate)
+    AND (:keyword IS NULL OR MATCH(p.title, p.body) AGAINST (:keyword IN NATURAL LANGUAGE MODE))
+ORDER BY p.created_at DESC
+""",
+            countQuery = """
+    SELECT COUNT(*) FROM post p
     WHERE 
-        (:#{#request.status} IS NULL OR p.status = :#{#request.status})
-        AND (:#{#request.category} IS NULL OR p.category = :#{#request.category})
-        AND (:#{#request.memberId} IS NULL OR p.memberId = :#{#request.memberId})
-        AND (:#{#request.fromDate} IS NULL OR p.metaData.createdAt >= :#{#request.fromDate})
-        AND (:#{#request.toDate} IS NULL OR p.metaData.createdAt <= :#{#request.toDate})
-        AND (:#{#request.keyword} IS NULL OR 
-             (LOWER(p.content.title) LIKE LOWER(CONCAT(:#{#request.keyword}, '%')) OR 
-              LOWER(p.content.body) LIKE LOWER(CONCAT(:#{#request.keyword}, '%'))))
-        AND (:#{#request.titleKeyword} IS NULL OR 
-             LOWER(p.content.title) LIKE LOWER(CONCAT(:#{#request.titleKeyword}, '%')))
-        AND (:#{#request.contentKeyword} IS NULL OR 
-             LOWER(p.content.body) LIKE LOWER(CONCAT(:#{#request.contentKeyword}, '%')))
-        ORDER BY p.metaData.createdAt DESC
-        """)
-    Page<Post> searchWithLikeOptimization(
-            @Param("request") PostSearchRequest request,
+        (:status IS NULL OR p.status = :status)
+        AND (:category IS NULL OR p.category = :category)
+        AND (:memberId IS NULL OR p.member_id = :memberId)
+        AND (:fromDate IS NULL OR p.created_at >= :fromDate)
+        AND (:toDate IS NULL OR p.created_at <= :toDate)
+        AND (:keyword IS NULL OR MATCH(p.title, p.body) AGAINST (:keyword IN NATURAL LANGUAGE MODE))
+""",
+            nativeQuery = true)
+    Page<Post> searchWithFullTextIndex(
+            @Param("status") String status,  // ← PostStatus → String
+            @Param("category") String category,  // ← PostCategory → String
+            @Param("memberId") Long memberId,
+            @Param("fromDate") LocalDateTime fromDate,
+            @Param("toDate") LocalDateTime toDate,
+            @Param("keyword") String keyword,
             Pageable pageable
     );
+    Page<Post> findAllBy(Pageable pageable);
 }

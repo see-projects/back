@@ -7,6 +7,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -37,9 +40,9 @@ record PostRepositoryTest(PostRepository postRepository, EntityManager entityMan
 
         @Test
         void 존재하지_않는_회원_ID로_조회_시_빈_리스트를_반환한다() {
-            List<Post> found = postRepository.findByMemberId(999L);
+            Page<Post> found = postRepository.findByMemberId(999L, Pageable.unpaged());
 
-            assertThat(found).isEmpty();
+            assertThat(found.getContent()).isEmpty();
         }
 
         private void assertThatPostCreated(Post post, Long expectedMemberId) {
@@ -62,9 +65,9 @@ record PostRepositoryTest(PostRepository postRepository, EntityManager entityMan
             Post post2 = createAndSavePost(MEMBER_ID);
             Post post3 = createAndSavePost(ANOTHER_MEMBER_ID);
 
-            List<Post> found = postRepository.findByMemberId(MEMBER_ID);
+            Page<Post> found = postRepository.findByMemberId(MEMBER_ID, Pageable.unpaged());
 
-            assertThatMemberPostsFound(found, post1, post2);
+            assertThatMemberPostsFound(found.getContent(), post1, post2);
         }
 
         private void assertThatMemberPostsFound(List<Post> found, Post post1, Post post2) {
@@ -83,9 +86,9 @@ record PostRepositoryTest(PostRepository postRepository, EntityManager entityMan
             Post post2 = createAndSavePostWithCategory(ANOTHER_MEMBER_ID, PostCategory.TECH);
             Post post3 = createAndSavePostWithCategory(THIRD_MEMBER_ID, PostCategory.QNA);
 
-            List<Post> found = postRepository.findByCategory(PostCategory.TECH);
+            Page<Post> found = postRepository.findByCategory(PostCategory.TECH, Pageable.unpaged());
 
-            assertThatCategoryPostsFound(found, post1, post2, PostCategory.TECH);
+            assertThatCategoryPostsFound(found.getContent(), post1, post2, PostCategory.TECH);
         }
 
         private void assertThatCategoryPostsFound(List<Post> found, Post post1, Post post2, PostCategory expectedCategory) {
@@ -104,10 +107,10 @@ record PostRepositoryTest(PostRepository postRepository, EntityManager entityMan
             Post publishedPost = createAndSavePost(ANOTHER_MEMBER_ID);
             publishPost(publishedPost);
 
-            List<Post> draftPosts = postRepository.findByStatus(PostStatus.DRAFT);
-            List<Post> publishedPosts = postRepository.findByStatus(PostStatus.PUBLISHED);
+            Page<Post> draftPosts = postRepository.findByStatus(PostStatus.DRAFT, Pageable.unpaged());
+            Page<Post> publishedPosts = postRepository.findByStatus(PostStatus.PUBLISHED, Pageable.unpaged());
 
-            assertThatStatusPostsFound(draftPosts, draftPost, publishedPosts, publishedPost);
+            assertThatStatusPostsFound(draftPosts.getContent(), draftPost, publishedPosts.getContent(), publishedPost);
         }
 
         @Test
@@ -119,9 +122,9 @@ record PostRepositoryTest(PostRepository postRepository, EntityManager entityMan
             publishPost(techPublishedPost);
             publishPost(qnaPublishedPost);
 
-            List<Post> found = postRepository.findByCategoryAndStatus(PostCategory.TECH, PostStatus.PUBLISHED);
+            Page<Post> found = postRepository.findByCategoryAndStatus(PostCategory.TECH, PostStatus.PUBLISHED, Pageable.unpaged());
 
-            assertThatCategoryAndStatusPostsFound(found, techPublishedPost);
+            assertThatCategoryAndStatusPostsFound(found.getContent(), techPublishedPost);
         }
 
         private void assertThatStatusPostsFound(List<Post> draftPosts, Post expectedDraftPost,
