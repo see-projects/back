@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
-import static org.springframework.util.Assert.state;
 
 @Entity
 @Getter
@@ -141,7 +140,9 @@ public class Post extends AbstractAggregateRoot {
 
     // Update 관련 메서드
     private static void validateHasChanges(PostUpdateRequest request) {
-        state(request.hasAnyUpdate(), "변경사항이 없습니다");
+        if (!request.hasAnyUpdate()) {
+            throw new IllegalStateException("변경사항이 없습니다");
+        }
     }
 
     private ContentUpdateResult updateContentIfNeeded(PostUpdateRequest request) {

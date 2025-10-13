@@ -5,13 +5,19 @@ import dooya.see.adapter.webapi.dto.PostDetailResponse;
 import dooya.see.application.member.required.TokenManager;
 import dooya.see.application.post.provided.PostFinder;
 import dooya.see.application.post.provided.PostManager;
-import dooya.see.domain.post.*;
+import dooya.see.domain.post.Post;
+import dooya.see.domain.post.PostCategory;
+import dooya.see.domain.post.PostStatus;
 import dooya.see.domain.post.dto.PostCreateRequest;
 import dooya.see.domain.post.dto.PostSearchRequest;
 import dooya.see.domain.post.dto.PostUpdateRequest;
 import dooya.see.domain.post.exception.UnauthorizedPostAccessException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
 
@@ -83,37 +89,48 @@ public class PostApi {
     }
 
     @GetMapping("/api/posts")
-    public List<PostDetailResponse> getPublicPosts() {
-        List<Post> posts = postFinder.findPublicPosts();
+    public List<PostDetailResponse> getPublicPosts(
+            @PageableDefault(size = 20, sort = "metaData.createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        Page<Post> posts = postFinder.findPublicPosts(pageable);
 
-        return convertToResponses(posts);
+        return mapToResponses(posts);
     }
 
     @GetMapping("/api/posts/category/{category}")
-    public List<PostDetailResponse> getPostsByCategory(@PathVariable PostCategory category) {
-        List<Post> posts = postFinder.findPublicPostsByCategory(category);
+    public List<PostDetailResponse> getPostsByCategory(@PathVariable PostCategory category,
+                                                       @PageableDefault(size = 20, sort = "metaData.createdAt", direction = Sort.Direction.DESC)
+                                                       Pageable pageable) {
+        Page<Post> posts = postFinder.findPublicPostsByCategory(category, pageable);
 
-        return convertToResponses(posts);
+        return mapToResponses(posts);
     }
 
     @GetMapping("/api/members/{memberId}/posts")
     public List<PostDetailResponse> getPostsByMember(@PathVariable Long memberId,
-                                                     @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token) {
-        List<Post> posts = postFinder.findByMemberId(memberId);
+                                                     @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token,
+                                                     @PageableDefault(size = 20, sort = "metaData.createdAt", direction = Sort.Direction.DESC)
+                                                     Pageable pageable) {
+        if (isCurrentUser(memberId, token))
+            return mapToResponses(postFinder.findByMemberId(memberId, pageable));
 
-        return filterPostsByAccess(posts, memberId, token);
+        PostSearchRequest request = PostSearchRequest.builder()
+                .memberId(memberId)
+                .status(PostStatus.PUBLISHED)
+                .build();
+
+        return mapToResponses(postFinder.search(request, pageable));
     }
 
     @GetMapping("/api/posts/status/{status}")
     public List<PostDetailResponse> getPostsByStatus(@PathVariable PostStatus status,
-                                                     @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token) {
+                                                     @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token,
+                                                     @PageableDefault(size = 20, sort = "metaData.createdAt", direction = Sort.Direction.DESC)
+                                                     Pageable pageable) {
         // 관리자나 특별한 권한이 있는 경우에만 허용하는 것이 좋지만,
         // 일단 기본 구현으로 진행
-        List<Post> posts = postFinder.findByStatus(status);
+        Page<Post> posts = postFinder.findByStatus(status, pageable);
 
-        return posts.stream()
-                .map(PostDetailResponse::of)
-                .toList();
+        return mapToResponses(posts);
     }
 
     @GetMapping("/api/posts/search")
@@ -123,11 +140,13 @@ public class PostApi {
                                                 @RequestParam(required = false) String contentKeyword,
                                                 @RequestParam(required = false) PostCategory category,
                                                 @RequestParam(required = false) Long memberId,
-                                                @RequestParam(required = false) PostStatus status) {
+                                                @RequestParam(required = false) PostStatus status,
+                                                @PageableDefault(size = 20, sort = "metaData.createdAt", direction = Sort.Direction.DESC)
+                                                Pageable pageable) {
         PostSearchRequest searchRequest = buildSearchRequest(token, keyword, titleKeyword, contentKeyword, category, memberId, status);
-        List<Post> posts = postFinder.search(searchRequest);
+        Page<Post> posts = postFinder.search(searchRequest, pageable);
 
-        return convertToResponses(posts);
+        return mapToResponses(posts);
     }
 
     // Authentication 관련 메서드
@@ -189,18 +208,8 @@ public class PostApi {
     }
 
     // Response Conversion 관련 메서드
-    private List<PostDetailResponse> convertToResponses(List<Post> posts) {
+    private List<PostDetailResponse> mapToResponses(Page<Post> posts) {
         return posts.stream()
-                .map(PostDetailResponse::of)
-                .toList();
-    }
-
-    private List<PostDetailResponse> filterPostsByAccess(List<Post> posts, Long memberId, String token) {
-        if (isCurrentUser(memberId, token))
-            return convertToResponses(posts);  // 본인: 모든 상태 반환
-
-        return posts.stream()
-                .filter(post -> post.getStatus() == PostStatus.PUBLISHED)  // 타인: 공개 게시글만
                 .map(PostDetailResponse::of)
                 .toList();
     }

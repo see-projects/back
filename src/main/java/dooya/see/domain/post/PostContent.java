@@ -1,10 +1,13 @@
 package dooya.see.domain.post;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 
 @Embeddable
 public record PostContent(
+        @Column(name = "title", length = 100, nullable = false)
         String title,
+        @Column(name = "body", length = 50000, nullable = false)
         String body
 ) {
     public PostContent {
