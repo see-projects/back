@@ -109,11 +109,13 @@ class PostRepositoryPerformanceTest {
         }
 
         metrics.forEach(metric ->
-                log.info("Post search '{}' 평균 {} ms (결과 수: {})",
+                log.info("[perf] collected '{}' metric: avg {} ms (rows: {})",
                         metric.label(),
-                        metric.duration().toMillis(),
+                        formatMillis(metric.duration()),
                         metric.resultSize())
         );
+
+        logSummary(metrics);
     }
 
     private PerformanceMetric measure(String label, Supplier<Object> query) {
@@ -130,8 +132,8 @@ class PostRepositoryPerformanceTest {
             long iterationNanos = System.nanoTime() - start;
             totalNanos += iterationNanos;
             lastSize = extractSize(result);
-            log.info("[perf] '{}' iteration {} took {} ms ({} rows)",
-                    label, i + 1, nanosToMillis(iterationNanos), lastSize);
+            log.info("[perf] '{}' iteration {} took {} ms (rows: {})",
+                    label, i + 1, formatMillis(iterationNanos), lastSize);
         }
 
         long averageNanos = Math.max(1L, totalNanos / ITERATIONS);
@@ -139,8 +141,8 @@ class PostRepositoryPerformanceTest {
                 .as("Query '%s' should return at least one row", label)
                 .isPositive();
 
-        log.info("[perf] '{}' 평균 {} ms over {} runs ({} rows)",
-                label, nanosToMillis(averageNanos), ITERATIONS, lastSize);
+        log.info("[perf] '{}' 평균 {} ms over {} runs (rows: {})",
+                label, formatMillis(averageNanos), ITERATIONS, lastSize);
 
         return new PerformanceMetric(label, Duration.ofNanos(averageNanos), lastSize);
     }
@@ -164,6 +166,38 @@ class PostRepositoryPerformanceTest {
 
     private long nanosToMillis(long nanos) {
         return Duration.ofNanos(nanos).toMillis();
+    }
+
+    private String formatMillis(long nanos) {
+        return String.format(Locale.US, "%.2f", nanos / 1_000_000.0);
+    }
+
+    private String formatMillis(Duration duration) {
+        return formatMillis(duration.toNanos());
+    }
+
+    private void logSummary(List<PerformanceMetric> metrics) {
+        if (metrics.isEmpty())
+            return;
+
+        Duration baselineDuration = metrics.get(0).duration();
+        log.info("[perf][summary] ----------------------------------------------------");
+        metrics.forEach(metric -> {
+            double ratio = computeRelativeRatio(baselineDuration, metric.duration());
+            log.info("[perf][summary] %-20s | avg %8s ms | rel %5.2fx | rows %6d",
+                    metric.label(),
+                    formatMillis(metric.duration()),
+                    ratio,
+                    metric.resultSize());
+        });
+        log.info("[perf][summary] baseline: '{}' 기준", metrics.get(0).label());
+    }
+
+    private double computeRelativeRatio(Duration baseline, Duration current) {
+        if (baseline.isZero()) {
+            return 1.0;
+        }
+        return (double) current.toNanos() / baseline.toNanos();
     }
 
     private record PerformanceMetric(String label, Duration duration, int resultSize) {
