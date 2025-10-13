@@ -12,6 +12,9 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -65,16 +68,16 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
             Post post2 = createTestPost();
             flushAndClearContext();
 
-            List<Post> found = postFinder.findByMemberId(AUTHOR_ID);
+            Page<Post> page = postFinder.findByMemberId(AUTHOR_ID, Pageable.unpaged());
 
-            assertThatPostsFoundByMember(found, AUTHOR_ID, post1, post2);
+            assertThatPostsFoundByMember(page.getContent(), AUTHOR_ID, post1, post2);
         }
 
         @Test
         void 게시글이_없는_회원_ID로_조회_시_빈_목록을_반환한다() {
-            List<Post> found = postFinder.findByMemberId(999L);
+            Page<Post> page = postFinder.findByMemberId(999L, Pageable.unpaged());
 
-            assertThat(found).isEmpty();
+            assertThat(page.getContent()).isEmpty();
         }
 
         @Test
@@ -83,16 +86,16 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
             Post post2 = createTestPost();
             flushAndClearContext();
 
-            List<Post> found = postFinder.findByCategory(PostCategory.TECH);
+            Page<Post> page = postFinder.findByCategory(PostCategory.TECH, Pageable.unpaged());
 
-            assertThatPostsFoundByCategory(found, PostCategory.TECH, post1, post2);
+            assertThatPostsFoundByCategory(page.getContent(), PostCategory.TECH, post1, post2);
         }
 
         @Test
         void 게시글이_없는_카테고리로_조회_시_빈_목록을_반환한다() {
-            List<Post> found = postFinder.findByCategory(PostCategory.QNA);
+            Page<Post> page = postFinder.findByCategory(PostCategory.QNA, Pageable.unpaged());
 
-            assertThat(found).isEmpty();
+            assertThat(page.getContent()).isEmpty();
         }
 
         @Test
@@ -101,16 +104,16 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
             Post post2 = createTestPost();
             flushAndClearContext();
 
-            List<Post> found = postFinder.findByStatus(PostStatus.DRAFT);
+            Page<Post> page = postFinder.findByStatus(PostStatus.DRAFT, Pageable.unpaged());
 
-            assertThatPostsFoundByStatus(found, PostStatus.DRAFT, post1, post2);
+            assertThatPostsFoundByStatus(page.getContent(), PostStatus.DRAFT, post1, post2);
         }
 
         @Test
         void 해당_상태의_게시글이_없으면_빈_목록을_반환한다() {
-            List<Post> found = postFinder.findByStatus(PostStatus.PUBLISHED);
+            Page<Post> page = postFinder.findByStatus(PostStatus.PUBLISHED, Pageable.unpaged());
 
-            assertThat(found).isEmpty();
+            assertThat(page.getContent()).isEmpty();
         }
 
         private void assertThatPostsFoundByMember(List<Post> posts, Long expectedMemberId, Post... expectedPosts) {
@@ -145,16 +148,16 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
             Post post2 = createPublishedPost();
             flushAndClearContext();
 
-            List<Post> found = postFinder.findPublicPosts();
+            Page<Post> page = postFinder.findPublicPosts(Pageable.unpaged());
 
-            assertThatPublicPostsFound(found, post1, post2);
+            assertThatPublicPostsFound(page.getContent(), post1, post2);
         }
 
         @Test
         void 발행된_게시글이_없으면_빈_목록을_반환한다() {
-            List<Post> found = postFinder.findPublicPosts();
+            Page<Post> page = postFinder.findPublicPosts(Pageable.unpaged());
 
-            assertThat(found).isEmpty();
+            assertThat(page.getContent()).isEmpty();
         }
 
         @Test
@@ -163,16 +166,16 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
             Post post2 = createPublishedPost();
             flushAndClearContext();
 
-            List<Post> found = postFinder.findPublicPostsByCategory(PostCategory.TECH);
+            Page<Post> page = postFinder.findPublicPostsByCategory(PostCategory.TECH, Pageable.unpaged());
 
-            assertThatPublicPostsByCategoryFound(found, PostCategory.TECH, post1, post2);
+            assertThatPublicPostsByCategoryFound(page.getContent(), PostCategory.TECH, post1, post2);
         }
 
         @Test
         void 해당_카테고리에_발행된_게시글이_없으면_빈_목록을_반환한다() {
-            List<Post> found = postFinder.findPublicPostsByCategory(PostCategory.TECH);
+            Page<Post> page = postFinder.findPublicPostsByCategory(PostCategory.TECH, Pageable.unpaged());
 
-            assertThat(found).isEmpty();
+            assertThat(page.getContent()).isEmpty();
         }
 
         private void assertThatPublicPostsFound(List<Post> posts, Post... expectedPosts) {
@@ -333,6 +336,23 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
         }
     }
 
+    @Nested
+    class 게시글_페이지_조회 {
+        @Test
+        void 게시글을_페이지로_조회한다() {
+            Post post1 = createTestPost();
+            Post post2 = createTestPost();
+            flushAndClearContext();
+
+            Page<Post> firstPage = postFinder.findPosts(PostSearchRequest.builder().build(), PageRequest.of(0, 1));
+            Page<Post> secondPage = postFinder.findPosts(PostSearchRequest.builder().build(), PageRequest.of(1, 1));
+
+            assertThat(firstPage.getTotalElements()).isEqualTo(2);
+            assertThat(firstPage.getContent()).extracting(Post::getId).containsExactly(post1.getId());
+            assertThat(secondPage.getContent()).extracting(Post::getId).containsExactly(post2.getId());
+        }
+    }
+
     // 헬퍼 메서드들
     private Post createTestPost() {
         return postManager.create(createPostRequest(), AUTHOR_ID);
@@ -360,44 +380,57 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
 
     private List<Post> searchByTitleKeyword(String keyword) {
         return postFinder.search(PostSearchRequest.builder()
-                .titleKeyword(keyword)
-                .build());
+                        .titleKeyword(keyword)
+                        .build(),
+                Pageable.unpaged())
+                .getContent();
     }
 
     private List<Post> searchByKeyword(String keyword) {
         return postFinder.search(PostSearchRequest.builder()
-                .keyword(keyword)
-                .build());
+                        .keyword(keyword)
+                        .build(),
+                Pageable.unpaged())
+                .getContent();
     }
 
     private List<Post> searchByContentKeyword(String keyword) {
         return postFinder.search(PostSearchRequest.builder()
-                .contentKeyword(keyword)
-                .build());
+                        .contentKeyword(keyword)
+                        .build(),
+                Pageable.unpaged())
+                .getContent();
     }
 
     private List<Post> searchByKeywordAndMemberAndCategory(String keyword, Long memberId, PostCategory category) {
         return postFinder.search(PostSearchRequest.builder()
-                .keyword(keyword)
-                .memberId(memberId)
-                .category(category)
-                .build());
+                        .keyword(keyword)
+                        .memberId(memberId)
+                        .category(category)
+                        .build(),
+                Pageable.unpaged())
+                .getContent();
     }
 
     private List<Post> searchByCategory(PostCategory category) {
         return postFinder.search(PostSearchRequest.builder()
-                .category(category)
-                .build());
+                        .category(category)
+                        .build(),
+                Pageable.unpaged())
+                .getContent();
     }
 
     private List<Post> searchByStatus(PostStatus status) {
         return postFinder.search(PostSearchRequest.builder()
-                .status(status)
-                .build());
+                        .status(status)
+                        .build(),
+                Pageable.unpaged())
+                .getContent();
     }
 
     private List<Post> searchWithEmptyConditions() {
-        return postFinder.search(PostSearchRequest.builder().build());
+        return postFinder.search(PostSearchRequest.builder().build(), Pageable.unpaged())
+                .getContent();
     }
 
     private Long[] extractIds(Post... posts) {
