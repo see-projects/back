@@ -3,12 +3,16 @@ package dooya.see.application.post.required;
 import dooya.see.application.post.PostTestDataGenerator;
 import dooya.see.domain.post.PostStatus;
 import dooya.see.domain.post.dto.PostSearchRequest;
+import dooya.see.infrastructure.database.PostSearchIndexInitializer;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,7 +27,9 @@ import java.util.function.Supplier;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
-@Import(PostTestDataGenerator.class)
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@ActiveProfiles("test")
+@Import({PostTestDataGenerator.class, PostSearchIndexInitializer.class})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PostRepositoryPerformanceTest {
     private static final Logger log = LoggerFactory.getLogger(PostRepositoryPerformanceTest.class);
@@ -95,19 +101,24 @@ class PostRepositoryPerformanceTest {
 
         if (supportsMySqlFullText()) {
             PerformanceMetric fullText = measure("mysql-fulltext", () -> postRepository.searchWithFullTextIndex(
-                    PostStatus.PUBLISHED.name(),
-                    null,
-                    null,
-                    null,
-                    null,
-                    "Performance",
+                    enumName(request.status()),
+                    enumName(request.category()),
+                    request.memberId(),
+                    request.fromDate(),
+                    request.toDate(),
+                    request.keyword(),
                     pageable
             ));
             metrics.add(fullText);
 
+            assertThat(fullText.duration().toNanos())
+                    .as("Full-text search should stay within acceptable range compared to baseline")
+                    .isLessThanOrEqualTo((long) (baseline.duration().toNanos() * PERFORMANCE_THRESHOLD));
             assertThat(fullText.resultSize())
                     .as("Full-text search should return the same number of posts as the paginated JPQL query")
                     .isEqualTo(paginated.resultSize());
+
+            logFullTextExplain(request, pageable);
         }
 
         // 개별 성능 로그 출력
@@ -163,10 +174,33 @@ class PostRepositoryPerformanceTest {
     }
 
     private boolean supportsMySqlFullText() {
+        String dialectName = detectDialectName();
+        boolean supported = dialectName != null && dialectName.toLowerCase(LOCALE).contains("mysql");
+        if (!supported) {
+            log.info("[perf] skipping MySQL full-text benchmark (dialect: {})",
+                    dialectName != null ? dialectName : "unknown");
+        }
+        return supported;
+    }
+
+    private String detectDialectName() {
         Object dialect = entityManager.getEntityManagerFactory()
                 .getProperties()
                 .get("hibernate.dialect");
-        return dialect != null && dialect.toString().toLowerCase(LOCALE).contains("mysql");
+        if (dialect != null) {
+            return dialect.toString();
+        }
+        try {
+            return entityManager.getEntityManagerFactory()
+                    .unwrap(org.hibernate.engine.spi.SessionFactoryImplementor.class)
+                    .getJdbcServices()
+                    .getDialect()
+                    .getClass()
+                    .getName();
+        } catch (RuntimeException ex) {
+            log.debug("[perf] failed to unwrap SessionFactoryImplementor for dialect detection", ex);
+            return null;
+        }
     }
 
     private long nanosToMillis(long nanos) {
@@ -206,6 +240,49 @@ class PostRepositoryPerformanceTest {
     private double computeRelativeRatio(Duration baseline, Duration current) {
         if (baseline.isZero()) return 1.0;
         return (double) current.toNanos() / baseline.toNanos();
+    }
+
+    private void logFullTextExplain(PostSearchRequest request, Pageable pageable) {
+        if (request.keyword() == null) {
+            log.info("[perf][explain] skipping explain because keyword is null");
+            return;
+        }
+
+        String explainSql = """
+                EXPLAIN ANALYZE
+                SELECT *
+                FROM post p
+                WHERE 
+                    (:status IS NULL OR p.status = :status)
+                    AND (:category IS NULL OR p.category = :category)
+                    AND (:memberId IS NULL OR p.member_id = :memberId)
+                    AND (:fromDate IS NULL OR p.created_at >= :fromDate)
+                    AND (:toDate IS NULL OR p.created_at <= :toDate)
+                    AND (:keyword IS NULL OR MATCH(p.title, p.body) AGAINST (:keyword IN NATURAL LANGUAGE MODE))
+                ORDER BY 
+                    CASE 
+                        WHEN :keyword IS NULL THEN 0 
+                        ELSE MATCH(p.title, p.body) AGAINST (:keyword IN NATURAL LANGUAGE MODE) 
+                    END DESC,
+                    p.created_at DESC
+                LIMIT %d
+                """.formatted(pageable.getPageSize());
+
+        Query explain = entityManager.createNativeQuery(explainSql);
+        explain.setParameter("status", enumName(request.status()));
+        explain.setParameter("category", enumName(request.category()));
+        explain.setParameter("memberId", request.memberId());
+        explain.setParameter("fromDate", request.fromDate());
+        explain.setParameter("toDate", request.toDate());
+        explain.setParameter("keyword", request.keyword());
+
+        @SuppressWarnings("unchecked")
+        List<Object> rows = explain.getResultList();
+        rows.forEach(row -> log.info("[perf][explain] {}", row));
+    }
+
+    private String enumName(Enum<?> value) {
+        return value != null ? value.name() : null;
     }
 
     private record PerformanceMetric(String label, Duration duration, int resultSize) {}

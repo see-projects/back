@@ -182,7 +182,12 @@ WHERE
     AND (:fromDate IS NULL OR p.created_at >= :fromDate)
     AND (:toDate IS NULL OR p.created_at <= :toDate)
     AND (:keyword IS NULL OR MATCH(p.title, p.body) AGAINST (:keyword IN NATURAL LANGUAGE MODE))
-ORDER BY p.created_at DESC
+ORDER BY 
+    CASE 
+        WHEN :keyword IS NULL THEN 0 
+        ELSE MATCH(p.title, p.body) AGAINST (:keyword IN NATURAL LANGUAGE MODE) 
+    END DESC,
+    p.created_at DESC
 """,
             countQuery = """
     SELECT COUNT(*) FROM post p
