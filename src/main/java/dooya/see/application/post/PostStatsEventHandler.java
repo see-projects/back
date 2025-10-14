@@ -4,6 +4,7 @@ import dooya.see.application.post.provided.PostStatsManager;
 import dooya.see.domain.post.event.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
@@ -28,7 +29,7 @@ public class PostStatsEventHandler {
     }
 
     @Async
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @EventListener
     public void handlePostViewed(PostViewed event) {
         if (event.postId() == null) return;
 
@@ -66,6 +67,36 @@ public class PostStatsEventHandler {
             postStatsManager.decrementLikeCount(event.postId());
         } catch (Exception e) {
             log.error("좋아요 수 감소 실패: postId={}", event.postId(), e);
+        }
+    }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void handleCommentCreated(CommentCreated event) {
+        if (event.postId() == null) return;
+
+        log.info("CommentCreated 이벤트 처리: postId={}, commentId={}, isReply={}",
+                event.postId(), event.commentId(), event.isReply());
+
+        try {
+            postStatsManager.incrementCommentCount(event.postId());
+        } catch (Exception e) {
+            log.error("댓글 수 증가 실패: postId={}", event.postId(), e);
+        }
+    }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void handleCommentDeleted(CommentDeleted event) {
+        if (event.postId() == null) return;
+
+        log.info("CommentDeleted 이벤트 처리: postId={}, commentId={}, isReply={}",
+                event.postId(), event.commentId(), event.isReply());
+
+        try {
+            postStatsManager.decrementCommentCount(event.postId());
+        } catch (Exception e) {
+            log.error("댓글 수 감소 실패: postId={}", event.postId(), e);
         }
     }
 
