@@ -14,22 +14,30 @@ import org.hibernate.annotations.NaturalId;
 import static java.util.Objects.requireNonNull;
 
 @Entity
+@Table(name = "member", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_member_email", columnNames = "email"),
+        @UniqueConstraint(name = "uk_member_detail_id", columnNames = "detail_id")
+})
 @Getter
 @ToString(callSuper = true, exclude = "detail")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member extends AbstractEntity {
     @NaturalId
     @Embedded
+    @AttributeOverride(name = "address", column = @Column(name = "email", nullable = false, length = 255))
     private Email email;
 
+    @Column(nullable = false, length = 50)
     private String nickname;
 
+    @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 
     @Enumerated(EnumType.STRING)
     private MemberStatus status;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "detail_id", nullable = false, unique = true)
     private MemberDetail detail;
 
     public static Member register(MemberRegisterRequest registerRequest, PasswordEncoder passwordEncoder) {
