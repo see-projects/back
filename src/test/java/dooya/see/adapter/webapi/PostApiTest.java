@@ -783,12 +783,12 @@ class PostApiTest {
     }
 
     private void awaitPostStatsInitialized(Long postId) {
-        waitUntil(() -> executeInNewTransaction(() -> postStatsRepository.findByPostId(postId).isPresent()),
+        waitUntil(() -> executeInRequiresNewTransaction(() -> postStatsRepository.findByPostId(postId).isPresent()),
                 "PostStats not initialized for postId=" + postId);
     }
 
     private void awaitViewCount(Long postId, int expectedCount) {
-        waitUntil(() -> executeInNewTransaction(() -> postStatsRepository.findByPostId(postId)
+        waitUntil(() -> executeInRequiresNewTransaction(() -> postStatsRepository.findByPostId(postId)
                 .map(PostStats::getViewCount)
                 .filter(count -> count == expectedCount)
                 .isPresent()), "Expected view count %d for postId=%d".formatted(expectedCount, postId));
@@ -813,6 +813,13 @@ class PostApiTest {
         TransactionTemplate template = new TransactionTemplate(transactionManager);
         template.setReadOnly(true);
         template.setPropagationBehavior(TransactionDefinition.PROPAGATION_SUPPORTS);
+        return template.execute(status -> action.get());
+    }
+
+    private <T> T executeInRequiresNewTransaction(Supplier<T> action) {
+        TransactionTemplate template = new TransactionTemplate(transactionManager);
+        template.setReadOnly(true);
+        template.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
         return template.execute(status -> action.get());
     }
 
