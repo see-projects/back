@@ -6,9 +6,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
 record PostLikeRepositoryTest(PostLikeRepository postLikeRepository, EntityManager entityManager) {
@@ -130,13 +132,11 @@ record PostLikeRepositoryTest(PostLikeRepository postLikeRepository, EntityManag
     @Nested
     class 좋아요_중복_처리 {
         @Test
-        void 동일_게시물에_동일_회원의_중복_좋아요가_허용된다() {
-            createAndSavePostLike(POST_ID, MEMBER_ID);
+        void 동일_게시물에_동일_회원의_중복_좋아요는_허용되지_않는다() {
             createAndSavePostLike(POST_ID, MEMBER_ID);
 
-            long count = postLikeRepository.countByPostId(POST_ID);
-
-            assertThat(count).isEqualTo(2);
+            assertThatThrownBy(() -> createAndSavePostLike(POST_ID, MEMBER_ID))
+                    .isInstanceOf(DataIntegrityViolationException.class);
         }
 
         @Test
