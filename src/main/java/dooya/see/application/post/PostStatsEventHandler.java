@@ -5,10 +5,10 @@ import dooya.see.domain.post.event.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
+import org.springframework.scheduling.annotation.Async;
 
 @Slf4j
 @Component
@@ -16,7 +16,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public class PostStatsEventHandler {
     private final PostStatsManager postStatsManager;
 
-    @Async
+    @Async("applicationTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePostCreated(PostCreated event) {
         log.info("PostCreated 이벤트 처리: postId={}, memberId={}", event.postId(), event.memberId());
@@ -28,7 +28,7 @@ public class PostStatsEventHandler {
         }
     }
 
-    @Async
+    @Async("applicationTaskExecutor")
     @EventListener
     public void handlePostViewed(PostViewed event) {
         if (event.postId() == null) return;
@@ -42,7 +42,7 @@ public class PostStatsEventHandler {
         }
     }
 
-    @Async
+    @Async("applicationTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePostLiked(PostLiked event) {
         if (event.postId() == null) return;
@@ -56,7 +56,7 @@ public class PostStatsEventHandler {
         }
     }
 
-    @Async
+    @Async("applicationTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePostUnliked(PostUnliked event) {
         if (event.postId() == null) return;
@@ -70,7 +70,7 @@ public class PostStatsEventHandler {
         }
     }
 
-    @Async
+    @Async("applicationTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleCommentCreated(CommentCreated event) {
         if (event.postId() == null) return;
@@ -85,7 +85,7 @@ public class PostStatsEventHandler {
         }
     }
 
-    @Async
+    @Async("applicationTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleCommentDeleted(CommentDeleted event) {
         if (event.postId() == null) return;
@@ -101,27 +101,27 @@ public class PostStatsEventHandler {
     }
 
     // 다른 이벤트들은 로깅만 수행
-    @Async
+    @Async("applicationTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePostUpdated(PostUpdated event) {
         log.info("PostUpdated 이벤트 처리: postId={}, memberId={}, titleChanged={}, bodyChanged={}, categoryChanged={}",
                 event.postId(), event.memberId(), event.titleChanged(), event.bodyChanged(), event.categoryChanged());
     }
 
-    @Async
+    @Async("applicationTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePostPublished(PostPublished event) {
         log.info("PostPublished 이벤트 처리: postId={}, memberId={}", event.postId(), event.memberId());
     }
 
-    @Async
+    @Async("applicationTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePostHidden(PostHidden event) {
         log.info("PostHidden 이벤트 처리: postId={}, memberId={}, previousStatus={}",
                 event.postId(), event.memberId(), event.previousStatus());
     }
 
-    @Async
+    @Async("applicationTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePostDeleted(PostDeleted event) {
         log.info("PostDeleted 이벤트 처리: postId={}, memberId={}, previousStatus={}",
