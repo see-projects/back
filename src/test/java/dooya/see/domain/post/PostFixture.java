@@ -65,6 +65,15 @@ public class PostFixture {
         );
     }
 
+    public static PostUpdateRequest updateTagsOnlyRequest() {
+        return new PostUpdateRequest(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(List.of("DevOps", "Cloud"))
+        );
+    }
+
     public static PostUpdateRequest noUpdateRequest() {
         return new PostUpdateRequest(
                 Optional.empty(),

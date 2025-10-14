@@ -12,7 +12,10 @@ import dooya.see.domain.post.dto.PostCreateRequest;
 import dooya.see.domain.post.dto.PostSearchRequest;
 import dooya.see.domain.post.dto.PostUpdateRequest;
 import dooya.see.domain.post.exception.UnauthorizedPostAccessException;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
+import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +25,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * 게시글 관리와 관련된 API를 제공하는 컨트롤러 클래스
@@ -32,6 +36,7 @@ public class PostApi {
     private final PostManager postManager;
     private final TokenManager tokenManager;
     private final PostFinder postFinder;
+    private final Validator validator;
 
     @PostMapping("/api/posts")
     public PostCreateResponse createPost(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token,
@@ -45,16 +50,18 @@ public class PostApi {
     @GetMapping("/api/posts/{id}")
     public PostDetailResponse getPost(@PathVariable Long id,
                                       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token) {
-        Post post = findPostWithAccess(id, token);
-        processViewIfNeeded(post, token);
+        Long currentMemberId = resolveMemberId(token);
+        Post post = findPostWithAccess(id, currentMemberId);
+        Post viewedPost = viewPostIfNeeded(post, currentMemberId);
 
-        return PostDetailResponse.of(post);
+        return PostDetailResponse.of(viewedPost);
     }
 
     @PutMapping("/api/posts/{id}")
     public PostDetailResponse updatePost(@PathVariable Long id,
                                          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token,
-                                         @RequestBody @Valid PostUpdateRequest request) {
+                                         @RequestBody PostUpdateRequest request) {
+        validatePostUpdateRequest(request);
         Long currentMemberId = extractCurrentMemberId(token);
         Post post = postManager.update(request, id, currentMemberId);
 
@@ -160,51 +167,56 @@ public class PostApi {
     }
 
     private boolean isCurrentUser(Long memberId, String token) {
-        if (!isAuthenticated(token))
-            return false;
-        Long currentMemberId = extractCurrentMemberId(token);
-
-        return currentMemberId.equals(memberId);
+        Long currentMemberId = resolveMemberId(token);
+        return currentMemberId != null && currentMemberId.equals(memberId);
     }
 
     // Post Access 관련 메서드
-    private Post findPostWithAccess(Long postId, String token) {
+    private Post findPostWithAccess(Long postId, Long currentMemberId) {
         Post post = postFinder.find(postId);
-        validatePostAccess(post, token);
+        validatePostAccess(post, currentMemberId);
 
         return post;
     }
 
-    private void validatePostAccess(Post post, String token) {
-        if (!canAccessPost(post, token))
+    private void validatePostAccess(Post post, Long currentMemberId) {
+        if (!canAccessPost(post, currentMemberId))
             throw new UnauthorizedPostAccessException("게시글을 조회할 권한이 없습니다");
     }
 
-    private boolean canAccessPost(Post post, String token) {
+    private boolean canAccessPost(Post post, Long currentMemberId) {
         if (post.getStatus() == PostStatus.PUBLISHED)
             return true;  // 공개 게시글은 누구나 접근 가능
 
-        if (!isAuthenticated(token))
+        if (currentMemberId == null)
             return false;  // 비공개 게시글은 인증 필요
-
-        Long currentMemberId = extractCurrentMemberId(token);
 
         return post.isWrittenBy(currentMemberId);  // 작성자만 비공개 게시글 접근 가능
     }
 
-    private void processViewIfNeeded(Post post, String token) {
-        if (shouldIncrementView(post, token)) {
-            //postManager.incrementViewCount(post.getId());  // 주석 해제 시 사용
+    private Post viewPostIfNeeded(Post post, Long currentMemberId) {
+        if (shouldIncrementView(post, currentMemberId))
+            return postFinder.viewPost(post.getId(), currentMemberId);
+
+        return post;
+    }
+
+    private boolean shouldIncrementView(Post post, Long currentMemberId) {
+        return currentMemberId == null || !post.isWrittenBy(currentMemberId);  // 비인증 또는 타인일 때만 조회수 증가
+    }
+
+    private void validatePostUpdateRequest(PostUpdateRequest request) {
+        Set<ConstraintViolation<PostUpdateRequest>> violations = validator.validate(request);
+        if (!violations.isEmpty()) {
+            throw new ConstraintViolationException(violations);
         }
     }
 
-    private boolean shouldIncrementView(Post post, String token) {
+    private Long resolveMemberId(String token) {
         if (!isAuthenticated(token))
-            return true;  // 비인증 사용자는 항상 조회수 증가
+            return null;
 
-        Long currentMemberId = extractCurrentMemberId(token);
-
-        return !post.isWrittenBy(currentMemberId);  // 본인 게시글이 아닐 때만 조회수 증가
+        return extractCurrentMemberId(token);
     }
 
     // Response Conversion 관련 메서드

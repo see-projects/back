@@ -5,6 +5,7 @@ import dooya.see.domain.member.exception.DuplicateEmailException;
 import dooya.see.domain.member.exception.DuplicateProfileException;
 import dooya.see.domain.member.exception.MemberNotFoundException;
 import dooya.see.domain.post.exception.*;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -34,7 +35,7 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
         return getProblemDetail(HttpStatus.UNAUTHORIZED, exception);
     }
 
-    @ExceptionHandler({EmptyCommentUpdateException.class})
+    @ExceptionHandler({EmptyCommentUpdateException.class, ConstraintViolationException.class})
     public ProblemDetail badRequestExceptionHandler(Exception exception) {
         return getProblemDetail(HttpStatus.BAD_REQUEST, exception);
     }

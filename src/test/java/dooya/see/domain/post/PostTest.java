@@ -141,6 +141,17 @@ class PostTest {
         }
 
         @Test
+        void 태그만_수정_시_태그가_변경되고_태그_이벤트가_발생한다() {
+            PostUpdateRequest request = updateTagsOnlyRequest();
+
+            post.update(request);
+
+            assertThat(post.getTags()).extracting(Tag::name)
+                    .containsExactly("devops", "cloud");
+            assertThatPostUpdatedEventOccurred(false, false, false, true);
+        }
+
+        @Test
         void 변경사항이_없는_요청으로_수정_시_예외가_발생한다() {
             PostUpdateRequest request = noUpdateRequest();
 
