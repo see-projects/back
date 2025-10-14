@@ -7,9 +7,11 @@ import dooya.see.application.post.required.PostRepository;
 import dooya.see.domain.post.*;
 import dooya.see.domain.post.dto.PostCreateRequest;
 import dooya.see.domain.post.dto.PostUpdateRequest;
+import dooya.see.domain.post.exception.DuplicateLikeException;
 import dooya.see.domain.post.exception.UnauthorizedPostAccessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -149,7 +151,17 @@ public class PostModifyService implements PostManager {
 
     private void createLike(Long postId, Long memberId) {
         PostLike postLike = PostLike.create(postId, memberId);
-        postLikeRepository.save(postLike);
+        try {
+            postLikeRepository.save(postLike);
+        } catch (DataIntegrityViolationException ex) {
+            if (isDuplicateLikeViolation(ex)) {
+                throw new DuplicateLikeException(
+                        "이미 좋아요를 누른 상태입니다: postId=%d, memberId=%d".formatted(postId, memberId),
+                        ex
+                );
+            }
+            throw ex;
+        }
     }
 
     private void removeLike(Long postId, Long memberId) {
@@ -165,5 +177,15 @@ public class PostModifyService implements PostManager {
     @FunctionalInterface
     private interface LikeOperation {
         void execute(Post post, Long postId, Long memberId);
+    }
+
+    private boolean isDuplicateLikeViolation(DataIntegrityViolationException exception) {
+        Throwable cause = exception.getMostSpecificCause();
+        String message = cause != null ? cause.getMessage() : exception.getMessage();
+        if (message == null) {
+            return false;
+        }
+        return message.contains("uk_post_like_member_post") || message.contains("post_like(member_id,post_id)")
+                || message.contains("member_id, post_id");
     }
 }
