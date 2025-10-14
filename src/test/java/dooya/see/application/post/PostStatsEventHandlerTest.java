@@ -12,14 +12,20 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.function.BooleanSupplier;
+import java.util.function.Predicate;
+
 import static dooya.see.domain.post.PostCategory.TECH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.fail;
 
 @SpringBootTest
 @Transactional
 @Import(SeeTestConfiguration.class)
-record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, PostStatsManager postStatsManager, PostStatsRepository postStatsRepository) {
+record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler,
+                                 PostStatsManager postStatsManager,
+                                 PostStatsRepository postStatsRepository) {
     private static final Long POST_ID = 100L;
     private static final Long MEMBER_ID = 1L;
     private static final Long ANOTHER_MEMBER_ID = 2L;
@@ -37,11 +43,12 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
         }
 
         private void assertThatStatsCreated(Long postId) {
-            PostStats stats = postStatsRepository.findByPostId(postId).orElseThrow();
+            PostStats stats = awaitStats(postId, this::isInitialStats);
             assertThat(stats.getPostId()).isEqualTo(postId);
-            assertThat(stats.getViewCount()).isEqualTo(0);
-            assertThat(stats.getLikeCount()).isEqualTo(0);
-            assertThat(stats.getCommentCount()).isEqualTo(0);
+        }
+
+        private boolean isInitialStats(PostStats stats) {
+            return stats.getViewCount() == 0 && stats.getLikeCount() == 0 && stats.getCommentCount() == 0;
         }
     }
 
@@ -74,11 +81,11 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
             assertThatCode(() -> postStatsEventHandler.handlePostViewed(event))
                     .doesNotThrowAnyException();
 
-            assertThat(postStatsRepository.findByPostId(NON_EXISTENT_POST_ID)).isEmpty();
+            assertThatStatsDoesNotExistFor(NON_EXISTENT_POST_ID);
         }
 
         private void assertThatViewCountIncremented(Long postId, int expectedCount) {
-            PostStats stats = postStatsRepository.findByPostId(postId).orElseThrow();
+            PostStats stats = awaitStats(postId, s -> s.getViewCount() == expectedCount);
             assertThat(stats.getViewCount()).isEqualTo(expectedCount);
         }
     }
@@ -123,7 +130,7 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
             assertThatCode(() -> postStatsEventHandler.handlePostLiked(event))
                     .doesNotThrowAnyException();
 
-            assertThat(postStatsRepository.findByPostId(NON_EXISTENT_POST_ID)).isEmpty();
+            assertThatStatsDoesNotExistFor(NON_EXISTENT_POST_ID);
         }
 
         @Test
@@ -133,23 +140,23 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
             assertThatCode(() -> postStatsEventHandler.handlePostUnliked(event))
                     .doesNotThrowAnyException();
 
-            assertThat(postStatsRepository.findByPostId(NON_EXISTENT_POST_ID)).isEmpty();
+            assertThatStatsDoesNotExistFor(NON_EXISTENT_POST_ID);
         }
 
         private void assertThatLikeCountIncremented(Long postId, int expectedCount) {
-            PostStats stats = postStatsRepository.findByPostId(postId).orElseThrow();
+            PostStats stats = awaitStats(postId, s -> s.getLikeCount() == expectedCount);
             assertThat(stats.getLikeCount()).isEqualTo(expectedCount);
             assertThat(stats.getViewCount()).isEqualTo(0);
             assertThat(stats.getCommentCount()).isEqualTo(0);
         }
 
         private void assertThatLikeCountDecremented(Long postId, int expectedCount) {
-            PostStats stats = postStatsRepository.findByPostId(postId).orElseThrow();
+            PostStats stats = awaitStats(postId, s -> s.getLikeCount() == expectedCount);
             assertThat(stats.getLikeCount()).isEqualTo(expectedCount);
         }
 
         private void assertThatLikeCountRemainsSafe(Long postId) {
-            PostStats stats = postStatsRepository.findByPostId(postId).orElseThrow();
+            PostStats stats = awaitStats(postId, s -> s.getLikeCount() == 0);
             assertThat(stats.getLikeCount()).isEqualTo(0);
         }
     }
@@ -187,11 +194,11 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
             assertThatCode(() -> postStatsEventHandler.handleCommentDeleted(deletedEvent))
                     .doesNotThrowAnyException();
 
-            assertThat(postStatsRepository.findByPostId(NON_EXISTENT_POST_ID)).isEmpty();
+            assertThatStatsDoesNotExistFor(NON_EXISTENT_POST_ID);
         }
 
         private void assertThatCommentCount(Long postId, int expectedCount) {
-            PostStats stats = postStatsRepository.findByPostId(postId).orElseThrow();
+            PostStats stats = awaitStats(postId, s -> s.getCommentCount() == expectedCount);
             assertThat(stats.getCommentCount()).isEqualTo(expectedCount);
         }
     }
@@ -222,7 +229,10 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
         }
 
         private void assertThatMultipleEventsProcessed(Long postId) {
-            PostStats stats = postStatsRepository.findByPostId(postId).orElseThrow();
+            PostStats stats = awaitStats(postId, s ->
+                    s.getViewCount() == 2 &&
+                            s.getLikeCount() == 1 &&
+                            s.getCommentCount() == 0);
             assertThat(stats.getViewCount()).isEqualTo(2);
             assertThat(stats.getLikeCount()).isEqualTo(1);
             assertThat(stats.getCommentCount()).isEqualTo(0);
@@ -280,6 +290,48 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
             postStatsEventHandler.handlePostViewed(viewEvent);
             postStatsEventHandler.handlePostLiked(likeEvent);
             postStatsEventHandler.handlePostUnliked(unlikeEvent);
+        }
+    }
+
+    private PostStats awaitStats(Long postId, Predicate<PostStats> predicate) {
+        int attempts = 200;
+        while (attempts-- > 0) {
+            PostStats stats = postStatsManager.getPostStats(postId).orElse(null);
+            if (stats != null && predicate.test(stats)) {
+                return stats;
+            }
+            sleep();
+        }
+        fail("조건에 맞는 PostStats를 찾지 못했습니다: postId=" + postId);
+        return null; // unreachable
+    }
+
+    private PostStats awaitStats(Long postId) {
+        return awaitStats(postId, stats -> true);
+    }
+
+    private void assertThatStatsDoesNotExistFor(Long postId) {
+        awaitCondition(() -> postStatsManager.getPostStats(postId).isEmpty(),
+                "Stats should not exist for postId=" + postId);
+    }
+
+    private void awaitCondition(BooleanSupplier condition, String failureMessage) {
+        int attempts = 200;
+        while (attempts-- > 0) {
+            if (condition.getAsBoolean()) {
+                return;
+            }
+            sleep();
+        }
+        fail(failureMessage);
+    }
+
+    private void sleep() {
+        try {
+            Thread.sleep(50);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            fail("대기 중 인터럽트가 발생했습니다");
         }
     }
 }
