@@ -25,7 +25,7 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
         return getProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, exception);
     }
 
-    @ExceptionHandler({DuplicateEmailException.class, DuplicateProfileException.class, InvalidPostStatusTransitionException.class, InvalidCommentStatusException.class})
+    @ExceptionHandler({DuplicateEmailException.class, DuplicateProfileException.class, DuplicateLikeException.class, InvalidPostStatusTransitionException.class, InvalidCommentStatusException.class})
     public ProblemDetail conflictExceptionHandler(Exception exception) {
         return getProblemDetail(HttpStatus.CONFLICT, exception);
     }
