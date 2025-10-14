@@ -10,6 +10,7 @@ import dooya.see.domain.member.exception.DuplicateEmailException;
 import dooya.see.domain.member.exception.DuplicateProfileException;
 import dooya.see.domain.shared.Email;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -62,7 +63,15 @@ public class MemberModifyService implements MemberRegister {
     }
 
     private Member savedMember(Member member) {
-        return memberRepository.save(member);
+        try {
+            return memberRepository.save(member);
+        } catch (DataIntegrityViolationException ex) {
+            String emailAddress = member.getEmail() != null ? member.getEmail().address() : "unknown";
+            if (isEmailConstraintViolation(ex)) {
+                throw new DuplicateEmailException("이미 사용중인 이메일입니다: " + emailAddress, ex);
+            }
+            throw ex;
+        }
     }
 
     // Email 검증 관련 메서드
@@ -78,6 +87,15 @@ public class MemberModifyService implements MemberRegister {
     private void checkEmailNotExists(Email email, String emailAddress) {
         if (memberRepository.findByEmail(email).isPresent())
             throw new DuplicateEmailException("이미 사용중인 이메일입니다: " + emailAddress);
+    }
+
+    private boolean isEmailConstraintViolation(DataIntegrityViolationException exception) {
+        Throwable cause = exception.getMostSpecificCause();
+        String message = cause != null ? cause.getMessage() : exception.getMessage();
+        if (message == null) {
+            return false;
+        }
+        return message.contains("uk_member_email") || message.contains("member(email)") || message.contains("member.email");
     }
 
     // Profile 검증 관련 메서드
