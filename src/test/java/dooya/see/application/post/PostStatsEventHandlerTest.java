@@ -155,6 +155,48 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler, Po
     }
 
     @Nested
+    class 댓글_이벤트 {
+        @Test
+        void CommentCreated_이벤트_처리_시_댓글_수가_증가한다() {
+            postStatsManager.initializePostStats(POST_ID);
+            CommentCreated event = CommentCreated.of(1L, POST_ID, MEMBER_ID, null);
+
+            postStatsEventHandler.handleCommentCreated(event);
+
+            assertThatCommentCount(POST_ID, 1);
+        }
+
+        @Test
+        void CommentDeleted_이벤트_처리_시_댓글_수가_감소한다() {
+            postStatsManager.initializePostStats(POST_ID);
+            postStatsManager.incrementCommentCount(POST_ID);
+            CommentDeleted event = new CommentDeleted(1L, POST_ID, MEMBER_ID, false);
+
+            postStatsEventHandler.handleCommentDeleted(event);
+
+            assertThatCommentCount(POST_ID, 0);
+        }
+
+        @Test
+        void 존재하지_않는_게시물의_댓글_이벤트는_조용히_무시된다() {
+            CommentCreated createdEvent = CommentCreated.of(1L, NON_EXISTENT_POST_ID, MEMBER_ID, null);
+            CommentDeleted deletedEvent = new CommentDeleted(1L, NON_EXISTENT_POST_ID, MEMBER_ID, false);
+
+            assertThatCode(() -> postStatsEventHandler.handleCommentCreated(createdEvent))
+                    .doesNotThrowAnyException();
+            assertThatCode(() -> postStatsEventHandler.handleCommentDeleted(deletedEvent))
+                    .doesNotThrowAnyException();
+
+            assertThat(postStatsRepository.findByPostId(NON_EXISTENT_POST_ID)).isEmpty();
+        }
+
+        private void assertThatCommentCount(Long postId, int expectedCount) {
+            PostStats stats = postStatsRepository.findByPostId(postId).orElseThrow();
+            assertThat(stats.getCommentCount()).isEqualTo(expectedCount);
+        }
+    }
+
+    @Nested
     class 복합_이벤트_처리 {
         @Test
         void 여러_이벤트를_순차적으로_처리할_수_있다() {
