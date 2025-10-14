@@ -6,6 +6,9 @@ import dooya.see.adapter.webapi.dto.MemberAuthResponse;
 import dooya.see.adapter.webapi.dto.PostCreateResponse;
 import dooya.see.adapter.webapi.dto.PostDetailResponse;
 import dooya.see.application.member.provided.MemberRegister;
+import dooya.see.application.post.provided.PostFinder;
+import dooya.see.application.post.provided.PostStatsManager;
+import dooya.see.application.post.required.PostStatsRepository;
 import dooya.see.domain.member.dto.MemberAuthRequest;
 import dooya.see.domain.member.dto.MemberRegisterRequest;
 import dooya.see.domain.post.*;
@@ -20,14 +23,23 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.UnsupportedEncodingException;
+import java.util.List;
+import java.util.Map;
+import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 
 import static dooya.see.domain.member.MemberFixture.*;
 import static dooya.see.domain.post.PostFixture.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -37,6 +49,10 @@ class PostApiTest {
     final ObjectMapper objectMapper;
     final MockMvcTester mvcTester;
     final MemberRegister memberRegister;
+    final PostStatsRepository postStatsRepository;
+    final PostStatsManager postStatsManager;
+    final PostFinder postFinder;
+    final PlatformTransactionManager transactionManager;
 
     private String authorToken;
     private String readerToken;
@@ -85,10 +101,13 @@ class PostApiTest {
         @Test
         void 게시글_조회_시_조회수가_증가한다() throws UnsupportedEncodingException, JsonProcessingException {
             Long postId = createTestPublishedPost();
+            postStatsManager.initializePostStats(postId);
+            awaitPostStatsInitialized(postId);
 
             MvcTestResult result = performPostGet(postId);
 
             assertThatPostRetrieved(result, postId);
+            awaitViewCount(postId, 1);
         }
 
         @Test
@@ -223,6 +242,29 @@ class PostApiTest {
             MvcTestResult result = performPostUpdate(postId, request, readerToken);
 
             assertThat(result).hasStatus(HttpStatus.FORBIDDEN);
+        }
+
+        @Test
+        void 태그만_수정해도_업데이트된다() throws UnsupportedEncodingException, JsonProcessingException {
+            Long postId = createTestPublishedPost();
+            String requestJson = objectMapper.writeValueAsString(Map.of("tags", List.of("DevOps", "Cloud")));
+
+            MvcTestResult result = mvcTester.put().uri("/api/posts/{id}", postId)
+                    .header("Authorization", "Bearer " + authorToken)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestJson).exchange();
+
+            if (result.getMvcResult().getResponse().getStatus() != HttpStatus.OK.value()) {
+                MethodArgumentNotValidException ex = (MethodArgumentNotValidException) result.getMvcResult().getResolvedException();
+                String message = ex == null
+                        ? "Unexpected status: " + result.getMvcResult().getResponse().getStatus()
+                        : ex.getBindingResult().toString();
+                fail(message);
+            }
+
+            Post updatedPost = executeInNewTransaction(() -> postFinder.find(postId));
+            assertThat(updatedPost.getTags()).extracting(Tag::name)
+                    .containsExactly("devops", "cloud");
         }
 
         private void assertThatPostUpdated(MvcTestResult result)
@@ -738,6 +780,40 @@ class PostApiTest {
             PostDetailResponse[] posts = parseResponseArray(result, PostDetailResponse[].class);
             assertThat(posts).isEmpty();
         }
+    }
+
+    private void awaitPostStatsInitialized(Long postId) {
+        waitUntil(() -> executeInNewTransaction(() -> postStatsRepository.findByPostId(postId).isPresent()),
+                "PostStats not initialized for postId=" + postId);
+    }
+
+    private void awaitViewCount(Long postId, int expectedCount) {
+        waitUntil(() -> executeInNewTransaction(() -> postStatsRepository.findByPostId(postId)
+                .map(PostStats::getViewCount)
+                .filter(count -> count == expectedCount)
+                .isPresent()), "Expected view count %d for postId=%d".formatted(expectedCount, postId));
+    }
+
+    private void waitUntil(BooleanSupplier condition, String failureMessage) {
+        int attempts = 40;
+        while (attempts-- > 0) {
+            if (condition.getAsBoolean())
+                return;
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                fail(failureMessage);
+            }
+        }
+        fail(failureMessage);
+    }
+
+    private <T> T executeInNewTransaction(Supplier<T> action) {
+        TransactionTemplate template = new TransactionTemplate(transactionManager);
+        template.setReadOnly(true);
+        template.setPropagationBehavior(TransactionDefinition.PROPAGATION_SUPPORTS);
+        return template.execute(status -> action.get());
     }
 
     // 헬퍼 메서드들
