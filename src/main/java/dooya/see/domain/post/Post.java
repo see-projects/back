@@ -112,7 +112,8 @@ public class Post extends AbstractAggregateRoot {
                 getId(),
                 memberId,
                 category,
-                status == PostStatus.PUBLISHED
+                status == PostStatus.PUBLISHED,
+                this
         ));
     }
 
@@ -202,7 +203,8 @@ public class Post extends AbstractAggregateRoot {
                 contentResult.titleChanged(),
                 contentResult.bodyChanged(),
                 categoryChanged,
-                tagsChanged
+                tagsChanged,
+                this
         ));
     }
 

@@ -1,5 +1,6 @@
 package dooya.see.domain.post.event;
 
+import dooya.see.domain.post.Post;
 import dooya.see.domain.shared.DomainEvent;
 
 /**
@@ -11,5 +12,6 @@ public record PostUpdated(
     boolean titleChanged,
     boolean bodyChanged,
     boolean categoryChanged,
-    boolean tagsChanged
+    boolean tagsChanged,
+    Post post
 ) implements DomainEvent {}

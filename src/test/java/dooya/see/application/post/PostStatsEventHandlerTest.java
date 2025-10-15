@@ -3,6 +3,7 @@ package dooya.see.application.post;
 import dooya.see.SeeTestConfiguration;
 import dooya.see.application.post.provided.PostStatsManager;
 import dooya.see.application.post.required.PostStatsRepository;
+import dooya.see.domain.post.Post;
 import dooya.see.domain.post.PostStats;
 import dooya.see.domain.post.PostStatus;
 import dooya.see.domain.post.event.*;
@@ -30,12 +31,13 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler,
     private static final Long MEMBER_ID = 1L;
     private static final Long ANOTHER_MEMBER_ID = 2L;
     private static final Long NON_EXISTENT_POST_ID = 999L;
+    private static Post post;
 
     @Nested
     class 게시물_생성_이벤트 {
         @Test
         void PostCreated_이벤트_처리_시_통계가_생성된다() {
-            PostCreated event = new PostCreated(POST_ID, MEMBER_ID, TECH, false);
+            PostCreated event = new PostCreated(POST_ID, MEMBER_ID, TECH, false, post);
 
             postStatsEventHandler.handlePostCreated(event);
 
@@ -243,7 +245,7 @@ record PostStatsEventHandlerTest(PostStatsEventHandler postStatsEventHandler,
     class 기타_이벤트_처리 {
         @Test
         void PostUpdated_이벤트는_조용히_처리된다() {
-            PostUpdated event = new PostUpdated(POST_ID, MEMBER_ID, true, false, true, true);
+            PostUpdated event = new PostUpdated(POST_ID, MEMBER_ID, true, false, true, true, post);
 
             assertThatCode(() -> postStatsEventHandler.handlePostUpdated(event))
                     .doesNotThrowAnyException();
