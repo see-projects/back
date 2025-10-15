@@ -18,7 +18,7 @@ record PostSearchElasticsearchRepositoryTest(PostSearchElasticsearchRepository r
     void ElasticSearch_색인_저장_및_조회_테스트() {
         for (int i = 1; i <= 30; i++) {
             PostDocument document = new PostDocument(
-                    (long) i,
+                    String.valueOf((long) i),
                     "테스트 제목 " + i,
                     "본문 내용 " + i,
                     "TECH",

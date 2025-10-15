@@ -19,7 +19,7 @@ import java.util.List;
 @AllArgsConstructor
 public class PostDocument {
     @Id
-    private Long id;
+    private String id;
 
     @Field(type = FieldType.Text)
     private String title;

@@ -15,7 +15,7 @@ public class PostDocumentMapper {
         }
 
         return PostDocument.builder()
-                .id(post.getId())
+                .id(String.valueOf(post.getId()))
                 .title(post.getContent().title())
                 .content(post.getContent().body())
                 .category(post.getCategory().name())
