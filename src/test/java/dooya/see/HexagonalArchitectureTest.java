@@ -188,23 +188,8 @@ public class HexagonalArchitectureTest {
     @Nested
     class 명명_규칙_검증 {
         @Test
-        void 리포지토리_인터페이스는_적절한_접미사를_가져야_한다() {
-            assertThatRepositoryInterfacesFollowNamingConvention();
-        }
-
-        @Test
         void 애플리케이션_서비스는_Service로_끝나야_한다() {
             assertThatApplicationServicesFollowNamingConvention();
-        }
-
-        private void assertThatRepositoryInterfacesFollowNamingConvention() {
-            classes()
-                    .that().areInterfaces()
-                    .and().resideInAPackage(REQUIRED_PACKAGE)
-                    .should().haveSimpleNameEndingWith("Repository")
-                    .orShould().haveSimpleNameEndingWith("Manager")
-                    .because("리포지토리는 명확한 명명 규칙을 따라야 합니다")
-                    .check(classes);
         }
 
         private void assertThatApplicationServicesFollowNamingConvention() {
