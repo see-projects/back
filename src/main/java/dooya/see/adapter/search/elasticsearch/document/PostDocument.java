@@ -9,7 +9,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @Document(indexName = "posts")
@@ -37,8 +37,8 @@ public class PostDocument {
     private List<String> tags;
 
     @Field(type = FieldType.Date)
-    private LocalDateTime createdAt;
+    private LocalDate createdAt;
 
     @Field(type = FieldType.Date)
-    private LocalDateTime modifiedAt;
+    private LocalDate modifiedAt;
 }
