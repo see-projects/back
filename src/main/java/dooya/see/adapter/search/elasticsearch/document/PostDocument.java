@@ -1,4 +1,4 @@
-package dooya.see.adapter.search;
+package dooya.see.adapter.search.elasticsearch.document;
 
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
