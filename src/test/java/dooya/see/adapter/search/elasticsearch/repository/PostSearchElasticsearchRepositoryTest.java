@@ -24,8 +24,7 @@ record PostSearchElasticsearchRepositoryTest(PostSearchElasticsearchRepository r
                     "TECH",
                     1L,
                     List.of("spring", "elasticsearch"),
-                    LocalDate.now(),
-                    LocalDate.now().plusDays(1)
+                    LocalDate.now()
             );
             repository.save(document);
         }

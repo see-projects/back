@@ -38,7 +38,4 @@ public class PostDocument {
 
     @Field(type = FieldType.Date)
     private LocalDate createdAt;
-
-    @Field(type = FieldType.Date)
-    private LocalDate modifiedAt;
 }
