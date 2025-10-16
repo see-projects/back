@@ -23,6 +23,7 @@ record PostSearchElasticsearchRepositoryTest(PostSearchElasticsearchRepository r
                     "본문 내용 " + i,
                     "TECH",
                     1L,
+                    "작성자",
                     List.of("spring", "elasticsearch"),
                     LocalDate.now()
             );

@@ -53,10 +53,10 @@ record PostSearchElasticsearchReaderAdapterTest(
         String keyword = "Spring";
         PageRequest pageable = PageRequest.of(0, 10);
 
-        Page<Post> result = reader.searchByKeyword(keyword, pageable);
+        Page<PostDocument> result = reader.searchByKeyword(keyword, pageable);
 
         assertThat(result).isNotEmpty();
-        assertThat(result.getContent().get(0).getContent().title()).contains("Spring");
-        assertThat(result.getContent().get(0).getCategory()).isEqualTo(PostCategory.TECH);
+        assertThat(result.getContent().get(0).getTitle()).contains("Spring");
+        assertThat(result.getContent().get(0).getCategory()).isEqualTo(PostCategory.TECH.name());
     }
 }

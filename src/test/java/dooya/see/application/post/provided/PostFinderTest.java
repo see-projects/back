@@ -1,6 +1,7 @@
 package dooya.see.application.post.provided;
 
 import dooya.see.SeeTestConfiguration;
+import dooya.see.adapter.search.elasticsearch.document.PostDocument;
 import dooya.see.adapter.search.elasticsearch.repository.PostSearchElasticsearchRepository;
 import dooya.see.domain.post.Post;
 import dooya.see.domain.post.PostCategory;
@@ -21,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 import static dooya.see.domain.post.PostFixture.*;
-import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -318,10 +318,11 @@ record PostFinderTest(
             createTestPostWithTitle("Java Stream 기초");
             flushAndClearContext();
 
-            Page<Post> result = postFinder.searchPosts("Spring", PageRequest.of(0, 10));
+            Page<PostDocument> result = postFinder.searchPosts("Spring", PageRequest.of(0, 10));
 
             assertThat(result).isNotEmpty();
-            assertThat(result.getContent().get(0).getContent().title()).contains("Spring");
+            assertThat(result.getContent())
+                    .anyMatch(document -> document.getTitle().contains("Spring"));
         }
 
         @Test
@@ -330,10 +331,11 @@ record PostFinderTest(
             createTestPostWithContent("Java 게시물", "JVM 메모리 구조를 다룹니다.");
             flushAndClearContext();
 
-            Page<Post> result = postFinder.searchPosts("Spring", PageRequest.of(0, 10));
+            Page<PostDocument> result = postFinder.searchPosts("Spring", PageRequest.of(0, 10));
 
-            assertThat(result).hasSize(1);
-            assertThat(result.getContent().get(0).getContent().title()).contains("테스트 게시물");
+            assertThat(result.getContent())
+                    .extracting(PostDocument::getTitle)
+                    .contains("테스트 게시물");
         }
 
         @Test
@@ -341,7 +343,7 @@ record PostFinderTest(
             createTestPostWithTitle("Java 입문");
             flushAndClearContext();
 
-            Page<Post> result = postFinder.searchPosts("Python", PageRequest.of(0, 10));
+            Page<PostDocument> result = postFinder.searchPosts("Python", PageRequest.of(0, 10));
 
             assertThat(result).isEmpty();
         }
