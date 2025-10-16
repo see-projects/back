@@ -23,6 +23,6 @@ record PostEventHandlerTest(
         Post post = postManager.create(createPostRequest(), AUTHOR_ID);
 
         await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
-                assertThat(searchRepository.findById(post.getId())).isPresent());
+                assertThat(searchRepository.findById(String.valueOf(post.getId()))).isPresent());
     }
 }

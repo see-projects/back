@@ -35,6 +35,6 @@ public class PostSearchElasticsearchAdapter implements PostSearchIndexer {
 
     @Override
     public void delete(Long postId) {
-        repository.deleteById(postId);
+        repository.deleteById(String.valueOf(postId));
     }
 }

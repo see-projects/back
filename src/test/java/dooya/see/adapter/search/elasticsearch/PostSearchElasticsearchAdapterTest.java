@@ -7,7 +7,6 @@ import dooya.see.domain.member.Member;
 import dooya.see.domain.member.MemberFixture;
 import dooya.see.domain.member.dto.MemberRegisterRequest;
 import dooya.see.domain.post.Post;
-import dooya.see.adapter.search.elasticsearch.document.PostDocument;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -40,7 +39,7 @@ record PostSearchElasticsearchAdapterTest(
     void 게시글을_Elasticsearch_색인으로_저장한다() {
         adapter.index(post);
 
-        PostDocument saved = repository.findById(post.getId()).orElseThrow();
+        PostDocument saved = repository.findById(String.valueOf(post.getId())).orElseThrow();
         assertThat(saved.getTitle()).isEqualTo("테스트 게시글 제목입니다");
         assertThat(saved.getTags()).containsExactly("spring", "backend", "java");
         assertThat(saved.getAuthorNickname()).isEqualTo(savedMember.getNickname());
@@ -49,11 +48,11 @@ record PostSearchElasticsearchAdapterTest(
     @Test
     void 게시글_색인을_삭제한다() {
         adapter.index(post);
-        assertThat(repository.existsById(post.getId())).isTrue();
+        assertThat(repository.existsById(String.valueOf(post.getId()))).isTrue();
 
         adapter.delete(post.getId());
 
-        assertThat(repository.existsById(post.getId())).isFalse();
+        assertThat(repository.existsById(String.valueOf(post.getId()))).isFalse();
     }
 
     @Test
@@ -63,7 +62,7 @@ record PostSearchElasticsearchAdapterTest(
 
         adapter.index(orphan);
 
-        PostDocument indexed = repository.findById(2L).orElseThrow();
+        PostDocument indexed = repository.findById(String.valueOf(2L)).orElseThrow();
         assertThat(indexed.getAuthorNickname()).isEmpty();
     }
 }
