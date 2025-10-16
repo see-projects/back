@@ -76,4 +76,6 @@ public interface PostFinder {
     Post viewPost(Long postId, Long viewerId);
 
     Page<Post> findPosts(PostSearchRequest searchRequest, Pageable pageable);
+
+    Page<Post> searchPosts(String keyword, Pageable pageable);
 }
