@@ -1,5 +1,6 @@
 package dooya.see.application.post.provided;
 
+import dooya.see.adapter.search.elasticsearch.document.PostDocument;
 import dooya.see.domain.post.Post;
 import dooya.see.domain.post.PostCategory;
 import dooya.see.domain.post.PostStatus;
@@ -77,5 +78,5 @@ public interface PostFinder {
 
     Page<Post> findPosts(PostSearchRequest searchRequest, Pageable pageable);
 
-    Page<Post> searchPosts(String keyword, Pageable pageable);
+    Page<PostDocument> searchPosts(String keyword, Pageable pageable);
 }

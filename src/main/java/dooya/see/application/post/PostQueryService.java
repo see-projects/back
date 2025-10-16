@@ -1,5 +1,6 @@
 package dooya.see.application.post;
 
+import dooya.see.adapter.search.elasticsearch.document.PostDocument;
 import dooya.see.application.post.provided.PostFinder;
 import dooya.see.application.post.required.PostRepository;
 import dooya.see.application.post.required.PostSearchReader;
@@ -68,7 +69,7 @@ public class PostQueryService implements PostFinder {
     }
 
     @Override
-    public Page<Post> searchPosts(String keyword, Pageable pageable) {
+    public Page<PostDocument> searchPosts(String keyword, Pageable pageable) {
         return postSearchReader.searchByKeyword(keyword, pageable);
     }
 
