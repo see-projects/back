@@ -31,7 +31,7 @@ record PostSearchElasticsearchAdapterTest(
 
         PostDocument saved = repository.findById(post.getId()).orElseThrow();
         assertThat(saved.getTitle()).isEqualTo("테스트 게시글 제목입니다");
-        assertThat(saved.getTags()).containsExactly("#spring", "#backend", "#java");
+        assertThat(saved.getTags()).containsExactly("spring", "backend", "java");
     }
 
     @Test
