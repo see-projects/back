@@ -2,6 +2,7 @@ package dooya.see.application.post;
 
 import dooya.see.application.post.provided.PostFinder;
 import dooya.see.application.post.required.PostRepository;
+import dooya.see.application.post.required.PostSearchReader;
 import dooya.see.domain.post.*;
 import dooya.see.domain.post.dto.PostSearchRequest;
 import dooya.see.domain.post.exception.PostNotFoundException;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class PostQueryService implements PostFinder {
     private final PostRepository postRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final PostSearchReader postSearchReader;
 
     @Override
     public Post find(Long postId) {
@@ -63,6 +65,11 @@ public class PostQueryService implements PostFinder {
         }
 
         return search(searchRequest, pageable);
+    }
+
+    @Override
+    public Page<Post> searchPosts(String keyword, Pageable pageable) {
+        return postSearchReader.searchByKeyword(keyword, pageable);
     }
 
     @Override
