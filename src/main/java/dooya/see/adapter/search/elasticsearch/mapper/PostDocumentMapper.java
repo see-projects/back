@@ -4,12 +4,11 @@ import dooya.see.adapter.search.elasticsearch.document.PostDocument;
 import dooya.see.domain.post.*;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
 public class PostDocumentMapper {
-    public PostDocument toDocument(Post post) {
+    public PostDocument toDocument(Post post, String authorNickname) {
         if (post == null) {
             throw new IllegalArgumentException("");
         }
@@ -20,37 +19,11 @@ public class PostDocumentMapper {
                 .content(post.getContent().body())
                 .category(post.getCategory().name())
                 .memberId(post.getMemberId())
+                .authorNickname(authorNickname)
                 .tags(post.getTags().stream()
                         .map(Tag::name)
                         .collect(Collectors.toList()))
                 .createdAt(post.getMetaData().createdAt().toLocalDate())
                 .build();
-
-    }
-
-    public Post toDomain(PostDocument document) {
-        if (document == null) {
-            throw new IllegalArgumentException("");
-        }
-
-        PostMetaData metaData = new PostMetaData(
-                document.getCreatedAt().atStartOfDay(),
-                null,
-                null
-        );
-
-        List<Tag> tags = document.getTags().stream()
-                .map(raw -> new Tag(raw.replace("#", "")))
-                .toList();
-
-        return Post.fromSearchIndex(
-                Long.valueOf(document.getId()),
-                document.getTitle(),
-                document.getContent(),
-                PostCategory.valueOf(document.getCategory()),
-                document.getMemberId(),
-                tags,
-                metaData
-        );
     }
 }
