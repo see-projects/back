@@ -1,5 +1,6 @@
 package dooya.see.domain.post;
 
+import dooya.see.domain.AbstractEntity;
 import dooya.see.domain.post.dto.PostCreateRequest;
 import dooya.see.domain.post.dto.PostUpdateRequest;
 import dooya.see.domain.post.event.*;
@@ -7,10 +8,9 @@ import dooya.see.domain.post.exception.InvalidPostStatusTransitionException;
 import dooya.see.domain.post.exception.UnauthorizedPostAccessException;
 import dooya.see.domain.shared.AbstractAggregateRoot;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,6 +19,8 @@ import static java.util.Objects.requireNonNull;
 
 @Entity
 @Getter
+@Builder(access = AccessLevel.PRIVATE)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Post extends AbstractAggregateRoot {
     @Embedded
@@ -103,6 +105,35 @@ public class Post extends AbstractAggregateRoot {
 
     public boolean isWrittenBy(Long memberId) {
         return this.memberId.equals(memberId);
+    }
+
+    public static Post fromSearchIndex(
+            Long id,
+            String title,
+            String content,
+            PostCategory category,
+            Long memberId,
+            List<Tag> tags,
+            PostMetaData metaData
+    ) {
+        Post post = Post.builder()
+                .content(new PostContent(title, content))
+                .category(category)
+                .memberId(memberId)
+                .tags(tags)
+                .metaData(metaData)
+                .status(PostStatus.PUBLISHED)
+                .build();
+
+        try {
+            Field idField = AbstractEntity.class.getDeclaredField("id");
+            idField.setAccessible(true);
+            idField.set(post, id);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+
+        return post;
     }
 
     // JPA 생명주기 콜백 - 생성 이벤트 발행
