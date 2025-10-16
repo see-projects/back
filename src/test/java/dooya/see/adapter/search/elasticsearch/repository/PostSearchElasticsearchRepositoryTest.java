@@ -16,6 +16,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 record PostSearchElasticsearchRepositoryTest(PostSearchElasticsearchRepository repository) {
     @Test
     void ElasticSearch_색인_저장_및_조회_테스트() {
+        repository.deleteAll();
+
         for (int i = 1; i <= 30; i++) {
             PostDocument document = new PostDocument(
                     String.valueOf((long) i),
@@ -39,5 +41,6 @@ record PostSearchElasticsearchRepositoryTest(PostSearchElasticsearchRepository r
         assertThat(result.getContent()).hasSize(10);
         assertThat(result.getTotalElements()).isGreaterThan(10);
         assertThat(result.getContent().get(0).getTitle()).contains("테스트");
+        assertThat(result.getContent().get(0).getAuthorNickname()).isEqualTo("작성자");
     }
 }

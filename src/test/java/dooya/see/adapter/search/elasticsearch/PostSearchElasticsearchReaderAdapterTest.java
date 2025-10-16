@@ -31,6 +31,7 @@ record PostSearchElasticsearchReaderAdapterTest(
                         .content("Spring Boot 프로젝트에서 Elasticsearch 적용 경험기입니다.")
                         .category(PostCategory.TECH.name())
                         .memberId(1L)
+                        .authorNickname("작성자1")
                         .tags(List.of("Spring", "Elasticsearch"))
                         .createdAt(LocalDate.now())
                         .build(),
@@ -40,6 +41,7 @@ record PostSearchElasticsearchReaderAdapterTest(
                         .content("스레드와 동시성 제어의 기본을 다룹니다.")
                         .category(PostCategory.TECH.name())
                         .memberId(2L)
+                        .authorNickname("작성자2")
                         .tags(List.of("Java", "Thread"))
                         .createdAt(LocalDate.now())
                         .build()
@@ -56,5 +58,6 @@ record PostSearchElasticsearchReaderAdapterTest(
         assertThat(result).isNotEmpty();
         assertThat(result.getContent().get(0).title()).contains("Spring");
         assertThat(result.getContent().get(0).category()).isEqualTo(PostCategory.TECH);
+        assertThat(result.getContent().get(0).authorNickname()).isEqualTo("작성자1");
     }
 }

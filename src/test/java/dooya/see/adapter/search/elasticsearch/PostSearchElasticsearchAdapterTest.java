@@ -2,7 +2,12 @@ package dooya.see.adapter.search.elasticsearch;
 
 import dooya.see.adapter.search.elasticsearch.document.PostDocument;
 import dooya.see.adapter.search.elasticsearch.repository.PostSearchElasticsearchRepository;
-import dooya.see.domain.post.*;
+import dooya.see.application.member.required.MemberRepository;
+import dooya.see.domain.member.Member;
+import dooya.see.domain.member.MemberFixture;
+import dooya.see.domain.member.dto.MemberRegisterRequest;
+import dooya.see.domain.post.Post;
+import dooya.see.adapter.search.elasticsearch.document.PostDocument;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,14 +19,20 @@ import static org.springframework.test.util.ReflectionTestUtils.setField;
 @SpringBootTest
 record PostSearchElasticsearchAdapterTest(
         PostSearchElasticsearchAdapter adapter,
-        PostSearchElasticsearchRepository repository) {
-    private static final Long AUTHOR_ID = 1L;
-
+        PostSearchElasticsearchRepository repository,
+        MemberRepository memberRepository) {
     private static Post post;
+    private static Member savedMember;
 
     @BeforeEach
     void setUp() {
-        post = Post.create(createPostRequest(), AUTHOR_ID);
+        repository.deleteAll();
+
+        MemberRegisterRequest registerRequest = MemberFixture.createMemberRegisterRequest("member" + System.nanoTime() + "@see.com");
+        Member member = Member.register(registerRequest, MemberFixture.createPasswordEncoder());
+        savedMember = memberRepository.save(member);
+
+        post = Post.create(createPostRequest(), savedMember.getId());
         setField(post, "id", 1L);
     }
 
@@ -32,6 +43,7 @@ record PostSearchElasticsearchAdapterTest(
         PostDocument saved = repository.findById(post.getId()).orElseThrow();
         assertThat(saved.getTitle()).isEqualTo("테스트 게시글 제목입니다");
         assertThat(saved.getTags()).containsExactly("spring", "backend", "java");
+        assertThat(saved.getAuthorNickname()).isEqualTo(savedMember.getNickname());
     }
 
     @Test
@@ -42,5 +54,16 @@ record PostSearchElasticsearchAdapterTest(
         adapter.delete(post.getId());
 
         assertThat(repository.existsById(post.getId())).isFalse();
+    }
+
+    @Test
+    void 존재하지_않는_회원이면_색인이_실패한다() {
+        Post orphan = Post.create(createPostRequest(), 999L);
+        setField(orphan, "id", 2L);
+
+        adapter.index(orphan);
+
+        PostDocument indexed = repository.findById(2L).orElseThrow();
+        assertThat(indexed.getAuthorNickname()).isEmpty();
     }
 }
