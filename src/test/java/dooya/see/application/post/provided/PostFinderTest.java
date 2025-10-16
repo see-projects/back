@@ -1,6 +1,7 @@
 package dooya.see.application.post.provided;
 
 import dooya.see.SeeTestConfiguration;
+import dooya.see.adapter.search.elasticsearch.repository.PostSearchElasticsearchRepository;
 import dooya.see.domain.post.Post;
 import dooya.see.domain.post.PostCategory;
 import dooya.see.domain.post.dto.PostSearchRequest;
@@ -20,13 +21,18 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 import static dooya.see.domain.post.PostFixture.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Transactional
 @Import(SeeTestConfiguration.class)
-record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityManager entityManager) {
+record PostFinderTest(
+        PostFinder postFinder,
+        PostManager postManager,
+        EntityManager entityManager,
+        PostSearchElasticsearchRepository repository) {
     private static final Long AUTHOR_ID = 1L;
     private static final Long ANOTHER_AUTHOR_ID = 2L;
     private static final Long VIEWER_ID = 2L;
@@ -34,6 +40,7 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
     @BeforeEach
     void setUp() {
         entityManager.clear();
+        repository.deleteAll();
     }
 
     @Nested
@@ -300,6 +307,43 @@ record PostFinderTest(PostFinder postFinder, PostManager postManager, EntityMana
             assertThat(posts).hasSize(expectedTitles.length);
             assertThat(posts).extracting(post -> post.getContent().title())
                     .containsExactlyInAnyOrder(expectedTitles);
+        }
+    }
+
+    @Nested
+    class 게시글_검색_ES {
+        @Test
+        void Elasticsearch에서_게시글을_키워드로_검색한다() {
+            createTestPostWithTitle("Spring Boot Elasticsearch 연동");
+            createTestPostWithTitle("Java Stream 기초");
+            flushAndClearContext();
+
+            Page<Post> result = postFinder.searchPosts("Spring", PageRequest.of(0, 10));
+
+            assertThat(result).isNotEmpty();
+            assertThat(result.getContent().get(0).getContent().title()).contains("Spring");
+        }
+
+        @Test
+        void Elasticsearch에서_제목과_내용을_모두_검색한다() {
+            createTestPostWithContent("테스트 게시물", "Spring Framework를 다룹니다.");
+            createTestPostWithContent("Java 게시물", "JVM 메모리 구조를 다룹니다.");
+            flushAndClearContext();
+
+            Page<Post> result = postFinder.searchPosts("Spring", PageRequest.of(0, 10));
+
+            assertThat(result).hasSize(1);
+            assertThat(result.getContent().get(0).getContent().title()).contains("테스트 게시물");
+        }
+
+        @Test
+        void Elasticsearch에서_키워드가_없으면_빈_결과를_반환한다() {
+            createTestPostWithTitle("Java 입문");
+            flushAndClearContext();
+
+            Page<Post> result = postFinder.searchPosts("Python", PageRequest.of(0, 10));
+
+            assertThat(result).isEmpty();
         }
     }
 
