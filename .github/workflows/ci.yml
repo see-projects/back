@@ -17,6 +17,21 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    services:
+      elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+        ports:
+          - 9200:9200
+        env:
+          discovery.type: single-node
+          ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+          xpack.security.enabled: "false"
+        options: >-
+          --health-cmd "curl -f http://localhost:9200/_cluster/health || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -35,13 +50,11 @@ jobs:
           mkdir -p ./src/main/resources
           echo "${{ secrets.APPLICATION_YML }}" > ./src/main/resources/application.yml
 
-      # IPv6 비활성화 (네트워크 오류 방지)
       - name: Disable IPv6
         run: |
           sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
           sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
 
-      # Gradle Wrapper 검증 (보안)
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v2
         with:
@@ -64,6 +77,20 @@ jobs:
           gradle-build-scan-report: true
           cache-read-only: false
 
+      - name: Wait for Elasticsearch to be ready
+        run: |
+          echo "Waiting for Elasticsearch..."
+          for i in {1..20}; do
+            if curl -fsS http://localhost:9200 >/dev/null; then
+              echo "Elasticsearch is up!"
+              exit 0
+            fi
+              echo "Retrying in 3s..."
+              sleep 3
+            done
+            echo "Elasticsearch did not become ready in time."
+            exit 1
+
       - name: Run tests
         run: |
           ./gradlew clean test \
@@ -73,6 +100,8 @@ jobs:
             --daemon \
             -Dorg.gradle.jvmargs="-Xmx2g -XX:+UseParallelGC" \
             -Dspring.profiles.active=test
+        env:
+          SPRING_ELASTICSEARCH_URIS: http://localhost:9200
 
       - name: Upload test results
         uses: actions/upload-artifact@v4

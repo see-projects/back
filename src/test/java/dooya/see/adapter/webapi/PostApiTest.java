@@ -2,9 +2,12 @@ package dooya.see.adapter.webapi;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import dooya.see.adapter.search.elasticsearch.repository.PostSearchElasticsearchRepository;
 import dooya.see.adapter.webapi.dto.MemberAuthResponse;
 import dooya.see.adapter.webapi.dto.PostCreateResponse;
 import dooya.see.adapter.webapi.dto.PostDetailResponse;
+import dooya.see.adapter.webapi.dto.PostSearchResponse;
 import dooya.see.application.member.provided.MemberRegister;
 import dooya.see.application.post.provided.PostFinder;
 import dooya.see.application.post.provided.PostStatsManager;
@@ -23,6 +26,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -31,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
@@ -53,6 +58,7 @@ class PostApiTest {
     final PostStatsManager postStatsManager;
     final PostFinder postFinder;
     final PlatformTransactionManager transactionManager;
+    final PostSearchElasticsearchRepository postSearchElasticsearchRepository;
 
     private String authorToken;
     private String readerToken;
@@ -61,6 +67,7 @@ class PostApiTest {
     void setUp() throws JsonProcessingException, UnsupportedEncodingException {
         authorToken = createMemberAndGetToken();
         readerToken = createSecondMemberAndGetToken();
+        postSearchElasticsearchRepository.deleteAll();
     }
 
     @Nested
@@ -782,6 +789,40 @@ class PostApiTest {
         }
     }
 
+    @Nested
+    class 게시글_검색_ES {
+        @Test
+        void 키워드로_게시글을_검색한다() throws Exception {
+            createPublishedPostWithTitle("Spring Boot Elasticsearch 연동");
+            createPublishedPostWithTitle("Java Stream 기초");
+            awaitSearchIndexed("Spring", 1);
+
+            MvcTestResult result = performPostSearchEs("Spring", 0, 10);
+
+            PageResponse<PostSearchResponse> page = parsePostSearchResponse(result);
+            assertThat(page.content()).extracting(PostSearchResponse::title)
+                    .contains("Spring Boot Elasticsearch 연동");
+        }
+
+        @Test
+        void 검색_결과가_없으면_빈_페이지를_반환한다() throws Exception {
+            createPublishedPostWithTitle("Spring Boot 가이드");
+            awaitSearchIndexed("Spring", 1);
+
+            MvcTestResult result = performPostSearchEs("Python", 0, 10);
+
+            PageResponse<PostSearchResponse> page = parsePostSearchResponse(result);
+            assertThat(page.content()).isEmpty();
+            assertThat(page.totalElements()).isZero();
+        }
+    }
+
+    private void awaitSearchIndexed(String keyword, int expectedCount) {
+        waitUntil(() -> executeInRequiresNewTransaction(() ->
+                postFinder.searchPosts(keyword, PageRequest.of(0, expectedCount)).getTotalElements() >= expectedCount),
+                "Elasticsearch indexing not completed for keyword=" + keyword);
+    }
+
     private void awaitPostStatsInitialized(Long postId) {
         waitUntil(() -> executeInRequiresNewTransaction(() -> postStatsRepository.findByPostId(postId).isPresent()),
                 "PostStats not initialized for postId=" + postId);
@@ -855,6 +896,19 @@ class PostApiTest {
 
     private Long createTestPublishedPost() throws JsonProcessingException, UnsupportedEncodingException {
         PostCreateRequest createRequest = createPostRequest(true);
+        String requestJson = objectMapper.writeValueAsString(createRequest);
+
+        MvcTestResult createResult = mvcTester.post().uri("/api/posts")
+                .header("Authorization", "Bearer " + authorToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson).exchange();
+
+        PostCreateResponse createResponse = parseResponse(createResult, PostCreateResponse.class);
+        return createResponse.postId();
+    }
+
+    private Long createPublishedPostWithTitle(String title) throws JsonProcessingException, UnsupportedEncodingException {
+        PostCreateRequest createRequest = createPostRequest(title, "검색용 본문");
         String requestJson = objectMapper.writeValueAsString(createRequest);
 
         MvcTestResult createResult = mvcTester.post().uri("/api/posts")
@@ -987,6 +1041,11 @@ class PostApiTest {
                 .exchange();
     }
 
+    private MvcTestResult performPostSearchEs(String keyword, int page, int size) {
+        String uri = String.format("/api/v1/posts/elasticsearch?keyword=%s&page=%d&size=%d", keyword, page, size);
+        return mvcTester.get().uri(uri).exchange();
+    }
+
     // 응답 파싱 헬퍼 메서드들
     private <T> T parseResponse(MvcTestResult result, Class<T> responseType)
             throws UnsupportedEncodingException, JsonProcessingException {
@@ -997,4 +1056,15 @@ class PostApiTest {
             throws UnsupportedEncodingException, JsonProcessingException {
         return objectMapper.readValue(result.getResponse().getContentAsString(), responseType);
     }
+
+    private PageResponse<PostSearchResponse> parsePostSearchResponse(MvcTestResult result)
+            throws UnsupportedEncodingException, JsonProcessingException {
+        JsonNode root = objectMapper.readTree(result.getResponse().getContentAsString());
+        PostSearchResponse[] content = objectMapper.treeToValue(root.get("content"), PostSearchResponse[].class);
+        int totalPages = root.path("totalPages").asInt();
+        long totalElements = root.path("totalElements").asLong();
+        return new PageResponse<>(Arrays.asList(content), totalPages, totalElements);
+    }
+
+    private record PageResponse<T>(List<T> content, int totalPages, long totalElements) {}
 }

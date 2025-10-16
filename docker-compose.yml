@@ -19,24 +19,55 @@ services:
       retries: 10
     restart: unless-stopped
 
-  mysql-test:
-    image: mysql:8.0
-    container_name: see-test-mysql
-    ports:
-      - "3307:3306"
+#  mysql-test:
+#    image: mysql:8.0
+#    container_name: see-test-mysql
+#    ports:
+#      - "3307:3306"
+#    environment:
+#      MYSQL_ROOT_PASSWORD: root
+#      MYSQL_DATABASE: see_test
+#      MYSQL_USER: see_user
+#      MYSQL_PASSWORD: see_password
+#    volumes:
+#      - mysql_test_data:/var/lib/mysql
+#      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+#    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+#    restart: unless-stopped
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+    container_name: see-elasticsearch
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: see_test
-      MYSQL_USER: see_user
-      MYSQL_PASSWORD: see_password
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    ports:
+      - "9200:9200"
     volumes:
-      - mysql_test_data:/var/lib/mysql
-      - ./docker/mysql/init:/docker-entrypoint-initdb.d
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+      - es_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.12.0
+    container_name: see-kibana
+    ports:
+      - "5601:5601"
+    environment:
+      ELASTICSEARCH_HOSTS: http://see-elasticsearch:9200
+    depends_on:
+      - elasticsearch
     restart: unless-stopped
 
 volumes:
   mysql_data:
     driver: local
   mysql_test_data:
+  es_data:
+    driver: local
 

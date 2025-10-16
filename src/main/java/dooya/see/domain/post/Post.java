@@ -7,9 +7,7 @@ import dooya.see.domain.post.exception.InvalidPostStatusTransitionException;
 import dooya.see.domain.post.exception.UnauthorizedPostAccessException;
 import dooya.see.domain.shared.AbstractAggregateRoot;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +17,8 @@ import static java.util.Objects.requireNonNull;
 
 @Entity
 @Getter
+@Builder(access = AccessLevel.PRIVATE)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Post extends AbstractAggregateRoot {
     @Embedded
@@ -112,7 +112,8 @@ public class Post extends AbstractAggregateRoot {
                 getId(),
                 memberId,
                 category,
-                status == PostStatus.PUBLISHED
+                status == PostStatus.PUBLISHED,
+                this
         ));
     }
 
@@ -202,7 +203,8 @@ public class Post extends AbstractAggregateRoot {
                 contentResult.titleChanged(),
                 contentResult.bodyChanged(),
                 categoryChanged,
-                tagsChanged
+                tagsChanged,
+                this
         ));
     }
 
