@@ -1,9 +1,8 @@
 package dooya.see.adapter.search.elasticsearch;
 
 import dooya.see.adapter.search.elasticsearch.document.PostDocument;
-import dooya.see.adapter.search.elasticsearch.mapper.PostDocumentMapper;
 import dooya.see.adapter.search.elasticsearch.repository.PostSearchElasticsearchRepository;
-import dooya.see.domain.post.Post;
+import dooya.see.application.post.dto.PostSearchResult;
 import dooya.see.domain.post.PostCategory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,7 +18,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 record PostSearchElasticsearchReaderAdapterTest(
         PostSearchElasticsearchRepository repository,
-        PostDocumentMapper mapper,
         PostSearchElasticsearchReaderAdapter reader) {
 
     @BeforeEach
@@ -53,10 +51,10 @@ record PostSearchElasticsearchReaderAdapterTest(
         String keyword = "Spring";
         PageRequest pageable = PageRequest.of(0, 10);
 
-        Page<PostDocument> result = reader.searchByKeyword(keyword, pageable);
+        Page<PostSearchResult> result = reader.searchByKeyword(keyword, pageable);
 
         assertThat(result).isNotEmpty();
-        assertThat(result.getContent().get(0).getTitle()).contains("Spring");
-        assertThat(result.getContent().get(0).getCategory()).isEqualTo(PostCategory.TECH.name());
+        assertThat(result.getContent().get(0).title()).contains("Spring");
+        assertThat(result.getContent().get(0).category()).isEqualTo(PostCategory.TECH);
     }
 }

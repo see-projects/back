@@ -1,7 +1,7 @@
 package dooya.see.application.post.provided;
 
 import dooya.see.SeeTestConfiguration;
-import dooya.see.adapter.search.elasticsearch.document.PostDocument;
+import dooya.see.application.post.dto.PostSearchResult;
 import dooya.see.adapter.search.elasticsearch.repository.PostSearchElasticsearchRepository;
 import dooya.see.domain.post.Post;
 import dooya.see.domain.post.PostCategory;
@@ -318,11 +318,11 @@ record PostFinderTest(
             createTestPostWithTitle("Java Stream 기초");
             flushAndClearContext();
 
-            Page<PostDocument> result = postFinder.searchPosts("Spring", PageRequest.of(0, 10));
+            Page<PostSearchResult> result = postFinder.searchPosts("Spring", PageRequest.of(0, 10));
 
             assertThat(result).isNotEmpty();
             assertThat(result.getContent())
-                    .anyMatch(document -> document.getTitle().contains("Spring"));
+                    .anyMatch(document -> document.title().contains("Spring"));
         }
 
         @Test
@@ -331,10 +331,10 @@ record PostFinderTest(
             createTestPostWithContent("Java 게시물", "JVM 메모리 구조를 다룹니다.");
             flushAndClearContext();
 
-            Page<PostDocument> result = postFinder.searchPosts("Spring", PageRequest.of(0, 10));
+            Page<PostSearchResult> result = postFinder.searchPosts("Spring", PageRequest.of(0, 10));
 
             assertThat(result.getContent())
-                    .extracting(PostDocument::getTitle)
+                    .extracting(PostSearchResult::title)
                     .contains("테스트 게시물");
         }
 
@@ -343,7 +343,7 @@ record PostFinderTest(
             createTestPostWithTitle("Java 입문");
             flushAndClearContext();
 
-            Page<PostDocument> result = postFinder.searchPosts("Python", PageRequest.of(0, 10));
+            Page<PostSearchResult> result = postFinder.searchPosts("Python", PageRequest.of(0, 10));
 
             assertThat(result).isEmpty();
         }
