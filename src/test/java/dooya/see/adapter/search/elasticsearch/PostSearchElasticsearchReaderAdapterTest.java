@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -18,7 +19,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 record PostSearchElasticsearchReaderAdapterTest(
         PostSearchElasticsearchRepository repository,
-        PostSearchElasticsearchReaderAdapter reader) {
+        PostSearchElasticsearchReaderAdapter reader,
+        ElasticsearchOperations operations) {
 
     @BeforeEach
     void setUp() {
@@ -46,6 +48,8 @@ record PostSearchElasticsearchReaderAdapterTest(
                         .createdAt(LocalDate.now())
                         .build()
         ));
+
+        operations.indexOps(PostDocument.class).refresh();
     }
 
     @Test
