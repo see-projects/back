@@ -21,7 +21,7 @@ public class PostDocumentMapper {
                 .category(post.getCategory().name())
                 .memberId(post.getMemberId())
                 .tags(post.getTags().stream()
-                        .map(Tag::displayName)
+                        .map(Tag::name)
                         .collect(Collectors.toList()))
                 .createdAt(post.getMetaData().createdAt().toLocalDate())
                 .build();
@@ -40,7 +40,7 @@ public class PostDocumentMapper {
         );
 
         List<Tag> tags = document.getTags().stream()
-                .map(Tag::new)
+                .map(raw -> new Tag(raw.replace("#", "")))
                 .toList();
 
         return Post.fromSearchIndex(
