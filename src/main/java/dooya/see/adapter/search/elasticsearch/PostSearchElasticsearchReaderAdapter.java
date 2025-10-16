@@ -17,8 +17,7 @@ public class PostSearchElasticsearchReaderAdapter implements PostSearchReader {
     private final PostDocumentMapper mapper;
 
     @Override
-    public Page<Post> searchByKeyword(String keyword, Pageable pageable) {
-        Page<PostDocument> result = repository.findByTitleContainingOrContentContaining(keyword, keyword, pageable);
-        return result.map(mapper::toDomain);
+    public Page<PostDocument> searchByKeyword(String keyword, Pageable pageable) {
+        return repository.findByTitleContainingOrContentContaining(keyword, keyword, pageable);
     }
 }
