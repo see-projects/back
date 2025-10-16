@@ -56,7 +56,7 @@ record PostSearchElasticsearchAdapterTest(
     }
 
     @Test
-    void 존재하지_않는_회원이면_색인이_실패한다() {
+    void 존재하지_않는_회원이면_작성자_정보가_비어있다() {
         Post orphan = Post.create(createPostRequest(), 999L);
         setField(orphan, "id", 2L);
 
