@@ -1,10 +1,10 @@
 package dooya.see.adapter.search.elasticsearch.mapper;
 
 import dooya.see.adapter.search.elasticsearch.document.PostDocument;
-import dooya.see.domain.post.Post;
-import dooya.see.domain.post.Tag;
+import dooya.see.domain.post.*;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
@@ -26,5 +26,31 @@ public class PostDocumentMapper {
                 .createdAt(post.getMetaData().createdAt().toLocalDate())
                 .build();
 
+    }
+
+    public Post toDomain(PostDocument document) {
+        if (document == null) {
+            throw new IllegalArgumentException("");
+        }
+
+        PostMetaData metaData = new PostMetaData(
+                document.getCreatedAt().atStartOfDay(),
+                null,
+                null
+        );
+
+        List<Tag> tags = document.getTags().stream()
+                .map(Tag::new)
+                .toList();
+
+        return Post.fromSearchIndex(
+                Long.valueOf(document.getId()),
+                document.getTitle(),
+                document.getContent(),
+                PostCategory.valueOf(document.getCategory()),
+                document.getMemberId(),
+                tags,
+                metaData
+        );
     }
 }
