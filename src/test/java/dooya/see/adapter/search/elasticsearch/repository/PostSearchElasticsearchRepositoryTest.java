@@ -6,7 +6,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -14,9 +13,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-record PostSearchElasticsearchRepositoryTest(
-        PostSearchElasticsearchRepository repository,
-        ElasticsearchOperations operations) {
+record PostSearchElasticsearchRepositoryTest(PostSearchElasticsearchRepository repository) {
     @Test
     void ElasticSearch_색인_저장_및_조회_테스트() {
         repository.deleteAll();
@@ -34,8 +31,6 @@ record PostSearchElasticsearchRepositoryTest(
             );
             repository.save(document);
         }
-
-        operations.indexOps(PostDocument.class).refresh();
 
         Pageable pageable = PageRequest.of(0, 10);
 
