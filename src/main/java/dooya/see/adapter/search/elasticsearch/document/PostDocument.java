@@ -34,6 +34,9 @@ public class PostDocument {
     private Long memberId;
 
     @Field(type = FieldType.Keyword)
+    private String authorNickname;
+
+    @Field(type = FieldType.Keyword)
     private List<String> tags;
 
     @Field(type = FieldType.Date)
