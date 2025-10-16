@@ -81,13 +81,15 @@ jobs:
         run: |
           echo "Waiting for Elasticsearch..."
           for i in {1..20}; do
-            if curl -s http://localhost:9200 >/dev/null; then
+            if curl -fsS http://localhost:9200 >/dev/null; then
               echo "Elasticsearch is up!"
-              break
+              exit 0
             fi
-            echo "Retrying in 3s..."
-            sleep 3
-          done
+              echo "Retrying in 3s..."
+              sleep 3
+            done
+            echo "Elasticsearch did not become ready in time."
+            exit 1
 
       - name: Run tests
         run: |
