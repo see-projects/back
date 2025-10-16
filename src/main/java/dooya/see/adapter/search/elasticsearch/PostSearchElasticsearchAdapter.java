@@ -1,16 +1,18 @@
 package dooya.see.adapter.search.elasticsearch;
 
-import dooya.see.adapter.search.elasticsearch.document.PostDocument;
 import dooya.see.adapter.search.elasticsearch.mapper.PostDocumentMapper;
 import dooya.see.adapter.search.elasticsearch.repository.PostSearchElasticsearchRepository;
 import dooya.see.application.member.required.MemberRepository;
 import dooya.see.application.post.required.PostSearchIndexer;
-import dooya.see.domain.member.Member;
 import dooya.see.domain.post.Post;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import static java.util.Objects.requireNonNull;
+import lombok.extern.slf4j.Slf4j;
+
 @Component
+@Slf4j
 @RequiredArgsConstructor
 public class PostSearchElasticsearchAdapter implements PostSearchIndexer {
     private final PostSearchElasticsearchRepository repository;
@@ -19,12 +21,16 @@ public class PostSearchElasticsearchAdapter implements PostSearchIndexer {
 
     @Override
     public void index(Post post) {
-        String nickname = memberRepository.findById(post.getMemberId())
-                .map(Member::getNickname)
-                .orElse("");
+        requireNonNull(post, "post must not be null");
 
-        PostDocument document = mapper.toDocument(post, nickname);
-        repository.save(document);
+        String nickname = memberRepository.findById(post.getMemberId())
+                .map(member -> member.getNickname() != null ? member.getNickname() : "")
+                .orElseGet(() -> {
+                    log.warn("회원 ID={} 을(를) 찾을 수 없어 빈 닉네임으로 색인합니다", post.getMemberId());
+                    return "";
+                });
+
+        repository.save(mapper.toDocument(post, nickname));
     }
 
     @Override
