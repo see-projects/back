@@ -107,35 +107,6 @@ public class Post extends AbstractAggregateRoot {
         return this.memberId.equals(memberId);
     }
 
-    public static Post fromSearchIndex(
-            Long id,
-            String title,
-            String content,
-            PostCategory category,
-            Long memberId,
-            List<Tag> tags,
-            PostMetaData metaData
-    ) {
-        Post post = Post.builder()
-                .content(new PostContent(title, content))
-                .category(category)
-                .memberId(memberId)
-                .tags(tags)
-                .metaData(metaData)
-                .status(PostStatus.PUBLISHED)
-                .build();
-
-        try {
-            Field idField = AbstractEntity.class.getDeclaredField("id");
-            idField.setAccessible(true);
-            idField.set(post, id);
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
-
-        return post;
-    }
-
     // JPA 생명주기 콜백 - 생성 이벤트 발행
     @PostPersist
     private void publishCreationEvent() {
