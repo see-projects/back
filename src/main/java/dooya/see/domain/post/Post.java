@@ -1,6 +1,5 @@
 package dooya.see.domain.post;
 
-import dooya.see.domain.AbstractEntity;
 import dooya.see.domain.post.dto.PostCreateRequest;
 import dooya.see.domain.post.dto.PostUpdateRequest;
 import dooya.see.domain.post.event.*;
@@ -10,7 +9,6 @@ import dooya.see.domain.shared.AbstractAggregateRoot;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
