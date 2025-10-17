@@ -1,5 +1,6 @@
 package dooya.see.adapter.webapi.dto;
 
+import dooya.see.application.post.dto.PostSearchResult;
 import dooya.see.domain.post.Post;
 import dooya.see.domain.post.PostCategory;
 import dooya.see.domain.post.PostStatus;
@@ -31,6 +32,20 @@ public record PostDetailResponse(
                 post.getMetaData().createdAt(),
                 post.getMetaData().modifiedAt(),
                 post.getMetaData().publishedAt()
+        );
+    }
+
+    public static PostDetailResponse fromSearchResult(PostSearchResult result) {
+        return new PostDetailResponse(
+                result.id(),
+                result.title(),
+                result.content(),
+                result.category(),
+                PostStatus.PUBLISHED,
+                result.memberId(),
+                result.createdAt() != null ? result.createdAt().atStartOfDay() : null,
+                null,
+                null
         );
     }
 }

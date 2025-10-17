@@ -3,6 +3,7 @@ package dooya.see.adapter.webapi;
 import dooya.see.adapter.webapi.dto.PostCreateResponse;
 import dooya.see.adapter.webapi.dto.PostDetailResponse;
 import dooya.see.application.member.required.TokenManager;
+import dooya.see.application.post.dto.PostSearchResult;
 import dooya.see.application.post.provided.PostFinder;
 import dooya.see.application.post.provided.PostManager;
 import dooya.see.domain.post.Post;
@@ -100,7 +101,7 @@ public class PostApi {
             @PageableDefault(size = 20, sort = "metaData.createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         Page<Post> posts = postFinder.findPublicPosts(pageable);
 
-        return mapToResponses(posts);
+        return mapToResponsesFromEntities(posts);
     }
 
     @GetMapping("/api/posts/category/{category}")
@@ -109,7 +110,7 @@ public class PostApi {
                                                        Pageable pageable) {
         Page<Post> posts = postFinder.findPublicPostsByCategory(category, pageable);
 
-        return mapToResponses(posts);
+        return mapToResponsesFromEntities(posts);
     }
 
     @GetMapping("/api/members/{memberId}/posts")
@@ -118,14 +119,14 @@ public class PostApi {
                                                      @PageableDefault(size = 20, sort = "metaData.createdAt", direction = Sort.Direction.DESC)
                                                      Pageable pageable) {
         if (isCurrentUser(memberId, token))
-            return mapToResponses(postFinder.findByMemberId(memberId, pageable));
+            return mapToResponsesFromEntities(postFinder.findByMemberId(memberId, pageable));
 
         PostSearchRequest request = PostSearchRequest.builder()
                 .memberId(memberId)
                 .status(PostStatus.PUBLISHED)
                 .build();
 
-        return mapToResponses(postFinder.search(request, pageable));
+        return mapToResponsesFromEntities(postFinder.search(request, pageable));
     }
 
     @GetMapping("/api/posts/status/{status}")
@@ -137,7 +138,7 @@ public class PostApi {
         // 일단 기본 구현으로 진행
         Page<Post> posts = postFinder.findByStatus(status, pageable);
 
-        return mapToResponses(posts);
+        return mapToResponsesFromEntities(posts);
     }
 
     @GetMapping("/api/posts/search")
@@ -151,9 +152,14 @@ public class PostApi {
                                                 @PageableDefault(size = 20, sort = "metaData.createdAt", direction = Sort.Direction.DESC)
                                                 Pageable pageable) {
         PostSearchRequest searchRequest = buildSearchRequest(token, keyword, titleKeyword, contentKeyword, category, memberId, status);
-        Page<Post> posts = postFinder.search(searchRequest, pageable);
 
-        return mapToResponses(posts);
+        if (canUseElasticsearch(searchRequest)) {
+            Page<PostSearchResult> results = postFinder.searchPosts(searchRequest.keyword(), pageable);
+            return mapToResponsesFromSearch(results);
+        }
+
+        Page<Post> posts = postFinder.search(searchRequest, pageable);
+        return mapToResponsesFromEntities(posts);
     }
 
     // Authentication 관련 메서드
@@ -220,9 +226,15 @@ public class PostApi {
     }
 
     // Response Conversion 관련 메서드
-    private List<PostDetailResponse> mapToResponses(Page<Post> posts) {
+    private List<PostDetailResponse> mapToResponsesFromEntities(Page<Post> posts) {
         return posts.stream()
                 .map(PostDetailResponse::of)
+                .toList();
+    }
+
+    private List<PostDetailResponse> mapToResponsesFromSearch(Page<PostSearchResult> results) {
+        return results.stream()
+                .map(PostDetailResponse::fromSearchResult)
                 .toList();
     }
 
@@ -233,13 +245,28 @@ public class PostApi {
         PostStatus effectiveStatus = determineEffectiveStatus(token, memberId, status);
 
         return PostSearchRequest.builder()
-                .keyword(keyword)
-                .titleKeyword(titleKeyword)
-                .contentKeyword(contentKeyword)
+                .keyword(normalize(keyword))
+                .titleKeyword(normalize(titleKeyword))
+                .contentKeyword(normalize(contentKeyword))
                 .category(category)
                 .memberId(memberId)
                 .status(effectiveStatus)
                 .build();
+    }
+
+    private boolean canUseElasticsearch(PostSearchRequest request) {
+        return request.keyword() != null
+                && request.titleKeyword() == null
+                && request.contentKeyword() == null
+                && request.category() == null
+                && request.memberId() == null
+                && request.status() == null
+                && request.fromDate() == null
+                && request.toDate() == null;
+    }
+
+    private String normalize(String text) {
+        return (text == null || text.isBlank()) ? null : text;
     }
 
     private PostStatus determineEffectiveStatus(String token, Long memberId, PostStatus status) {
