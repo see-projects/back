@@ -1,7 +1,10 @@
+version: "3.8"
+
 services:
   mysql:
     image: mysql:8.0
     container_name: see-mysql
+    restart: unless-stopped
     ports:
       - "3306:3306"
     environment:
@@ -14,30 +17,15 @@ services:
       - ./docker/mysql/init:/docker-entrypoint-initdb.d
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      timeout: 20s
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 10s
+      timeout: 5s
       retries: 10
-    restart: unless-stopped
-
-#  mysql-test:
-#    image: mysql:8.0
-#    container_name: see-test-mysql
-#    ports:
-#      - "3307:3306"
-#    environment:
-#      MYSQL_ROOT_PASSWORD: root
-#      MYSQL_DATABASE: see_test
-#      MYSQL_USER: see_user
-#      MYSQL_PASSWORD: see_password
-#    volumes:
-#      - mysql_test_data:/var/lib/mysql
-#      - ./docker/mysql/init:/docker-entrypoint-initdb.d
-#    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-#    restart: unless-stopped
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
     container_name: see-elasticsearch
+    restart: unless-stopped
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
@@ -51,23 +39,64 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: unless-stopped
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.12.0
     container_name: see-kibana
+    restart: unless-stopped
     ports:
       - "5601:5601"
     environment:
       ELASTICSEARCH_HOSTS: http://see-elasticsearch:9200
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    container_name: see-zookeeper
     restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    healthcheck:
+      test: ["CMD-SHELL", "echo ruok | nc localhost 2181 | grep imok || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: see-kafka
+    restart: unless-stopped
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+      # 두 가지 리스너를 노출하여 컨테이너 내부/호스트 접근 모두 지원
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://see-kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+
+      # 기본 동작 설정
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+
+    healthcheck:
+      test: [ "CMD", "bash", "-c", "kafka-topics --bootstrap-server localhost:9092 --list >/dev/null 2>&1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
 volumes:
   mysql_data:
-    driver: local
-  mysql_test_data:
   es_data:
-    driver: local
-
