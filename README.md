@@ -209,6 +209,15 @@ open build/jacocoHtml/index.html
 
 # 아키텍처 규칙 검증
 ./gradlew test --tests "*ArchUnitTest"
+
+# 벤치마크 데이터 적재 (필요 시 forceReload=true)
+./gradlew bootRun --args='--spring.profiles.active=benchmark-data --benchmark.data.post-count=50000'
+
+# JMH 기반 DB vs ES 검색 성능 측정
+./gradlew jmh
+
+# Gatling 부하 테스트 실행 (서버 실행 필요)
+./gradlew gatlingRun -Pgatling.simulationClass=dooya.see.search.PostSearchSimulation
 ```
 
 ## 주요 지표

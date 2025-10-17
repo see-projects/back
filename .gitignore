@@ -23,6 +23,7 @@ bin/
 *.iml
 *.ipr
 application.yml
+application-benchmark-data.yml
 
 out/
 !**/src/main/**/out/

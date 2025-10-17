@@ -615,6 +615,7 @@ class PostApiTest {
         void 키워드로_게시글을_검색할_수_있다()
                 throws UnsupportedEncodingException, JsonProcessingException {
             createTestPublishedPost();
+            awaitSearchIndexed("테스트", 1);
 
             MvcTestResult result = performPostSearch("keyword=테스트");
 
