@@ -32,6 +32,38 @@ jobs:
           --health-timeout 5s
           --health-retries 10
 
+      zookeeper:
+        image: confluentinc/cp-zookeeper:7.6.1
+        ports:
+          - 2181:2181
+        env:
+          ZOOKEEPER_CLIENT_PORT: 2181
+          ZOOKEEPER_TICK_TIME: 2000
+        options: >-
+          --health-cmd "echo ruok | nc localhost 2181 | grep imok || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+      kafka:
+        image: confluentinc/cp-kafka:7.6.1
+        ports:
+          - 9092:9092
+        env:
+          KAFKA_BROKER_ID: 1
+          KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9092
+          KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+        options: >-
+          --health-cmd "nc -z localhost 9092"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+        depends_on:
+          - zookeeper
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -57,19 +89,9 @@ jobs:
 
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v2
-        with:
-          min-wrapper-count: 1
-          allow-snapshots: false
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
-
-      - name: Verify Gradle Wrapper Checksum
-        run: |
-          if [ -f "gradle/wrapper/gradle-wrapper.properties" ]; then
-            echo "Gradle wrapper configuration verified"
-            cat gradle/wrapper/gradle-wrapper.properties
-          fi
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
@@ -77,19 +99,19 @@ jobs:
           gradle-build-scan-report: true
           cache-read-only: false
 
-      - name: Wait for Elasticsearch to be ready
+      - name: Wait for services to be ready
         run: |
-          echo "Waiting for Elasticsearch..."
+          echo "Waiting for Elasticsearch, Kafka, and Zookeeper..."
           for i in {1..20}; do
-            if curl -fsS http://localhost:9200 >/dev/null; then
-              echo "Elasticsearch is up!"
+            if curl -fsS http://localhost:9200 >/dev/null && nc -z localhost 9092 && nc -z localhost 2181; then
+              echo "All services are up!"
               exit 0
             fi
-              echo "Retrying in 3s..."
-              sleep 3
-            done
-            echo "Elasticsearch did not become ready in time."
-            exit 1
+            echo "Retrying in 5s..."
+            sleep 5
+          done
+          echo "Services did not become ready in time."
+          exit 1
 
       - name: Run tests
         run: |
@@ -102,6 +124,7 @@ jobs:
             -Dspring.profiles.active=test
         env:
           SPRING_ELASTICSEARCH_URIS: http://localhost:9200
+          SPRING_KAFKA_BOOTSTRAP_SERVERS: localhost:9092
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
@@ -112,35 +135,3 @@ jobs:
             build/reports/tests/
             build/test-results/
           retention-days: 7
-
-  build-check:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: gradle
-
-      - name: Create application.yml file
-        run: |
-          mkdir -p ./src/main/resources
-          echo "${{ secrets.APPLICATION_YML }}" > ./src/main/resources/application.yml
-
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
-
-      - name: Compile check
-        run: |
-          ./gradlew compileJava compileTestJava \
-            --parallel \
-            --build-cache \
-            --configuration-cache
