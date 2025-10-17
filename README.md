@@ -217,7 +217,7 @@ open build/jacocoHtml/index.html
 ./gradlew jmh
 
 # Gatling 부하 테스트 실행 (서버 실행 필요)
-./gradlew gatlingRun
+./gradlew gatlingRun -Pgatling.simulationClass=dooya.see.search.PostSearchSimulation
 ```
 
 ## 주요 지표
