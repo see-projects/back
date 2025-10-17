@@ -37,8 +37,8 @@ jobs:
         ports:
           - 9092:9092
         env:
-          CLUSTER_ID: ci-cluster-001
-          KAFKA_CLUSTER_ID: ci-cluster-001
+          CLUSTER_ID: 9UbE6ogDQKqe49oBCZZmnA
+          KAFKA_CLUSTER_ID: 9UbE6ogDQKqe49oBCZZmnA
           KAFKA_PROCESS_ROLES: broker,controller
           KAFKA_NODE_ID: 1
           KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
