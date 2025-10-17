@@ -1,31 +1,24 @@
 package dooya.see.adapter.integration.kafka;
 
-import dooya.see.application.post.required.PostSearchIndexer;
-import dooya.see.domain.post.event.PostCreated;
-import dooya.see.domain.post.event.PostUpdated;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@ConditionalOnProperty(value = "see.kafka.enabled", havingValue = "true")
 public class PostEventConsumer {
-    private final PostSearchIndexer postSearchIndexer;
+    private final PostEventProcessor postEventProcessor;
 
-    @KafkaListener(topics = "post-events", groupId = "post-indexr-group")
-    public void consume(Object event) {
-        log.info("Kafka Event 수신: {}", event);
-
-        try {
-            if (event instanceof PostCreated created) {
-                postSearchIndexer.index(created.post());
-            } else {
-                log.warn("처리 불가능한 이벤트 타입: {}", event.getClass().getSimpleName());
-            }
-        } catch (Exception e) {
-            log.error("Kafka 이벤트 처리 중 오류 발생: {}", event, e);
-        }
+    @KafkaListener(
+            topics = "${see.kafka.topics.post-events:post-events}",
+            groupId = "${spring.kafka.consumer.group-id:post-indexer-group}"
+    )
+    public void consume(PostEventMessage message) {
+        log.debug("Kafka 이벤트 수신: {}", message);
+        postEventProcessor.process(message);
     }
 }
