@@ -1,8 +1,14 @@
+import org.gradle.api.tasks.SourceSetContainer
+import org.gradle.api.tasks.ScalaSourceSet
+
 plugins {
     java
+    scala
     id("org.springframework.boot") version "3.5.4"
     id("io.spring.dependency-management") version "1.1.7"
     id("com.github.spotbugs") version "6.1.11"
+    id("me.champeau.jmh") version "0.7.2"
+    id("io.gatling.gradle") version "3.13.1"
     jacoco
 }
 
@@ -23,6 +29,15 @@ configurations {
 
 repositories {
     mavenCentral()
+}
+
+val sourceSets = extensions.getByType<SourceSetContainer>()
+sourceSets.named("gatling") {
+    java.setSrcDirs(emptyList<String>())
+    resources.srcDir("src/gatling/resources")
+    withConvention(ScalaSourceSet::class) {
+        scala.srcDir("src/gatling/scala")
+    }
 }
 
 val mockitoAgent: Configuration = configurations.create("mockitoAgent")
@@ -51,8 +66,20 @@ dependencies {
     testImplementation("org.junit-pioneer:junit-pioneer:2.3.0")
     testImplementation("org.mockito:mockito-core:5.18.0")
     testImplementation("com.tngtech.archunit:archunit-junit5:1.4.1")
-    mockitoAgent("org.mockito:mockito-core:5.18.0") { isTransitive = false }
+mockitoAgent("org.mockito:mockito-core:5.18.0") { isTransitive = false }
+
+jmhImplementation("org.openjdk.jmh:jmh-core:1.37")
+jmhAnnotationProcessor("org.openjdk.jmh:jmh-generator-annprocess:1.37")
 }
+
+jmh {
+    jmhVersion.set("1.37")
+    includes.set(listOf("dooya.see.benchmark.PostSearchBenchmark"))
+    resultFormat.set("JSON")
+    resultsFile.set(layout.buildDirectory.file("reports/jmh/post-search.json"))
+}
+
+
 
 tasks.named<Test>("test") {
     useJUnitPlatform()
