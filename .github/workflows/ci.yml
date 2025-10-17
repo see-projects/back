@@ -61,59 +61,63 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 10
-        depends_on:
-          - zookeeper
 
     steps:
-      - name: Check out repository
+      - name: 🧩 Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
-      - name: Set up JDK 21
+      - name: ☕️ Set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
           cache: gradle
 
-      - name: Create application.yml file
+      - name: 📝 Create application.yml
         run: |
           mkdir -p ./src/main/resources
           echo "${{ secrets.APPLICATION_YML }}" > ./src/main/resources/application.yml
 
-      - name: Disable IPv6
+      - name: 🧱 Disable IPv6 (network stability)
         run: |
           sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
           sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
 
-      - name: Validate Gradle wrapper
+      - name: 🧩 Validate Gradle Wrapper
         uses: gradle/wrapper-validation-action@v2
 
-      - name: Make gradlew executable
+      - name: 🧍 Make gradlew executable
         run: chmod +x ./gradlew
 
-      - name: Setup Gradle
+      - name: ⚙️ Setup Gradle
         uses: gradle/gradle-build-action@v2
         with:
           gradle-build-scan-report: true
           cache-read-only: false
 
-      - name: Wait for services to be ready
+      - name: 🕐 Wait for Kafka, Zookeeper, and Elasticsearch
         run: |
-          echo "Waiting for Elasticsearch, Kafka, and Zookeeper..."
-          for i in {1..20}; do
-            if curl -fsS http://localhost:9200 >/dev/null && nc -z localhost 9092 && nc -z localhost 2181; then
-              echo "All services are up!"
+          echo "Waiting for Elasticsearch, Zookeeper, and Kafka to be ready..."
+          for i in {1..25}; do
+            es_ready=$(curl -fsS http://localhost:9200/_cluster/health > /dev/null && echo "yes" || echo "no")
+            zk_ready=$(echo ruok | nc localhost 2181 | grep imok > /dev/null && echo "yes" || echo "no")
+            kafka_ready=$(nc -z localhost 9092 && echo "yes" || echo "no")
+
+            if [ "$es_ready" = "yes" ] && [ "$zk_ready" = "yes" ] && [ "$kafka_ready" = "yes" ]; then
+              echo "✅ All services are ready!"
               exit 0
             fi
-            echo "Retrying in 5s..."
+
+            echo "⏳ Waiting for services... retrying in 5s ($i/25)"
             sleep 5
           done
-          echo "Services did not become ready in time."
+
+          echo "❌ Services did not start in time"
           exit 1
 
-      - name: Run tests
+      - name: 🧪 Run tests
         run: |
           ./gradlew clean test \
             --parallel \
@@ -126,7 +130,7 @@ jobs:
           SPRING_ELASTICSEARCH_URIS: http://localhost:9200
           SPRING_KAFKA_BOOTSTRAP_SERVERS: localhost:9092
 
-      - name: Upload test results
+      - name: 📦 Upload test results
         uses: actions/upload-artifact@v4
         if: always()
         with:
