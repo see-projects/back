@@ -49,12 +49,7 @@ jobs:
           KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
           CLUSTER_ID: ci-cluster-001
         options: >-
-          --entrypoint bash
-          -c "if [ ! -f /tmp/kraft-combined-logs/meta.properties ]; then
-                /usr/bin/kafka-storage format --ignore-formatted --cluster-id ci-cluster-001 --config /etc/kafka/kafka.properties;
-              fi &&
-              /etc/confluent/docker/run" &&
-              echo 'Kafka started successfully!'
+          --entrypoint '["bash","-c","if [ ! -f /tmp/kraft-combined-logs/meta.properties ]; then /usr/bin/kafka-storage format --ignore-formatted --cluster-id ci-cluster-001 --config /etc/kafka/kafka.properties; fi && /etc/confluent/docker/run"]'
           --health-cmd "nc -z localhost 9092"
           --health-interval 15s
           --health-timeout 10s
