@@ -47,9 +47,12 @@ jobs:
           KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
           KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
           KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
-          CLUSTER_ID: ci-cluster-001
         options: >-
-          --entrypoint '["bash","-c","if [ ! -f /tmp/kraft-combined-logs/meta.properties ]; then /usr/bin/kafka-storage format --ignore-formatted --cluster-id ci-cluster-001 --config /etc/kafka/kafka.properties; fi && /etc/confluent/docker/run"]'
+          --entrypoint bash
+          -c "if [ ! -f /tmp/kraft-combined-logs/meta.properties ]; then
+                 /usr/bin/kafka-storage format --ignore-formatted --cluster-id ci-cluster-001 --config /etc/kafka/kafka.properties;
+               fi;
+               /etc/confluent/docker/run"
           --health-cmd "nc -z localhost 9092"
           --health-interval 15s
           --health-timeout 10s
