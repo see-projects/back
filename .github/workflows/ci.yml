@@ -37,6 +37,7 @@ jobs:
         ports:
           - 9092:9092
         env:
+          KAFKA_CLUSTER_ID: ci-cluster-001
           KAFKA_PROCESS_ROLES: broker,controller
           KAFKA_NODE_ID: 1
           KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
@@ -48,11 +49,6 @@ jobs:
           KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
           KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
         options: >-
-          --entrypoint bash
-          -c "if [ ! -f /tmp/kraft-combined-logs/meta.properties ]; then
-                 /usr/bin/kafka-storage format --ignore-formatted --cluster-id ci-cluster-001 --config /etc/kafka/kafka.properties;
-               fi;
-               /etc/confluent/docker/run"
           --health-cmd "nc -z localhost 9092"
           --health-interval 15s
           --health-timeout 10s
