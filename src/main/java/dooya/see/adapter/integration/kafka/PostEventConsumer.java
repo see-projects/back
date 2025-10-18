@@ -15,7 +15,8 @@ public class PostEventConsumer {
 
     @KafkaListener(
             topics = "${see.kafka.topics.post-events:post-events}",
-            groupId = "${spring.kafka.consumer.group-id:post-indexer-group}"
+            groupId = "${spring.kafka.consumer.group-id:post-indexer-group}",
+            containerFactory = "kafkaListenerContainerFactory"
     )
     public void consume(PostEventMessage message) {
         log.debug("Kafka 이벤트 수신: {}", message);
