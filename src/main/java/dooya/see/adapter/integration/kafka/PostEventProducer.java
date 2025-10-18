@@ -40,7 +40,13 @@ public class PostEventProducer implements PostEventPublisher {
 
         String key = message.postId() != null ? message.postId().toString() : null;
 
-        Runnable sendTask = () -> sendWithRetry(key, message);
+        Runnable sendTask = () -> {
+            try {
+                sendWithRetry(key, message);
+            } catch (Exception unexpected) {
+                log.error("Kafka 이벤트 발행 중 처리되지 않은 예외 발생: {}", message, unexpected);
+            }
+        };
 
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
@@ -90,7 +96,8 @@ public class PostEventProducer implements PostEventPublisher {
         }, recoveryContext -> {
             Throwable lastError = recoveryContext.getLastThrowable();
             log.error("Kafka 이벤트 발행 실패(재시도 완료): {}", message, lastError);
-            throw new IllegalStateException("Kafka 전송 실패(재시도 초과)", lastError);
+            // TODO: DLQ 또는 모니터링 알림 연동을 고려합니다.
+            return null;
         });
     }
 }
