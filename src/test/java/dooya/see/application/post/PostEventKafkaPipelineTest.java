@@ -24,7 +24,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(properties = {
         "see.kafka.enabled=true",
-        "spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}"
+        "spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}",
+        "spring.kafka.consumer.group-id=${random.uuid}"
 })
 @EmbeddedKafka(partitions = 1, topics = "${see.kafka.topics.post-events:post-events}")
 @TestPropertySource(properties = "spring.kafka.consumer.auto-offset-reset=earliest")
