@@ -11,6 +11,7 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.support.serializer.JsonSerializer;
+import org.springframework.retry.support.RetryTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,5 +38,13 @@ public class KafkaProducerConfig {
     @Bean
     public KafkaTemplate<String, PostEventMessage> postEventKafkaTemplate(ProducerFactory<String, PostEventMessage> postEventProducerFactory) {
         return new KafkaTemplate<>(postEventProducerFactory);
+    }
+
+    @Bean
+    public RetryTemplate kafkaRetryTemplate() {
+        return RetryTemplate.builder()
+                .maxAttempts(3)
+                .exponentialBackoff(200, 2.0, 2_000)
+                .build();
     }
 }
