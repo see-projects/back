@@ -9,7 +9,9 @@ public record PostContent(
         String title,
         @Column(name = "body", length = 50000, nullable = false)
         String body
-) {
+) implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
+
     public PostContent {
         validateTitle(title);
         validateBody(body);

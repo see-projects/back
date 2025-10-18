@@ -32,66 +32,84 @@ jobs:
           --health-timeout 5s
           --health-retries 10
 
+      kafka:
+        image: confluentinc/cp-kafka:7.6.1
+        ports:
+          - 9092:9092
+        env:
+          CLUSTER_ID: 9UbE6ogDQKqe49oBCZZmnA
+          KAFKA_CLUSTER_ID: 9UbE6ogDQKqe49oBCZZmnA
+          KAFKA_PROCESS_ROLES: broker,controller
+          KAFKA_NODE_ID: 1
+          KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+          KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+          KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+          KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+          KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+          KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+        options: >-
+          --health-cmd "nc -z localhost 9092"
+          --health-interval 15s
+          --health-timeout 10s
+          --health-retries 10
+
     steps:
-      - name: Check out repository
+      - name: 🧩 Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
-      - name: Set up JDK 21
+      - name: ☕️ Set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
           cache: gradle
 
-      - name: Create application.yml file
+      - name: 📝 Create application.yml
         run: |
           mkdir -p ./src/main/resources
           echo "${{ secrets.APPLICATION_YML }}" > ./src/main/resources/application.yml
 
-      - name: Disable IPv6
+      - name: 🧱 Disable IPv6 (network stability)
         run: |
           sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
           sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
 
-      - name: Validate Gradle wrapper
+      - name: 🧩 Validate Gradle Wrapper
         uses: gradle/wrapper-validation-action@v2
-        with:
-          min-wrapper-count: 1
-          allow-snapshots: false
 
-      - name: Make gradlew executable
+      - name: 🧍 Make gradlew executable
         run: chmod +x ./gradlew
 
-      - name: Verify Gradle Wrapper Checksum
-        run: |
-          if [ -f "gradle/wrapper/gradle-wrapper.properties" ]; then
-            echo "Gradle wrapper configuration verified"
-            cat gradle/wrapper/gradle-wrapper.properties
-          fi
-
-      - name: Setup Gradle
+      - name: ⚙️ Setup Gradle
         uses: gradle/gradle-build-action@v2
         with:
           gradle-build-scan-report: true
           cache-read-only: false
 
-      - name: Wait for Elasticsearch to be ready
+      - name: 🕐 Wait for Kafka and Elasticsearch
         run: |
-          echo "Waiting for Elasticsearch..."
-          for i in {1..20}; do
-            if curl -fsS http://localhost:9200 >/dev/null; then
-              echo "Elasticsearch is up!"
+          echo "Waiting for Elasticsearch and Kafka to be ready..."
+          for i in {1..25}; do
+            es_ready=$(curl -fsS http://localhost:9200/_cluster/health > /dev/null && echo "yes" || echo "no")
+            kafka_ready=$(nc -z localhost 9092 && echo "yes" || echo "no")
+
+            if [ "$es_ready" = "yes" ] && [ "$kafka_ready" = "yes" ]; then
+              echo "✅ All services are ready!"
               exit 0
             fi
-              echo "Retrying in 3s..."
-              sleep 3
-            done
-            echo "Elasticsearch did not become ready in time."
-            exit 1
 
-      - name: Run tests
+            echo "⏳ Waiting for services... retrying in 5s ($i/25)"
+            sleep 5
+          done
+
+          echo "❌ Services did not start in time"
+          exit 1
+
+      - name: 🧪 Run tests
         run: |
           ./gradlew clean test \
             --parallel \
@@ -102,8 +120,9 @@ jobs:
             -Dspring.profiles.active=test
         env:
           SPRING_ELASTICSEARCH_URIS: http://localhost:9200
+          SPRING_KAFKA_BOOTSTRAP_SERVERS: localhost:9092
 
-      - name: Upload test results
+      - name: 📦 Upload test results
         uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -118,29 +137,39 @@ jobs:
     if: github.event_name == 'pull_request'
 
     steps:
-      - name: Check out repository
+      - name: 🧩 Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
-      - name: Set up JDK 21
+      - name: ☕️ Set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
           cache: gradle
 
-      - name: Create application.yml file
+      - name: 📝 Create application.yml
         run: |
           mkdir -p ./src/main/resources
           echo "${{ secrets.APPLICATION_YML }}" > ./src/main/resources/application.yml
 
-      - name: Setup Gradle
+      - name: ⚙️ Setup Gradle
         uses: gradle/gradle-build-action@v2
 
-      - name: Compile check
+      - name: 🧱 Compile check
         run: |
           ./gradlew compileJava compileTestJava \
             --parallel \
             --build-cache \
             --configuration-cache
+
+      - name: 📦 Upload build results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build-results
+          path: |
+            build/classes/
+            build/libs/
+          retention-days: 7

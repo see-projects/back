@@ -66,12 +66,21 @@
 - **Application Layer**: 유스케이스 조율과 트랜잭션 관리
     - Primary Port: MemberManager, PostManager, CommentManager
     - Secondary Port: MemberRepository, PostRepository, PostStatsRepository
-    - 이벤트 핸들러: PostStatsEventHandler
+    - 이벤트 핸들러: PostEventHandler, PostStatsEventHandler
 
 - **Adapter Layer**: 외부 시스템과의 연동
     - Web API: REST 엔드포인트
     - Security: JWT 인증/인가
     - Persistence: JPA 구현체
+    - Integration: Kafka 프로듀서/컨슈머, Elasticsearch 색인기
+
+### 이벤트 파이프라인
+
+1. **도메인 이벤트 발행**: Post, Comment 등 애그리거트가 `AbstractAggregateRoot`를 통해 이벤트를 수집합니다.
+2. **애플리케이션 이벤트**: `PostEventHandler`가 스프링 애플리케이션 이벤트를 받아 `PostEventPublisher`(포트)에 위임합니다.
+3. **Kafka 전송**: `PostEventProducer`는 트랜잭션 커밋 이후 Kafka로 메시지를 전송하며, `postId`를 메시지 키로 사용하고 `RetryTemplate`으로 재시도 정책을 적용합니다.
+4. **컨슈머 처리**: `PostEventConsumer`는 `DefaultErrorHandler`가 적용된 리스너 컨테이너에서 메시지를 소비하고, `PostEventProcessor`가 최신 게시글을 재조회해 Elasticsearch 색인을 갱신합니다.
+5. **Fallback 모드**: `see.kafka.enabled=false` 일 때는 `DirectPostEventPublisher`가 즉시 색인 작업을 수행하여 Kafka 없이도 동일한 로직을 유지합니다.
 
 ## 기술 스택
 
@@ -80,10 +89,13 @@
 - **Spring Boot 3.5.4**: 최신 스프링 부트로 개발 생산성 향상
 - **Spring Data JPA**: 데이터 접근 계층 추상화
 - **Spring Security**: 인증/인가 보안 체계
+- **Spring Retry**: 외부 시스템 연동 시 재시도 정책 지원
 
-### Database
+### Storage & Messaging
 - **MySQL 8.0**: 운영 환경 데이터베이스
 - **H2**: 개발/테스트 환경 인메모리 데이터베이스
+- **Elasticsearch 8.x**: 검색 인덱스 저장소
+- **Apache Kafka 7.x (Confluent)**: 도메인 이벤트 브로커
 - **Docker Compose**: 컨테이너 기반 개발 환경
 
 ### Testing & Quality
@@ -111,17 +123,27 @@ git clone https://github.com/your-repo/see.git
 cd see
 ```
 
-### 2. 데이터베이스 시작
+### 2. 인프라 기동 (선택)
 ```bash
-docker-compose up -d mysql
+# MySQL, Elasticsearch, Kafka를 한 번에 실행하려면
+docker compose up -d mysql elasticsearch kafka
+
+# 또는 필요한 서비스만 선택적으로 실행할 수 있습니다.
 ```
+
+Kafka를 사용하지 않는 개발 환경이라면 위 단계를 생략하고 `see.kafka.enabled=false` 프로필을 활성화하면 됩니다.
 
 ### 3. 애플리케이션 실행
 ```bash
 ./gradlew bootRun
 ```
 
-### 4. API 테스트
+### 4. 환경 설정 팁
+- `see.kafka.enabled=false`: Kafka 없이 즉시 색인을 수행 (기본 테스트 프로필)
+- `spring.kafka.bootstrap-servers`: 로컬 Kafka 브로커 주소 (임베디드 테스트에서는 자동 주입)
+- `spring.elasticsearch.uris`: Elasticsearch 연결 주소 (기본값 `http://localhost:9200`)
+
+### 5. API 테스트
 ```bash
 # 회원 가입
 curl -X POST http://localhost:8080/api/members \
@@ -184,7 +206,8 @@ src/
 │   └── adapter/                # 어댑터 계층
 │       ├── webapi/             # REST API
 │       ├── security/           # 보안
-│       └── persistence/        # 데이터베이스
+│       ├── persistence/        # 데이터베이스
+│       └── integration/        # Kafka, Elasticsearch 연동
 └── test/                       # 테스트 코드
     ├── domain/                 # 단위 테스트 (순수 Java)
     ├── application/            # 통합 테스트
@@ -197,11 +220,15 @@ src/
 - **단위 테스트**: 도메인 로직을 순수 Java로 빠르게 검증
 - **통합 테스트**: 포트 구현체를 모의 객체로 대체하여 애플리케이션 서비스 검증
 - **인수 테스트**: 실제 어댑터를 사용하여 End-to-End 시나리오 검증
+- **Kafka 통합 테스트**: Embedded Kafka를 활용해 이벤트 파이프라인을 종단 간 검증
 
 ### 테스트 실행
 ```bash
-# 전체 테스트
+# 전체 테스트 (Kafka 비활성화 프로필 기본 적용)
 ./gradlew test
+
+# Kafka 파이프라인 통합 테스트만 실행 (Embedded Kafka)
+./gradlew test --tests PostEventKafkaPipelineTest
 
 # 테스트 커버리지 확인  
 ./gradlew jacocoTestReport
