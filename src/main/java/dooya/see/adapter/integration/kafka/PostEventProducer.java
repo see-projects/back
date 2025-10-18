@@ -10,9 +10,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+
+import java.util.concurrent.ExecutionException;
 
 @Slf4j
 @Component
@@ -20,6 +23,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 @ConditionalOnProperty(value = "see.kafka.enabled", havingValue = "true")
 public class PostEventProducer implements PostEventPublisher {
     private final KafkaTemplate<String, PostEventMessage> kafkaTemplate;
+    private final RetryTemplate retryTemplate;
 
     @Value("${see.kafka.topics.post-events:post-events}")
     private String topic;
@@ -34,15 +38,19 @@ public class PostEventProducer implements PostEventPublisher {
             return;
         }
 
+        String key = message.postId() != null ? message.postId().toString() : null;
+
+        Runnable sendTask = () -> sendWithRetry(key, message);
+
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {
-                    doSend(message);
+                    sendTask.run();
                 }
             });
         } else {
-            doSend(message);
+            sendTask.run();
         }
     }
 
@@ -59,28 +67,30 @@ public class PostEventProducer implements PostEventPublisher {
         return null;
     }
 
-    private void doSend(PostEventMessage message) {
-        try {
-            kafkaTemplate.send(topic, message)
-                    .whenComplete((result, throwable) -> {
-                        if (throwable != null) {
-                            log.error("Kafka 이벤트 발행 실패: {}", message, throwable);
-                            return;
-                        }
-                        if (result != null && log.isDebugEnabled()) {
-                            log.debug("Kafka 이벤트 발행 성공: topic={}, partition={}, offset={}, payload={}",
-                                    result.getRecordMetadata().topic(),
-                                    result.getRecordMetadata().partition(),
-                                    result.getRecordMetadata().offset(),
-                                    message);
-                        }
-                    })
-                    .exceptionally(throwable -> {
-                        log.error("Kafka 이벤트 발행 실패: {}", message, throwable);
-                        return null;
-                    });
-        } catch (Exception e) {
-            log.error("Kafka 이벤트 발행 실패: {}", message, e);
-        }
+    private void sendWithRetry(String key, PostEventMessage message) {
+        retryTemplate.execute(retryContext -> {
+            try {
+                var result = kafkaTemplate.send(topic, key, message).get();
+                if (result != null && log.isDebugEnabled()) {
+                    log.debug("Kafka 이벤트 발행 성공: topic={}, partition={}, offset={}, key={}, payload={}",
+                            result.getRecordMetadata().topic(),
+                            result.getRecordMetadata().partition(),
+                            result.getRecordMetadata().offset(),
+                            key,
+                            message);
+                }
+                return null;
+            } catch (InterruptedException interrupted) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("Kafka 전송이 인터럽트되었습니다", interrupted);
+            } catch (ExecutionException executionException) {
+                Throwable cause = executionException.getCause() != null ? executionException.getCause() : executionException;
+                throw new IllegalStateException("Kafka 전송 실패", cause);
+            }
+        }, recoveryContext -> {
+            Throwable lastError = recoveryContext.getLastThrowable();
+            log.error("Kafka 이벤트 발행 실패(재시도 완료): {}", message, lastError);
+            throw new IllegalStateException("Kafka 전송 실패(재시도 초과)", lastError);
+        });
     }
 }
