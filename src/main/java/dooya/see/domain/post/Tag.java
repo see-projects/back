@@ -2,10 +2,12 @@ package dooya.see.domain.post;
 
 import jakarta.persistence.Embeddable;
 
+import java.io.Serializable;
 import java.util.regex.Pattern;
 
 @Embeddable
-public record Tag(String name) {
+public record Tag(String name) implements Serializable {
+    private static final long serialVersionUID = 1L;
     private static final Pattern TAG_PATTERN = Pattern.compile("^[가-힣a-zA-Z0-9]+$");
 
     public Tag {

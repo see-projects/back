@@ -20,7 +20,8 @@ import static java.util.Objects.requireNonNull;
 @Builder(access = AccessLevel.PRIVATE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Post extends AbstractAggregateRoot {
+public class Post extends AbstractAggregateRoot implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
     @Embedded
     private PostContent content;
 

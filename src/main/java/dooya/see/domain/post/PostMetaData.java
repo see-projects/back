@@ -2,6 +2,7 @@ package dooya.see.domain.post;
 
 import jakarta.persistence.Embeddable;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Embeddable
@@ -11,7 +12,8 @@ public record PostMetaData(
         LocalDateTime modifiedAt,
 
         LocalDateTime publishedAt
-) {
+) implements Serializable {
+    private static final long serialVersionUID = 1L;
     
     public static PostMetaData create() {
         LocalDateTime now = LocalDateTime.now();
