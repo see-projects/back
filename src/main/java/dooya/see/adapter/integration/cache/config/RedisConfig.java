@@ -11,7 +11,6 @@ public class RedisConfig {
     @Bean
     RedisTemplate<String, String> redisTemplate(RedisConnectionFactory connectionFactory) {
         RedisTemplate<String, String> template = new RedisTemplate<>();
-        // Spring Boot auto-configures LettuceConnectionFactory based on spring.data.redis.* properties.
         template.setConnectionFactory(connectionFactory);
         template.setKeySerializer(new StringRedisSerializer());
         template.setValueSerializer(new StringRedisSerializer());
