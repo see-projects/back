@@ -83,6 +83,10 @@ jmh {
     resultsFile.set(layout.buildDirectory.file("reports/jmh/post-search.json"))
 }
 
+tasks.named<Zip>("jmhJar") {
+    isZip64 = true
+}
+
 
 
 tasks.named<Test>("test") {
