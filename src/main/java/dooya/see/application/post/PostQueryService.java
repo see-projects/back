@@ -2,12 +2,14 @@ package dooya.see.application.post;
 
 import dooya.see.application.post.provided.PostFinder;
 import dooya.see.application.post.required.PostRepository;
+import dooya.see.application.post.required.PostSearchCacheRepository;
 import dooya.see.application.post.required.PostSearchReader;
 import dooya.see.application.post.dto.PostSearchResult;
 import dooya.see.domain.post.*;
 import dooya.see.domain.post.dto.PostSearchRequest;
 import dooya.see.domain.post.exception.PostNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -16,6 +18,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -23,6 +26,7 @@ public class PostQueryService implements PostFinder {
     private final PostRepository postRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final PostSearchReader postSearchReader;
+    private final PostSearchCacheRepository postSearchCacheRepository;
 
     @Override
     public Post find(Long postId) {
@@ -70,7 +74,8 @@ public class PostQueryService implements PostFinder {
 
     @Override
     public Page<PostSearchResult> searchPosts(String keyword, Pageable pageable) {
-        return postSearchReader.searchByKeyword(keyword, pageable);
+        return postSearchCacheRepository.find(keyword, pageable)
+                .orElseGet(() -> fetchAndCacheSearchResults(keyword, pageable));
     }
 
     @Override
@@ -89,6 +94,17 @@ public class PostQueryService implements PostFinder {
     private void publishDomainEvents(Post post) {
         post.getDomainEvents().forEach(eventPublisher::publishEvent);
         post.clearDomainEvents();
+    }
+
+    private Page<PostSearchResult> fetchAndCacheSearchResults(String keyword, Pageable pageable) {
+        Page<PostSearchResult> results = postSearchReader.searchByKeyword(keyword, pageable);
+        try {
+            postSearchCacheRepository.save(keyword, pageable, results);
+        } catch (Exception e) {
+            // 캐시 실패는 검색 흐름에 영향을 주지 않도록 기록만 남긴다.
+            log.warn("검색 결과 캐시 저장 실패: keyword={}, page={}, size={}", keyword, pageable.getPageNumber(), pageable.getPageSize(), e);
+        }
+        return results;
     }
 
     private boolean isEmptySearch(PostSearchRequest searchRequest) {
