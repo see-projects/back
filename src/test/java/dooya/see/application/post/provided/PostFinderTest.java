@@ -3,6 +3,7 @@ package dooya.see.application.post.provided;
 import dooya.see.SeeTestConfiguration;
 import dooya.see.application.post.dto.PostSearchResult;
 import dooya.see.adapter.search.elasticsearch.repository.PostSearchElasticsearchRepository;
+import dooya.see.application.post.required.PostSearchCacheRepository;
 import dooya.see.domain.post.Post;
 import dooya.see.domain.post.PostCategory;
 import dooya.see.domain.post.dto.PostSearchRequest;
@@ -20,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 import static dooya.see.domain.post.PostFixture.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,7 +34,8 @@ record PostFinderTest(
         PostFinder postFinder,
         PostManager postManager,
         EntityManager entityManager,
-        PostSearchElasticsearchRepository repository) {
+        PostSearchElasticsearchRepository repository,
+        PostSearchCacheRepository postSearchCacheRepository) {
     private static final Long AUTHOR_ID = 1L;
     private static final Long ANOTHER_AUTHOR_ID = 2L;
     private static final Long VIEWER_ID = 2L;
@@ -41,6 +44,7 @@ record PostFinderTest(
     void setUp() {
         entityManager.clear();
         repository.deleteAll();
+        postSearchCacheRepository.evictAll();
     }
 
     @Nested
@@ -346,6 +350,31 @@ record PostFinderTest(
             Page<PostSearchResult> result = postFinder.searchPosts("Python", PageRequest.of(0, 10));
 
             assertThat(result).isEmpty();
+        }
+    }
+
+    @Nested
+    class 게시글_검색_캐시 {
+        @Test
+        void 검색_결과를_Redis에_캐싱하고_재사용한다() {
+            createTestPostWithTitle("Spring Boot 캐싱");
+            createTestPostWithTitle("Spring Data Redis");
+            flushAndClearContext();
+
+            Pageable pageable = PageRequest.of(0, 10);
+
+            Page<PostSearchResult> firstResult = postFinder.searchPosts("Spring", pageable);
+            assertThat(firstResult.getContent()).isNotEmpty();
+
+            Optional<Page<PostSearchResult>> cached = postSearchCacheRepository.find("Spring", pageable);
+            assertThat(cached).isPresent();
+            assertThat(cached.get().getContent()).isEqualTo(firstResult.getContent());
+
+            repository.deleteAll();
+            flushAndClearContext();
+
+            Page<PostSearchResult> secondResult = postFinder.searchPosts("Spring", pageable);
+            assertThat(secondResult.getContent()).isEqualTo(firstResult.getContent());
         }
     }
 
