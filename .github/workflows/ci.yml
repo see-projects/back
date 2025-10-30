@@ -32,6 +32,16 @@ jobs:
           --health-timeout 5s
           --health-retries 10
 
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
       kafka:
         image: confluentinc/cp-kafka:7.6.1
         ports:
@@ -92,12 +102,13 @@ jobs:
 
       - name: 🕐 Wait for Kafka and Elasticsearch
         run: |
-          echo "Waiting for Elasticsearch and Kafka to be ready..."
+          echo "Waiting for Elasticsearch, Kafka, and Redis to be ready..."
           for i in {1..25}; do
             es_ready=$(curl -fsS http://localhost:9200/_cluster/health > /dev/null && echo "yes" || echo "no")
             kafka_ready=$(nc -z localhost 9092 && echo "yes" || echo "no")
+            redis_ready=$(nc -z localhost 6379 && echo "yes" || echo "no")
 
-            if [ "$es_ready" = "yes" ] && [ "$kafka_ready" = "yes" ]; then
+            if [ "$es_ready" = "yes" ] && [ "$kafka_ready" = "yes" ] && [ "$redis_ready" = "yes" ]; then
               echo "✅ All services are ready!"
               exit 0
             fi
