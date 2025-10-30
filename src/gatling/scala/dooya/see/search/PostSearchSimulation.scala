@@ -17,21 +17,40 @@ class PostSearchSimulation extends Simulation {
     .acceptHeader("application/json")
     .contentTypeHeader("application/json")
 
-  private val feeder = Iterator.continually(Map(
-    "keyword" -> keywords(Random.nextInt(keywords.size))
-  ))
+  private val feeder = Iterator.continually {
+    val baseKeyword = keywords(Random.nextInt(keywords.size))
+    Map(
+      "hotKeyword" -> baseKeyword,
+      "coldKeyword" -> s"$baseKeyword-${System.nanoTime()}"
+    )
+  }
 
   private val dbSearch = exec(
     http("db-search")
       .get("/api/posts/search")
-      .queryParam("keyword", "${keyword}")
+      .queryParam("keyword", "${hotKeyword}")
       .check(status.is(200))
   )
 
   private val esSearch = exec(
-    http("es-search")
+    http("es-cold-search")
       .get("/api/v1/posts/elasticsearch")
-      .queryParam("keyword", "${keyword}")
+      .queryParam("keyword", "${coldKeyword}")
+      .check(status.is(200))
+  )
+
+  private val esCacheWarm = exec(
+    http("es-cache-warm")
+      .get("/api/v1/posts/elasticsearch")
+      .queryParam("keyword", "${hotKeyword}")
+      .check(status.is(200))
+      .silent
+  )
+
+  private val esCacheHit = exec(
+    http("es-cache-hit")
+      .get("/api/v1/posts/elasticsearch")
+      .queryParam("keyword", "${hotKeyword}")
       .check(status.is(200))
   )
 
@@ -44,6 +63,10 @@ class PostSearchSimulation extends Simulation {
     .exec(dbSearch)
     .pause(500.milliseconds, 2.seconds)
     .exec(esSearch)
+    .pause(200.milliseconds, 500.milliseconds)
+    .exec(esCacheWarm)
+    .pause(100.milliseconds)
+    .exec(esCacheHit)
 
   setUp(
     scenarioBuilder.inject(
